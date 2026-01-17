@@ -56,6 +56,7 @@ export function DetailsStep({
     date?: string;
     time?: string;
     contact?: string;
+    city?: string;
   }>({});
   const [timeInput, setTimeInput] = useState(bookingData.time);
   const [timeInputError, setTimeInputError] = useState<string | undefined>();
@@ -63,6 +64,21 @@ export function DetailsStep({
     bookingData.date ? format(bookingData.date, 'dd/MM/yyyy') : ''
   );
   const [dateError, setDateError] = useState<string | undefined>();
+
+  const isCustomCity =
+    bookingData.city && !cities.find((c) => c === bookingData.city);
+  const [showCustomCityInput, setShowCustomCityInput] =
+    useState(isCustomCity);
+
+  const handleCitySelect = (value: string) => {
+    if (value === 'Autre') {
+      setShowCustomCityInput(true);
+      updateBookingData({ city: '' });
+    } else {
+      setShowCustomCityInput(false);
+      updateBookingData({ city: value });
+    }
+  };
 
   const handleTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = e.target.value;
@@ -145,12 +161,15 @@ export function DetailsStep({
   };
 
   const handleConfirm = () => {
-    const newErrors: { date?: string; time?: string; contact?: string } = {};
+    const newErrors: { date?: string; time?: string; contact?: string, city?: string } = {};
     if (!bookingData.date) {
       newErrors.date = 'Veuillez sélectionner une date.';
     }
     if (!bookingData.time) {
       newErrors.time = 'Veuillez choisir une heure.';
+    }
+    if (showCustomCityInput && !bookingData.city.trim()) {
+      newErrors.city = 'Veuillez préciser la ville.';
     }
     if (bookingData.email && !/^\S+@\S+\.\S+$/.test(bookingData.email)) {
       newErrors.contact = 'Veuillez entrer un email valide.';
@@ -296,8 +315,8 @@ export function DetailsStep({
               </CardHeader>
               <CardContent>
                 <Select
-                  onValueChange={(value) => updateBookingData({ city: value })}
-                  defaultValue={bookingData.city}
+                  onValueChange={handleCitySelect}
+                  value={showCustomCityInput ? 'Autre' : bookingData.city || ''}
                 >
                   <SelectTrigger id="city">
                     <SelectValue placeholder="Choisir une ville" />
@@ -310,6 +329,24 @@ export function DetailsStep({
                     ))}
                   </SelectContent>
                 </Select>
+                {showCustomCityInput && (
+                  <Input
+                    id="custom-city"
+                    placeholder="Précisez votre ville"
+                    value={bookingData.city}
+                    onChange={(e) => updateBookingData({ city: e.target.value })}
+                    className={cn(
+                      'mt-2 animate-in fade-in duration-300',
+                      errors.city && 'border-destructive focus-visible:ring-destructive'
+                    )}
+                  />
+                )}
+                {errors.city && (
+                  <p className="text-sm text-destructive mt-2 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.city}
+                  </p>
+                )}
               </CardContent>
             </Card>
             <Card className="shadow-md">
@@ -373,6 +410,12 @@ export function DetailsStep({
                   {bookingData.time || '...'}
                 </span>
               </div>
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground">Ville</span>
+                <span className="font-medium capitalize text-right">
+                  {bookingData.city || 'Non précisée'}
+                </span>
+              </div>
             </CardContent>
           </Card>
 
@@ -417,12 +460,12 @@ export function DetailsStep({
               )}
             </CardContent>
           </Card>
-          {(errors.date || errors.time) && (
+          {(errors.date || errors.time || errors.city) && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Champs manquants</AlertTitle>
               <AlertDescription>
-                Veuillez vérifier que la date et l'heure sont bien renseignées.
+                Veuillez vérifier que tous les champs obligatoires sont bien renseignés.
               </AlertDescription>
             </Alert>
           )}
