@@ -59,7 +59,12 @@ export default function BookingPage() {
   };
 
   if (isConfirmed) {
-    return <ConfirmationStep />;
+    return (
+      <ConfirmationStep
+        bookingData={bookingData}
+        updateBookingData={updateBookingData}
+      />
+    );
   }
 
   return (
