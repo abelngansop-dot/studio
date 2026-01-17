@@ -58,11 +58,16 @@ export default function BookingPage() {
     }
   };
 
+  const handleBackFromConfirmation = () => {
+    setIsConfirmed(false);
+  };
+
   if (isConfirmed) {
     return (
       <ConfirmationStep
         bookingData={bookingData}
         updateBookingData={updateBookingData}
+        onBack={handleBackFromConfirmation}
       />
     );
   }

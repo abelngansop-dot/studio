@@ -7,22 +7,38 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle, Phone, MessageSquare, AlertCircle } from 'lucide-react';
+import { CheckCircle, Phone, MessageSquare, AlertCircle, ArrowLeft, PartyPopper, Briefcase, Sparkles, ListChecks, Calendar, Clock, MapPin, Hourglass, Loader2 } from 'lucide-react';
 import type { BookingData } from '@/app/booking/page';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type ConfirmationStepProps = {
   bookingData: BookingData;
   updateBookingData: (data: Partial<BookingData>) => void;
+  onBack: () => void;
 };
 
-export function ConfirmationStep({ bookingData, updateBookingData }: ConfirmationStepProps) {
+// A small component for a summary item
+const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | React.ReactNode }) => (
+    <div className="flex items-start justify-between py-2">
+        <div className="flex items-center gap-3">
+            {icon}
+            <span className="text-muted-foreground">{label}</span>
+        </div>
+        <span className="font-semibold text-right capitalize">{value}</span>
+    </div>
+);
+
+
+export function ConfirmationStep({ bookingData, updateBookingData, onBack }: ConfirmationStepProps) {
   const [email, setEmail] = useState(bookingData.email);
   const [phone, setPhone] = useState(bookingData.phone);
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; phone?: string, consent?: string }>({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEmailValid = (email: string) => /^\S+@\S+\.\S+$/.test(email);
   const isPhoneValid = (phone: string) => /^\+?[0-9\s-()]{8,}$/.test(phone);
@@ -57,37 +73,76 @@ export function ConfirmationStep({ bookingData, updateBookingData }: Confirmatio
   const handleContactClick = (contactMethod: 'call' | 'message') => {
     setHasAttemptedSubmit(true);
     if (validate()) {
-      if (contactMethod === 'call') {
-        window.location.href = `tel:${phone.replace(/\s/g, '')}`;
-      } else {
-        const message = encodeURIComponent("Bonjour, je confirme ma réservation avec Inoubliable.");
-        window.open(`https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${message}`, '_blank');
-      }
+      setIsSubmitting(true);
+      // Simulate backend submission
+      setTimeout(() => {
+        setIsSubmitting(false);
+        if (contactMethod === 'call') {
+          window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+        } else {
+          const message = encodeURIComponent("Bonjour, je confirme ma réservation avec Inoubliable.");
+          window.open(`https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${message}`, '_blank');
+        }
+      }, 1500)
     }
   };
 
   const isFormValid = email && phone && consent && isEmailValid(email) && isPhoneValid(phone);
+  
+  const getEventIcon = () => {
+    switch (bookingData.eventType) {
+      case 'mariage':
+        return <PartyPopper className="h-5 w-5 text-primary" />;
+      case 'entreprise':
+        return <Briefcase className="h-5 w-5 text-primary" />;
+      default:
+        return <Sparkles className="h-5 w-5 text-primary" />;
+    }
+  };
+
+  const selectedDateDisplay = bookingData.date
+    ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr })
+    : 'Non précisée';
 
   return (
     <div className="flex items-center justify-center py-12 animate-in fade-in duration-500">
       <Card className="w-full max-w-2xl shadow-2xl">
         <CardHeader className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-10 w-10 text-green-600" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <CheckCircle className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold font-headline mt-4">
-            Demande enregistrée !
+            Un dernier coup d'œil
           </CardTitle>
           <CardDescription className="text-lg pt-2">
-            Votre demande a bien été prise en compte. Une équipe vous contactera
-            très bientôt.
+            Vérifiez les détails de votre demande avant de finaliser.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 px-4 md:px-6">
+            <Card className="bg-background/50">
+                <CardHeader>
+                    <CardTitle className="text-xl font-headline">Récapitulatif</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm">
+                    <SummaryItem icon={getEventIcon()} label="Événement" value={bookingData.eventType} />
+                    <Separator />
+                    <SummaryItem icon={<ListChecks className="h-5 w-5 text-primary" />} label="Services" value={bookingData.services.join(', ') || 'Non précisés'} />
+                     <Separator />
+                    <SummaryItem icon={<Calendar className="h-5 w-5 text-primary" />} label="Date" value={selectedDateDisplay} />
+                     <Separator />
+                    <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure" value={bookingData.time || 'Non précisée'} />
+                     <Separator />
+                    <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Ville" value={bookingData.city || 'Non précisée'} />
+                     <Separator />
+                    <SummaryItem icon={<Hourglass className="h-5 w-5 text-primary" />} label="Durée" value={bookingData.duration || 'Non précisée'} />
+                </CardContent>
+            </Card>
+            
           <Separator />
+
           <div className="text-center">
-             <h3 className="text-xl font-semibold font-headline">Comment préférez-vous être contacté ?</h3>
-             <p className="text-muted-foreground mt-1 text-sm md:text-base">Veuillez renseigner vos informations pour activer les options de contact.</p>
+             <h3 className="text-xl font-semibold font-headline">Confirmez pour être contacté</h3>
+             <p className="text-muted-foreground mt-1 text-sm md:text-base">Veuillez renseigner vos informations pour finaliser votre demande.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-2">
@@ -140,18 +195,23 @@ export function ConfirmationStep({ bookingData, updateBookingData }: Confirmatio
            </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-            <Button size="lg" disabled={!isFormValid} onClick={() => handleContactClick('call')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleContactClick('call')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               <Phone className="mr-2 h-5 w-5" />
-              Me faire appeler
+              Confirmer par Appel
             </Button>
-            <Button size="lg" disabled={!isFormValid} onClick={() => handleContactClick('message')}>
+            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleContactClick('message')}>
+              {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               <MessageSquare className="mr-2 h-5 w-5" />
-              Message WhatsApp
+              Confirmer par Message
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex-col gap-4 pt-6">
-            <Separator />
+        <CardFooter className="flex-col sm:flex-row justify-between items-center gap-4 pt-6">
+            <Button variant="outline" size="lg" onClick={onBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Précédent
+            </Button>
             <Button asChild variant="link" className="text-muted-foreground">
               <Link href="/">Retour à l'accueil</Link>
             </Button>
