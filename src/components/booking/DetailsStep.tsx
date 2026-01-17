@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
 import { cities, durations } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import {
@@ -23,8 +22,9 @@ import {
   Sparkles,
   PartyPopper,
   Briefcase,
+  CheckCircle,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse, isValid, isPast, startOfToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { BookingData } from '@/app/booking/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +59,10 @@ export function DetailsStep({
   }>({});
   const [timeInput, setTimeInput] = useState(bookingData.time);
   const [timeInputError, setTimeInputError] = useState<string | undefined>();
+  const [dateInput, setDateInput] = useState<string>(
+    bookingData.date ? format(bookingData.date, 'dd/MM/yyyy') : ''
+  );
+  const [dateError, setDateError] = useState<string | undefined>();
 
   const handleTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = e.target.value;
@@ -76,17 +80,69 @@ export function DetailsStep({
     setTimeInput(time);
     updateBookingData({ time });
     setTimeInputError(undefined);
-     if (errors.time) {
-      setErrors(prev => ({...prev, time: undefined}));
+    if (errors.time) {
+      setErrors((prev) => ({ ...prev, time: undefined }));
     }
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    updateBookingData({ date });
-    if (errors.date) {
-      setErrors(prev => ({...prev, date: undefined}));
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDateInput(value);
+
+    if (!value) {
+      updateBookingData({ date: undefined });
+      setDateError(undefined);
+      return;
     }
-  }
+
+    const lowercasedValue = value.trim().toLowerCase();
+
+    if (lowercasedValue === "aujourd'hui") {
+      const today = startOfToday();
+      updateBookingData({ date: today });
+      setDateError(undefined);
+      if (errors.date) {
+        setErrors((prev) => ({ ...prev, date: undefined }));
+      }
+      return;
+    }
+
+    const supportedFormats = [
+      'dd/MM/yyyy',
+      'd/M/yyyy',
+      'dd-MM-yyyy',
+      'd-M-yyyy',
+      'd MMMM yyyy',
+    ];
+
+    let parsedDate: Date | null = null;
+    for (const fmt of supportedFormats) {
+      const dt = parse(value, fmt, new Date(), { locale: fr });
+      if (isValid(dt)) {
+        parsedDate = dt;
+        break;
+      }
+    }
+
+    if (parsedDate && isValid(parsedDate)) {
+      if (
+        isPast(parsedDate) &&
+        format(parsedDate, 'yyyy-MM-dd') !== format(startOfToday(), 'yyyy-MM-dd')
+      ) {
+        setDateError('La date ne peut pas être dans le passé.');
+        updateBookingData({ date: undefined });
+      } else {
+        setDateError(undefined);
+        updateBookingData({ date: parsedDate });
+        if (errors.date) {
+          setErrors((prev) => ({ ...prev, date: undefined }));
+        }
+      }
+    } else {
+      setDateError('Format de date invalide, veuillez réessayer.');
+      updateBookingData({ date: undefined });
+    }
+  };
 
   const handleConfirm = () => {
     const newErrors: { date?: string; time?: string; contact?: string } = {};
@@ -145,20 +201,36 @@ export function DetailsStep({
               <CardTitle className="text-2xl font-headline">Quand ?</CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-              <div className="flex flex-col items-center">
-                <Calendar
-                  mode="single"
-                  selected={bookingData.date}
-                  onSelect={handleDateSelect}
-                  locale={fr}
-                  disabled={(date) =>
-                    date < new Date(new Date().setHours(0, 0, 0, 0))
-                  }
-                  className="rounded-md border"
-                />
-                {errors.date && (
-                  <p className="mt-2 text-sm text-destructive self-start">
-                    {errors.date}
+              <div className="space-y-4">
+                <Label
+                  htmlFor="date"
+                  className="text-lg font-medium flex items-center gap-2"
+                >
+                  <CalendarIcon className="h-5 w-5" /> Date de l'événement
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="date"
+                    type="text"
+                    placeholder="ex: 17/01/2026 ou aujourd'hui"
+                    value={dateInput}
+                    onChange={handleDateInputChange}
+                    className={cn(
+                      'pr-8',
+                      dateError &&
+                        'border-destructive focus-visible:ring-destructive',
+                      bookingData.date &&
+                        !dateError &&
+                        'border-green-500 focus-visible:ring-green-500'
+                    )}
+                  />
+                  {bookingData.date && !dateError && (
+                    <CheckCircle className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                  )}
+                </div>
+                {(dateError || errors.date) && (
+                  <p className="text-sm text-destructive">
+                    {dateError || errors.date}
                   </p>
                 )}
               </div>
@@ -177,7 +249,9 @@ export function DetailsStep({
                   onChange={handleTimeInputChange}
                 />
                 {(timeInputError || errors.time) && (
-                  <p className="text-sm text-destructive">{timeInputError || errors.time}</p>
+                  <p className="text-sm text-destructive">
+                    {timeInputError || errors.time}
+                  </p>
                 )}
 
                 <div className="relative">
@@ -185,7 +259,9 @@ export function DetailsStep({
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">ou</span>
+                    <span className="bg-card px-2 text-muted-foreground">
+                      ou
+                    </span>
                   </div>
                 </div>
 
@@ -194,7 +270,9 @@ export function DetailsStep({
                     {timeSlots.map((time) => (
                       <Button
                         key={time}
-                        variant={bookingData.time === time ? 'default' : 'outline'}
+                        variant={
+                          bookingData.time === time ? 'default' : 'outline'
+                        }
                         className="w-full"
                         onClick={() => handleTimeSlotSelect(time)}
                       >
@@ -239,14 +317,18 @@ export function DetailsStep({
                 <div className="p-3 bg-primary/10 rounded-lg">
                   {getEventIcon()}
                 </div>
-                <CardTitle className="text-xl font-headline">Durée ?</CardTitle>
+                <CardTitle className="text-xl font-headline">
+                  Durée ?
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {durations.map((duration) => (
                   <Button
                     key={duration}
                     variant={
-                      bookingData.duration === duration ? 'default' : 'outline'
+                      bookingData.duration === duration
+                        ? 'default'
+                        : 'outline'
                     }
                     onClick={() => updateBookingData({ duration: duration })}
                   >
@@ -287,7 +369,9 @@ export function DetailsStep({
               </div>
               <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">Heure</span>
-                <span className="font-medium">{bookingData.time || '...'}</span>
+                <span className="font-medium">
+                  {bookingData.time || '...'}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -309,7 +393,9 @@ export function DetailsStep({
                   type="email"
                   placeholder="vous@exemple.com"
                   value={bookingData.email}
-                  onChange={(e) => updateBookingData({ email: e.target.value })}
+                  onChange={(e) =>
+                    updateBookingData({ email: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -319,7 +405,9 @@ export function DetailsStep({
                   type="tel"
                   placeholder="+237 6 XX XX XX XX"
                   value={bookingData.phone}
-                  onChange={(e) => updateBookingData({ phone: e.target.value })}
+                  onChange={(e) =>
+                    updateBookingData({ phone: e.target.value })
+                  }
                 />
               </div>
               {errors.contact && (
