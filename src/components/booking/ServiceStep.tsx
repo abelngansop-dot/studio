@@ -21,23 +21,13 @@ export function ServiceStep({
   onNext,
   onBack,
 }: ServiceStepProps) {
-  const [error, setError] = useState('');
   const [pastMessages, setPastMessages] = useState<string[]>([]);
 
   const handleSelectService = (serviceId: string) => {
-    setError('');
     const newServices = bookingData.services.includes(serviceId)
       ? bookingData.services.filter((s) => s !== serviceId)
       : [...bookingData.services, serviceId];
     updateBookingData({ services: newServices });
-  };
-
-  const handleNext = () => {
-    if (bookingData.services.length === 0) {
-      setError('Veuillez choisir au moins un service pour continuer.');
-      return;
-    }
-    onNext();
   };
   
   const addPastMessage = useCallback((message: string) => {
@@ -81,15 +71,11 @@ export function ServiceStep({
         />
       )}
 
-      {error && (
-        <p className="mt-4 text-center text-destructive font-medium">{error}</p>
-      )}
-
       <div className="mt-8 flex justify-between">
         <Button variant="outline" onClick={onBack}>
           Précédent
         </Button>
-        <Button onClick={handleNext}>Suivant</Button>
+        <Button onClick={onNext} disabled={bookingData.services.length === 0}>Suivant</Button>
       </div>
     </div>
   );
