@@ -1,0 +1,222 @@
+/**
+ * Core Philosophy: This ruleset implements a role-based and ownership-based security model for the "Inoubliable Events" application.
+ * Publicly browsable content (like products and services) is readable by anyone, but all write operations are restricted to administrators.
+ * User-specific data (like bookings and notifications) is private and accessible only by the owning user.
+ * Administrator privileges are managed through a separate, secure '/roles_admin' collection, providing a clear and performant way to handle authorization checks.
+ *
+ * Data Structure: The data is organized into a mix of top-level collections for shared/public data and nested subcollections for user-owned data.
+ * - Top-level collections like '/products', '/categories', and '/eventServices' store public information.
+ * - User-private data is nested under '/users/{userId}/...' (e.g., '/users/{userId}/bookings/{bookingId}').
+ * - A dedicated '/roles_admin/{userId}' collection is used to grant admin rights.
+ *
+ * Key Security Decisions:
+ * - Admin Access: A user is considered an admin if a document with their UID exists in the '/roles_admin' collection. This is checked using the `isAdmin()` function.
+ * - User Data Privacy: All data nested under a user's path, like '/users/{userId}/bookings', is strictly protected. Users can only access their own data subtree. Listing all users is disabled for non-admins to prevent user enumeration.
+ * - Public Data with Admin Writes: Collections like '/products' and '/offers' are publicly readable to allow browsing, but can only be modified by administrators.
+ * - Orders Security: The top-level '/orders' collection is secured by checking an internal `userId` field on each document. Non-admins can only access their own orders and cannot list the entire collection.
+ *
+ * Denormalization for Authorization:
+ * - The rules rely on the `userId` field being denormalized onto documents within user-specific subcollections (e.g., 'Booking' documents under `/users/{userId}/bookings`). This is used to enforce relational integrity between the document path and its content.
+ * - The '/roles_admin' collection is a form of denormalization, storing admin status separately for fast, secure lookups without needing to query the main '/users' collection.
+ *
+ * Structural Segregation:
+ * - Private user data (bookings, notifications) is stored in subcollections under the user's document.
+ * - Publicly browsable data (products, categories, event services) is stored in separate top-level collections. This clear separation simplifies rules and makes public listing queries safe and performant.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for auth logic
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    /**
+     * Checks if the current user is an admin.
+     * Admin status is granted by the existence of a document in the /roles_admin collection
+     * where the document ID matches the user's UID.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+
+    /**
+     * @description Manages user profiles. Users can create their own profile and manage it. Admins have read access to all profiles but cannot list them all.
+     * @path /users/{userId}
+     * @allow (create) A new user signing up: `request.auth.uid == 'user_abc'` creating document at `/users/user_abc`.
+     * @deny (get) A user trying to read another user's profile: `request.auth.uid == 'user_123'` getting `/users/user_456`.
+     * @principle Enforces self-creation and ownership, while preventing user enumeration by non-admins.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Publicly readable event services. Only admins can create, modify, or delete them.
+     * @path /eventServices/{eventServiceId}
+     * @allow (get) Any user, signed-in or not, can read an event service document.
+     * @deny (create) A non-admin user trying to create a new event service.
+     * @principle Implements a "Public Read with Admin-Only Writes" pattern for catalogue-style data.
+     */
+    match /eventServices/{eventServiceId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Publicly readable categories for services and products. Only admins can manage categories.
+     * @path /categories/{categoryId}
+     * @allow (list) Any user, signed-in or not, can list all categories.
+     * @deny (update) A non-admin user trying to rename a category.
+     * @principle Implements a "Public Read with Admin-Only Writes" pattern for catalogue-style data.
+     */
+    match /categories/{categoryId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Manages a user's private bookings. All operations are restricted to the owner of the data tree.
+     * @path /users/{userId}/bookings/{bookingId}
+     * @allow (create) A user creating their own booking: `request.auth.uid == 'user_abc'` creating a doc in `/users/user_abc/bookings`.
+     * @deny (list) A user trying to list another user's bookings: `request.auth.uid == 'user_123'` listing `/users/user_456/bookings`.
+     * @principle Restricts access to a user's own data tree using path-based ownership.
+     */
+    match /users/{userId}/bookings/{bookingId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId) && isExistingDoc();
+    }
+
+    /**
+     * @description Manages reviews for bookings. Reviews are public, but can only be created by the user who owns the associated booking.
+     * @path /bookings/{bookingId}/reviews/{reviewId}
+     * @allow (get) Any user can read reviews for any booking.
+     * @deny (create) A user trying to create a review for a booking they do not own.
+     * @principle Secures a subcollection by checking ownership of a related document in a different collection.
+     * @note Due to the data structure, this rule must use a get() to check the owner of the parent booking document.
+     *       The 'Review' entity should ideally have a `userId` field to identify the author for update/delete operations.
+     *       This rule assumes a top-level `/bookings` collection as implied by the path.
+     */
+    match /bookings/{bookingId}/reviews/{reviewId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.auth.uid;
+      // CRITICAL: The 'Review' entity is missing a 'userId' or 'authorId' field to determine ownership for updates and deletes.
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Manages product stock. This is sensitive business data accessible only by administrators.
+     * @path /stocks/{stockId}
+     * @allow (get) An admin reading stock levels.
+     * @deny (update) Any non-admin user attempting to change stock quantity.
+     * @principle Restricts access entirely to admin users for internal business logic.
+     */
+    match /stocks/{stockId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Publicly readable products. Only admins can create, modify, or delete them.
+     * @path /products/{productId}
+     * @allow (list) Any user, signed-in or not, can list all products.
+     * @deny (delete) A non-admin user trying to delete a product.
+     * @principle Implements a "Public Read with Admin-Only Writes" pattern for catalogue-style data.
+     */
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Publicly readable offers and discounts. Only admins can manage them.
+     * @path /offers/{offerId}
+     * @allow (get) Any user, signed-in or not, can read an offer.
+     * @deny (create) A non-admin user trying to create a new offer.
+     * @principle Implements a "Public Read with Admin-Only Writes" pattern for catalogue-style data.
+     */
+    match /offers/{offerId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
+     * @description Manages user orders. Users can only access their own orders. Admins have full access. Listing is restricted to admins.
+     * @path /orders/{orderId}
+     * @allow (create) A user placing an order: `request.auth.uid == 'user_abc'` creating an order with `userId: 'user_abc'`.
+     * @deny (list) A non-admin user trying to list all orders in the system.
+     * @principle Secures a top-level collection containing user-specific data by checking an internal ownership field.
+     */
+    match /orders/{orderId} {
+      allow get: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid);
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if (isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid)) && isExistingDoc();
+      allow delete: if (isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid)) && isExistingDoc();
+    }
+
+    /**
+     * @description Manages a user's private notifications. All operations are restricted to the owner of the data tree.
+     * @path /users/{userId}/notifications/{notificationId}
+     * @allow (get) A user reading their own notification: `request.auth.uid == 'user_abc'` getting from `/users/user_abc/notifications`.
+     * @deny (update) A user trying to mark another user's notification as read.
+     * @principle Restricts access to a user's own data tree using path-based ownership.
+     */
+    match /users/{userId}/notifications/{notificationId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId) && isExistingDoc();
+    }
+
+    /**
+     * @description Manages administrator roles. Only existing admins can view or modify this collection.
+     * @path /roles_admin/{userId}
+     * @allow (create) An existing admin granting admin rights to another user.
+     * @deny (list) A non-admin user trying to see who the admins are.
+     * @principle Secures administrative roles by restricting all access to current admins.
+     */
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+  }
+}
