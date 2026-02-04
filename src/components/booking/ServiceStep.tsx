@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
 import { services } from '@/lib/data';
 import { SelectableCard } from './SelectableCard';
 import { Button } from '@/components/ui/button';
-import { AITip } from '@/components/AITip';
 import type { BookingData } from './BookingFlow';
 import type { icons } from 'lucide-react';
 
@@ -21,24 +19,12 @@ export function ServiceStep({
   onNext,
   onBack,
 }: ServiceStepProps) {
-  const [pastMessages, setPastMessages] = useState<string[]>([]);
-
   const handleSelectService = (serviceId: string) => {
     const newServices = bookingData.services.includes(serviceId)
       ? bookingData.services.filter((s) => s !== serviceId)
       : [...bookingData.services, serviceId];
     updateBookingData({ services: newServices });
   };
-  
-  const addPastMessage = useCallback((message: string) => {
-    setPastMessages(prev => [...prev, message]);
-  }, []);
-
-  const firstSelectedService = useMemo(() => {
-    const firstServiceId = bookingData.services[0];
-    if (!firstServiceId) return '';
-    return services.find(s => s.id === firstServiceId)?.name || '';
-  }, [bookingData.services]);
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -61,15 +47,6 @@ export function ServiceStep({
           />
         ))}
       </div>
-
-      {firstSelectedService && (
-         <AITip 
-          userType="nouveau client"
-          serviceRequested={firstSelectedService}
-          pastMessages={pastMessages}
-          onNewMessage={addPastMessage}
-        />
-      )}
 
       <div className="mt-8 flex justify-between">
         <Button variant="outline" onClick={onBack}>
