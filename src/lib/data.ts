@@ -9,14 +9,70 @@ export const eventTypes = [
 ];
 
 export const services = [
-  { id: 'photographe', name: 'Photographe', icon: 'Camera' },
-  { id: 'video', name: 'Vidéo', icon: 'Video' },
-  { id: 'drone', name: 'Drone', icon: 'Rocket' },
-  { id: 'logistique', name: 'Logistique', icon: 'Truck' },
-  { id: 'traiteur', name: 'Traiteur', icon: 'UtensilsCrossed' },
-  { id: 'boissons', name: 'Boissons', icon: 'GlassWater' },
-  { id: 'gateaux', name: 'Gâteaux', icon: 'Cake' },
-  { id: 'sonorisation', name: 'Sonorisation', icon: 'Music' },
+  {
+    id: 'photographe',
+    name: 'Photographe',
+    icon: 'Camera',
+    description: 'Immortalisez vos moments précieux avec nos photographes experts.',
+    rating: 4.9,
+    imageId: 'service-photographe',
+  },
+  {
+    id: 'video',
+    name: 'Vidéo',
+    icon: 'Video',
+    description: "Revivez votre événement avec un film professionnel et émouvant.",
+    rating: 4.8,
+    imageId: 'service-video',
+  },
+  {
+    id: 'drone',
+    name: 'Drone',
+    icon: 'Rocket',
+    description: "Des prises de vues aériennes spectaculaires pour un souvenir unique.",
+    rating: 4.9,
+    imageId: 'service-drone',
+  },
+  {
+    id: 'logistique',
+    name: 'Logistique',
+    icon: 'Truck',
+    description: "Nous gérons toute l'installation pour que vous profitiez sereinement.",
+    rating: 4.7,
+    imageId: 'service-logistique',
+  },
+  {
+    id: 'traiteur',
+    name: 'Traiteur',
+    icon: 'UtensilsCrossed',
+    description: "Régalez vos invités avec des menus savoureux et adaptés à vos goûts.",
+    rating: 4.8,
+    imageId: 'service-traiteur',
+  },
+  {
+    id: 'boissons',
+    name: 'Boissons',
+    icon: 'GlassWater',
+    description: "Un service de bar complet pour rafraîchir et enchanter vos convives.",
+    rating: 4.6,
+    imageId: 'service-boissons',
+  },
+  {
+    id: 'gateaux',
+    name: 'Gâteaux',
+    icon: 'Cake',
+    description: "Des créations pâtissières sur-mesure pour un dessert inoubliable.",
+    rating: 4.9,
+    imageId: 'service-gateaux',
+  },
+  {
+    id: 'sonorisation',
+    name: 'Sonorisation',
+    icon: 'Music',
+    description: "Une ambiance musicale parfaite avec un équipement de haute qualité.",
+    rating: 4.7,
+    imageId: 'service-sonorisation',
+  },
 ];
 
 export const cities = [
