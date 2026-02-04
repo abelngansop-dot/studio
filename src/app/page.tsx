@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
+import { BookingTrigger } from '@/components/booking/BookingTrigger';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -77,13 +78,14 @@ export default function Home() {
                   vous rappelle.
                 </p>
                 <div className="mt-8">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105"
-                  >
-                    <Link href="/booking">Réserver un service</Link>
-                  </Button>
+                  <BookingTrigger>
+                    <Button
+                      size="lg"
+                      className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105"
+                    >
+                      Réserver un service
+                    </Button>
+                  </BookingTrigger>
                 </div>
               </CardContent>
             </Card>
@@ -128,9 +130,9 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="flex justify-between items-center bg-secondary/30 py-3 px-4">
                      <StarRating rating={service.rating} />
-                     <Button variant="ghost" size="sm" asChild>
-                       <Link href="/booking">Choisir <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                     </Button>
+                     <BookingTrigger initialServiceId={service.id}>
+                        <Button variant="ghost" size="sm">Choisir <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                     </BookingTrigger>
                   </CardFooter>
                 </Card>
                );

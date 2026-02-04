@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, Phone, MessageSquare, AlertCircle, ArrowLeft, PartyPopper, Briefcase, Sparkles, ListChecks, Calendar, Clock, MapPin, Hourglass, Loader2 } from 'lucide-react';
-import type { BookingData } from '@/app/booking/page';
+import type { BookingData } from '@/components/booking/BookingFlow';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -18,6 +18,7 @@ type ConfirmationStepProps = {
   bookingData: BookingData;
   updateBookingData: (data: Partial<BookingData>) => void;
   onBack: () => void;
+  onBookingComplete: () => void;
 };
 
 // A small component for a summary item
@@ -32,13 +33,14 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
 );
 
 
-export function ConfirmationStep({ bookingData, updateBookingData, onBack }: ConfirmationStepProps) {
+export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBookingComplete }: ConfirmationStepProps) {
   const [email, setEmail] = useState(bookingData.email);
   const [phone, setPhone] = useState(bookingData.phone);
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; phone?: string, consent?: string }>({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const isEmailValid = (email: string) => /^\S+@\S+\.\S+$/.test(email);
   const isPhoneValid = (phone: string) => /^\+?[0-9\s-()]{8,}$/.test(phone);
@@ -77,12 +79,17 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack }: Con
       // Simulate backend submission
       setTimeout(() => {
         setIsSubmitting(false);
+        setIsSubmitted(true);
         if (contactMethod === 'call') {
           window.location.href = `tel:${phone.replace(/\s/g, '')}`;
         } else {
           const message = encodeURIComponent("Bonjour, je confirme ma réservation avec Inoubliable.");
           window.open(`https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${message}`, '_blank');
         }
+        setTimeout(() => {
+            onBookingComplete();
+        }, 3000);
+
       }, 1500)
     }
   };
@@ -103,11 +110,24 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack }: Con
   const selectedDateDisplay = bookingData.date
     ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr })
     : 'Non précisée';
+    
+  if (isSubmitted) {
+      return (
+          <div className="flex flex-col items-center justify-center text-center p-8 min-h-[50vh]">
+            <PartyPopper className="h-16 w-16 text-accent mb-4 animate-in fade-in zoom-in" />
+            <h2 className="text-2xl font-bold font-headline">Demande enregistrée !</h2>
+            <p className="text-muted-foreground mt-2 max-w-sm">
+                Merci de votre confiance. Vous pouvez fermer cette fenêtre, notre équipe vous contactera très prochainement.
+            </p>
+            <Button onClick={onBookingComplete} className="mt-6">Fermer</Button>
+          </div>
+      )
+  }
 
   return (
-    <div className="flex items-center justify-center py-12 animate-in fade-in duration-500">
-      <Card className="w-full max-w-2xl shadow-2xl">
-        <CardHeader className="text-center">
+    <div className="p-4 md:p-6">
+      <Card className="w-full max-w-2xl shadow-none border-none">
+        <CardHeader className="text-center px-0">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <CheckCircle className="h-10 w-10 text-primary" />
           </div>
@@ -118,7 +138,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack }: Con
             Vérifiez les détails de votre demande avant de finaliser.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6 px-4 md:px-6">
+        <CardContent className="space-y-6 px-0">
             <Card className="bg-background/50">
                 <CardHeader>
                     <CardTitle className="text-xl font-headline">Récapitulatif</CardTitle>
@@ -207,7 +227,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack }: Con
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex-col sm:flex-row justify-between items-center gap-4 pt-6">
+        <CardFooter className="flex-col sm:flex-row justify-between items-center gap-4 pt-6 px-0">
             <Button variant="outline" size="lg" onClick={onBack}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Précédent

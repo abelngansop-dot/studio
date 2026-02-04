@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Button } from './ui/button';
+import { BookingTrigger } from './booking/BookingTrigger';
 
 export function Header() {
   return (
@@ -22,9 +23,9 @@ export function Header() {
             <Link href="/#contact">Contact</Link>
           </Button>
         </nav>
-        <Button asChild className="rounded-full shadow-lg">
-          <Link href="/booking">Réserver</Link>
-        </Button>
+        <BookingTrigger>
+          <Button className="rounded-full shadow-lg">Réserver</Button>
+        </BookingTrigger>
       </div>
     </header>
   );
