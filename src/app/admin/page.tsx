@@ -31,6 +31,14 @@ export default function AdminLoginPage() {
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) {
+        toast({
+            variant: 'destructive',
+            title: "Erreur d'authentification",
+            description: "Le service d'authentification n'est pas disponible.",
+        });
+        return;
+    }
     setIsLoading(true);
 
     try {
@@ -47,7 +55,7 @@ export default function AdminLoginPage() {
           description: 'Bienvenue sur votre tableau de bord.',
         });
       }
-      router.push('/admin/dashboard');
+      // On success, the useEffect hook will redirect to the dashboard
     } catch (error) {
       console.error(error);
       let title = 'Erreur';
@@ -84,7 +92,7 @@ export default function AdminLoginPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="ml-2">Chargement...</p>
+        <p className="ml-2">Redirection...</p>
       </div>
     );
   }
