@@ -23,7 +23,7 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.push('/admin');
     }
   }, [user, isUserLoading, router]);
 
@@ -36,8 +36,10 @@ export default function AdminLayout({
   }
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
+    if (auth) {
+        await signOut(auth);
+    }
+    router.push('/admin');
   };
 
   const isActive = (path: string) => pathname === path;

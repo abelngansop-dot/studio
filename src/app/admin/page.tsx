@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.replace('/admin/dashboard');
+      router.replace('/dashboard');
     }
   }, [user, isUserLoading, router]);
 
@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
           description: 'Bienvenue sur votre tableau de bord.',
         });
       }
-      router.push('/admin/dashboard');
+      router.push('/dashboard');
     } catch (error) {
       console.error(error);
       let title = 'Erreur';
