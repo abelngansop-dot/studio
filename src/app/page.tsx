@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
+import { CurrentYear } from '@/components/CurrentYear';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -226,7 +227,7 @@ export default function Home() {
       
       <footer id="contact" className="bg-primary text-primary-foreground mt-16">
         <div className="container py-8 text-center">
-            <p>&copy; {new Date().getFullYear()} Inoubliable Events. Tous droits réservés.</p>
+            <p>&copy; <CurrentYear /> Inoubliable Events. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

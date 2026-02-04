@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { format, parse, isValid, isPast, startOfToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { BookingData } from '@/app/booking/page';
+import type { BookingData } from './BookingFlow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

@@ -5,7 +5,7 @@ import { services } from '@/lib/data';
 import { SelectableCard } from './SelectableCard';
 import { Button } from '@/components/ui/button';
 import { AITip } from '@/components/AITip';
-import type { BookingData } from '@/app/booking/page';
+import type { BookingData } from './BookingFlow';
 import type { icons } from 'lucide-react';
 
 type ServiceStepProps = {
