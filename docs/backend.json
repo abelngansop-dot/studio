@@ -6,123 +6,41 @@
       "type": "object",
       "description": "Represents a user of the Inoubliable Events application.",
       "properties": {
-        "id": {
+        "uid": {
           "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
+          "description": "Unique identifier from Firebase Auth."
         },
         "email": {
           "type": "string",
           "description": "The email address of the user.",
           "format": "email"
         },
-        "phone": {
+        "displayName": {
           "type": "string",
-          "description": "The phone number of the user."
+          "description": "The display name of the user."
         },
-        "userType": {
+        "photoURL": {
           "type": "string",
-          "description": "The type of user (e.g., Admin, Client, Super Admin)."
+          "description": "URL of the user's profile picture."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., client, admin, superadmin).",
+          "enum": ["client", "admin", "superadmin"]
         },
         "createdAt": {
           "type": "string",
           "description": "The date and time the user was created.",
           "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The date and time the user was last updated.",
-          "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "firstName",
-        "lastName",
-        "email",
-        "phone",
-        "userType"
-      ]
-    },
-    "EventService": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "EventService",
-      "type": "object",
-      "description": "Represents a service offered for events, such as photography or catering.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the EventService entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the event service."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the event service."
-        },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N EventService)"
-        },
-        "price": {
-          "type": "number",
-          "description": "The price of the event service."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the service image."
-        },
-        "isActive": {
-          "type": "boolean",
-          "description": "Indicates whether the service is currently active."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "categoryId",
-        "price"
-      ]
-    },
-    "Category": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Category",
-      "type": "object",
-      "description": "Represents a category for event services.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Category entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the category."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the category."
-        }
-      },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["uid", "email", "role", "createdAt"]
     },
     "Booking": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Booking",
       "type": "object",
-      "description": "Represents a booking made by a user for event services.",
+      "description": "Represents a booking request made by a user for event services.",
       "properties": {
         "id": {
           "type": "string",
@@ -130,298 +48,85 @@
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Booking)"
+          "description": "Reference to the User who made the booking."
         },
-        "eventDate": {
+        "eventType": {
+          "type": "string",
+          "description": "The type of event."
+        },
+        "services": {
+          "type": "array",
+          "description": "A list of requested service IDs.",
+          "items": { "type": "string" }
+        },
+        "city": {
+          "type": "string",
+          "description": "The city of the event."
+        },
+        "date": {
           "type": "string",
           "description": "The date of the event.",
           "format": "date-time"
         },
-        "eventLocation": {
-          "type": "string",
-          "description": "The location of the event."
-        },
-        "duration": {
-          "type": "string",
-          "description": "The duration of the event."
+        "contactInfo": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "phone": { "type": "string" }
+          },
+          "required": ["email", "phone"]
         },
         "status": {
           "type": "string",
-          "description": "The status of the booking (e.g., New, Confirmed, Completed, Cancelled)."
+          "description": "The status of the booking (e.g., pending, confirmed, cancelled).",
+          "enum": ["pending", "confirmed", "cancelled"]
         },
         "createdAt": {
           "type": "string",
           "description": "The date and time the booking was created.",
           "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The date and time the booking was last updated.",
-          "format": "date-time"
-        },
-        "eventServiceIds": {
+        }
+      },
+      "required": ["userId", "eventType", "services", "city", "date", "status", "createdAt"]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "type": "object",
+      "description": "Represents a service offered for events, such as photography or catering.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "rating": { "type": "number" },
+        "media": {
           "type": "array",
-          "description": "References to EventServices. (Relationship: EventService N:N Booking)",
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "type": { "enum": ["image", "video"] },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "testimonials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "eventType": { "type": "string" },
+              "comment": { "type": "string" }
+            }
           }
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "eventDate",
-        "eventLocation",
-        "duration",
-        "status"
-      ]
-    },
-    "Review": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Review",
-      "type": "object",
-      "description": "Represents a review given by a user for a booking.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Review entity."
-        },
-        "bookingId": {
-          "type": "string",
-          "description": "Reference to Booking. (Relationship: Booking 1:N Review)"
-        },
-        "rating": {
-          "type": "number",
-          "description": "The rating given by the user (1-5 stars)."
-        },
-        "comment": {
-          "type": "string",
-          "description": "The comment left by the user."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time the review was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The date and time the review was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "bookingId",
-        "rating",
-        "comment"
-      ]
-    },
-    "Stock": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Stock",
-      "type": "object",
-      "description": "Represents the stock level of an item.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Stock entity."
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to Product. (Relationship: Product 1:N Stock)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "The quantity of the item in stock."
-        },
-        "lastStockUpdate": {
-          "type": "string",
-          "description": "The date and time the stock was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "productId",
-        "quantity"
-      ]
-    },
-    "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Product",
-      "type": "object",
-      "description": "Represents a product that can be offered as an event service.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Product entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the product."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the product."
-        },
-        "price": {
-          "type": "number",
-          "description": "The price of the product."
-        },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N Product)"
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the product image."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "price",
-        "categoryId"
-      ]
-    },
-    "Offer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Offer",
-      "type": "object",
-      "description": "Represents a special offer or discount.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Offer entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the offer."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the offer."
-        },
-        "discountPercentage": {
-          "type": "number",
-          "description": "The discount percentage of the offer."
-        },
-        "startDate": {
-          "type": "string",
-          "description": "The start date of the offer.",
-          "format": "date-time"
-        },
-        "endDate": {
-          "type": "string",
-          "description": "The end date of the offer.",
-          "format": "date-time"
-        },
-        "productIds": {
-          "type": "array",
-          "description": "References to Products. (Relationship: Product N:N Offer)",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "discountPercentage",
-        "startDate",
-        "endDate"
-      ]
-    },
-    "Order": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Order",
-      "type": "object",
-      "description": "Represents an order placed by a user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Order entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "The date the order was placed.",
-          "format": "date-time"
-        },
-        "totalAmount": {
-          "type": "number",
-          "description": "The total amount of the order."
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the order (e.g., Pending, Processing, Shipped, Delivered)."
-        },
-        "productIds": {
-          "type": "array",
-          "description": "References to Products. (Relationship: Product N:N Order)",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "orderDate",
-        "totalAmount",
-        "status"
-      ]
-    },
-    "Notification": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Notification",
-      "type": "object",
-      "description": "Represents a notification sent to a user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Notification entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Notification)"
-        },
-        "message": {
-          "type": "string",
-          "description": "The message of the notification."
-        },
-        "type": {
-          "type": "string",
-          "description": "The type of notification (e.g., Booking Update, Offer Alert)."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time the notification was created.",
-          "format": "date-time"
-        },
-        "isRead": {
-          "type": "boolean",
-          "description": "Indicates whether the notification has been read."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "message",
-        "type"
-      ]
+      "required": ["name", "description", "icon"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
@@ -429,191 +134,26 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Includes standard user data such as name, email, and user type.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "schema": { "$ref": "#/entities/User" },
+          "description": "Stores user profiles and roles."
         }
       },
       {
-        "path": "/eventServices/{eventServiceId}",
-        "definition": {
-          "entityName": "EventService",
-          "schema": {
-            "$ref": "#/backend/entities/EventService"
-          },
-          "description": "Stores information about event services, such as photography and catering.",
-          "params": [
-            {
-              "name": "eventServiceId",
-              "description": "The unique identifier for the event service."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Stores categories for event services.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "The unique identifier for the category."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/bookings/{bookingId}",
+        "path": "/bookings/{bookingId}",
         "definition": {
           "entityName": "Booking",
-          "schema": {
-            "$ref": "#/backend/entities/Booking"
-          },
-          "description": "Stores booking information for each user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "bookingId",
-              "description": "The unique identifier for the booking."
-            }
-          ]
+          "schema": { "$ref": "#/entities/Booking" },
+          "description": "Stores all booking requests."
         }
       },
       {
-        "path": "/bookings/{bookingId}/reviews/{reviewId}",
+        "path": "/services/{serviceId}",
         "definition": {
-          "entityName": "Review",
-          "schema": {
-            "$ref": "#/backend/entities/Review"
-          },
-          "description": "Stores reviews for each booking. This may need to be moved to a subcollection of a user's bookings, `/users/{userId}/bookings/{bookingId}/reviews/{reviewId}`, for better security and ownership.",
-          "params": [
-            {
-              "name": "bookingId",
-              "description": "The unique identifier for the booking."
-            },
-            {
-              "name": "reviewId",
-              "description": "The unique identifier for the review."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/stocks/{stockId}",
-        "definition": {
-          "entityName": "Stock",
-          "schema": {
-            "$ref": "#/backend/entities/Stock"
-          },
-          "description": "Stores stock information for products.",
-          "params": [
-            {
-              "name": "stockId",
-              "description": "The unique identifier for the stock."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores product information.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique identifier for the product."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/offers/{offerId}",
-        "definition": {
-          "entityName": "Offer",
-          "schema": {
-            "$ref": "#/backend/entities/Offer"
-          },
-          "description": "Stores information about offers and discounts.",
-          "params": [
-            {
-              "name": "offerId",
-              "description": "The unique identifier for the offer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores order information.",
-          "params": [
-            {
-              "name": "orderId",
-              "description": "The unique identifier for the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/notifications/{notificationId}",
-        "definition": {
-          "entityName": "Notification",
-          "schema": {
-            "$ref": "#/backend/entities/Notification"
-          },
-          "description": "Stores notifications for each user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "notificationId",
-              "description": "The unique identifier for the notification."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "roles_admin",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Documents in this collection grant admin privileges to a user. Existence of a document is sufficient for granting admin rights.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "entityName": "Service",
+          "schema": { "$ref": "#/entities/Service" },
+          "description": "Stores all available services and their details."
         }
       }
-    ],
-    "reasoning": "The Firestore data structure is designed to support the \"Inoubliable Events\" application, focusing on event service bookings, reviews, and administrative management. The structure prioritizes authorization independence, security, and scalability.\n\n**Authorization Independence:**\n\n*   **User-Owned Data:** Bookings and Notifications are structured under the `/users/{userId}` path, ensuring that access control is based on user ID without requiring parent document lookups.\n*   **Denormalization for Collaborative Data:** While not explicitly collaborative based on the schema, consider denormalizing relevant user roles or permissions into the Booking document if collaborative features are added later. This prevents `get()` calls in security rules.\n\n**Structural Segregation:**\n\n*   **Separate Collections:** Each entity type (Users, EventServices, Categories, Bookings, Reviews, Stocks, Products, Offers, Orders, Notifications) has its own top-level collection. This simplifies security rules by ensuring that all documents within a collection share the same access requirements.\n*   **Admin Roles:** The structure uses a dedicated `/roles_admin/{uid}` collection to manage admin privileges, avoiding the need to store roles directly within user documents and simplifying role-based authorization.\n\n**Access Modeling:**\n\n*   **Path-Based Ownership:** Bookings and notifications are nested under `/users/{userId}`, enforcing ownership by path. This allows simple security rules to ensure that only the user can access their own bookings and notifications.\n*   **Membership Maps:** If collaborative features are added (e.g., allowing multiple users to manage a booking), a `members` map within the Booking document should be used. The keys would be user IDs, and the values would be their roles (e.g., `{uid1: \"owner\", uid2: \"editor\"}`).\n\n**QAPs (Rules are not Filters):**\n\n*   The design inherently supports secure `list` operations because each collection contains documents with homogeneous security needs. Path-based ownership (`/users/{userId}/bookings/{bookingId}`) ensures that listing bookings requires only checking the user's ID against the path, not filtering based on document content.\n*   Admin privileges are managed using the `/roles_admin/{uid}` collection, which ensures that listing admin users is based on existence, rather than filtering user documents based on roles.\n\n**Data Clarity and Predictability:**\n\n*   The schema uses explicit state modeling with the `status` field in the Booking and Order entities. This makes it easy to track the state of bookings and orders without relying on complex logic.\n*   Collection and field names are consistent and semantic (e.g., `userId`, `createdAt`, `updatedAt`). Wildcards are descriptive (e.g., `{userId}`, `{bookingId}`)."
+    ]
   }
 }

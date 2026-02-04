@@ -1,3 +1,4 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { CurrentYear } from '@/components/CurrentYear';
+import { Header } from '@/components/Header';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -54,6 +56,8 @@ export default function Home() {
 
   return (
     <div className="bg-background">
+      <Header />
+      <main className="min-h-[calc(100vh-4rem)]">
       <section className="relative w-full h-[calc(100vh-4rem)] flex items-center justify-center">
         {heroImage && (
           <Image
@@ -230,6 +234,7 @@ export default function Home() {
             <p>&copy; <CurrentYear /> Inoubliable Events. Tous droits réservés.</p>
         </div>
       </footer>
+      </main>
     </div>
   );
 }
