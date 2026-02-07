@@ -55,8 +55,9 @@ export function DetailsStep({
   const [errors, setErrors] = useState<{
     date?: string;
     time?: string;
-    contact?: string;
     city?: string;
+    email?: string;
+    phone?: string;
   }>({});
   const [timeInput, setTimeInput] = useState(bookingData.time);
   const [timeInputError, setTimeInputError] = useState<string | undefined>();
@@ -157,7 +158,7 @@ export function DetailsStep({
   };
 
   const handleConfirm = () => {
-    const newErrors: { date?: string; time?: string; contact?: string, city?: string } = {};
+    const newErrors: { date?: string; time?: string; city?: string; email?: string; phone?: string; } = {};
     if (!bookingData.date) {
       newErrors.date = 'Veuillez sélectionner une date.';
     }
@@ -167,8 +168,14 @@ export function DetailsStep({
     if (showCustomCityInput && !bookingData.city.trim()) {
       newErrors.city = 'Veuillez préciser la ville.';
     }
+    if (!bookingData.phone) {
+        newErrors.phone = 'Le numéro de téléphone est obligatoire.';
+    } else if (!/^\+?[0-9\s-()]{8,}$/.test(bookingData.phone)) {
+        newErrors.phone = 'Veuillez entrer un numéro de téléphone valide.';
+    }
+
     if (bookingData.email && !/^\S+@\S+\.\S+$/.test(bookingData.email)) {
-      newErrors.contact = 'Veuillez entrer un email valide.';
+      newErrors.email = 'Veuillez entrer un email valide.';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -418,27 +425,17 @@ export function DetailsStep({
           <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="font-headline text-xl">
-                Contact (Optionnel)
+                Vos Coordonnées
               </CardTitle>
               <p className="text-sm text-muted-foreground pt-1">
-                Pour un rappel rapide et un devis personnalisé.
+                Le numéro de téléphone est obligatoire pour continuer.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="vous@exemple.com"
-                  value={bookingData.email}
-                  onChange={(e) =>
-                    updateBookingData({ email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone</Label>
+                <Label htmlFor="phone" className={cn(errors.phone && 'text-destructive')}>
+                    Téléphone <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -447,19 +444,34 @@ export function DetailsStep({
                   onChange={(e) =>
                     updateBookingData({ phone: e.target.value })
                   }
+                  className={cn(errors.phone && 'border-destructive focus-visible:ring-destructive')}
                 />
+                {errors.phone && (
+                    <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-4 w-4" />{errors.phone}</p>
+                )}
               </div>
-              {errors.contact && (
-                <p className="text-sm text-center text-destructive">
-                  {errors.contact}
-                </p>
-              )}
+               <div className="space-y-2">
+                <Label htmlFor="email" className={cn(errors.email && 'text-destructive')}>Email (Optionnel)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="vous@exemple.com"
+                  value={bookingData.email}
+                  onChange={(e) =>
+                    updateBookingData({ email: e.target.value })
+                  }
+                  className={cn(errors.email && 'border-destructive focus-visible:ring-destructive')}
+                />
+                {errors.email && (
+                    <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-4 w-4" />{errors.email}</p>
+                )}
+              </div>
             </CardContent>
           </Card>
-          {(errors.date || errors.time || errors.city) && (
+          {(errors.date || errors.time || errors.city || errors.phone || errors.email) && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Champs manquants</AlertTitle>
+              <AlertTitle>Champs manquants ou invalides</AlertTitle>
               <AlertDescription>
                 Veuillez vérifier que tous les champs obligatoires sont bien renseignés.
               </AlertDescription>
