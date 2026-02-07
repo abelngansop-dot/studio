@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { CalendarPlus, LayoutGrid, LogOut, User as UserIcon } from 'lucide-react';
+import { CalendarPlus, LayoutGrid, LogOut, User as UserIcon, LifeBuoy, FileText } from 'lucide-react';
 import { BookingTrigger } from './booking/BookingTrigger';
 import Link from 'next/link';
 
@@ -46,20 +46,34 @@ export function UserNav({ user }: { user: User }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        <BookingTrigger>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
-                <CalendarPlus className="mr-2 h-4 w-4" />
-                <span>Nouvelle réservation</span>
-            </DropdownMenuItem>
-        </BookingTrigger>
-        
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href="/profil">
+            <UserIcon className="mr-2 h-4 w-4" />
+            <span>Mon Profil</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href="/mes-reservations">
             <LayoutGrid className="mr-2 h-4 w-4" />
             <span>Mes réservations</span>
           </Link>
         </DropdownMenuItem>
+         <BookingTrigger>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                <CalendarPlus className="mr-2 h-4 w-4" />
+                <span>Nouvelle réservation</span>
+            </DropdownMenuItem>
+        </BookingTrigger>
         
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href="/legal">
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Légal & Confidentialité</span>
+          </Link>
+        </DropdownMenuItem>
+
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />

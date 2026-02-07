@@ -127,6 +127,22 @@
         }
       },
       "required": ["name", "description", "icon"]
+    },
+    "Review": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Review",
+        "type": "object",
+        "description": "Represents a review submitted by a user.",
+        "properties": {
+            "userId": { "type": "string" },
+            "displayName": { "type": "string" },
+            "photoURL": { "type": "string" },
+            "rating": { "type": "number" },
+            "comment": { "type": "string" },
+            "status": { "enum": ["pending", "approved", "rejected"] },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "displayName", "rating", "comment", "status", "createdAt"]
     }
   },
   "auth": {
@@ -156,6 +172,14 @@
           "entityName": "Service",
           "schema": { "$ref": "#/entities/Service" },
           "description": "Stores all available services and their details."
+        }
+      },
+      {
+        "path": "/reviews/{reviewId}",
+        "definition": {
+            "entityName": "Review",
+            "schema": { "$ref": "#/entities/Review" },
+            "description": "Stores user reviews for moderation and display."
         }
       }
     ]

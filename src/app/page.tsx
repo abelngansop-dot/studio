@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { services } from '@/lib/data';
 import { testimonials, type Testimonial } from '@/lib/testimonials';
 import { cn } from '@/lib/utils';
-import { ArrowRight, Star, Loader2 } from 'lucide-react';
+import { ArrowRight, Star, Loader2, Edit } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -19,10 +19,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
-import { CurrentYear } from '@/components/CurrentYear';
 import { Header } from '@/components/Header';
 import { useTranslation } from '@/hooks/use-translation';
 import { useUser } from '@/firebase';
+import { ContactFooter } from '@/components/ContactFooter';
+import { LeaveReviewTrigger } from '@/components/reviews/LeaveReviewTrigger';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -63,7 +64,7 @@ export default function Home() {
   return (
     <div className="bg-background">
       <Header />
-      <main className="min-h-[calc(100vh-4rem)]">
+      <main>
       <section className="relative w-full h-[calc(100vh-4rem)] flex items-center justify-center">
         {heroImage && (
           <Image
@@ -238,14 +239,18 @@ export default function Home() {
             <CarouselPrevious className="hidden sm:flex" />
             <CarouselNext className="hidden sm:flex" />
           </Carousel>
+           <div className="text-center mt-12">
+                <LeaveReviewTrigger>
+                    <Button variant="outline" size="lg">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Laisser un avis
+                    </Button>
+                </LeaveReviewTrigger>
+            </div>
         </div>
       </section>
       
-      <footer id="contact" className="bg-primary text-primary-foreground mt-16">
-        <div className="container py-8 text-center">
-            <p>&copy; <CurrentYear /> Inoubliable Events. {t('footer.copyright')}</p>
-        </div>
-      </footer>
+      <ContactFooter />
       </main>
     </div>
   );

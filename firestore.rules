@@ -37,8 +37,8 @@ service cloud.firestore {
       // Only Admins or Super Admins are allowed to change a user's role.
       allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin() || isSuperAdmin();
 
-      // DELETE: Only Super Admins can delete user accounts.
-      allow delete: if isSuperAdmin();
+      // DELETE: Users can delete their own accounts. Super Admins can also delete any user account.
+      allow delete: if isOwner(userId) || isSuperAdmin();
       
       // LIST: Only Admins and Super Admins can list all users.
       allow list: if isAdmin() || isSuperAdmin();
@@ -54,7 +54,7 @@ service cloud.firestore {
       allow get: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
 
       // LIST: Admins/SuperAdmins can list all bookings. Regular users can only run queries filtered by their user ID.
-      allow list: if isAdmin() || isSuperAdmin() || (isSignedIn() && request.query.get('userId') == request.auth.uid);
+      allow list: if (isAdmin() || isSuperAdmin()) || (isSignedIn() && request.query.userId == request.auth.uid);
 
       // Admins and Super Admins can still update and delete all bookings.
       allow update, delete: if isAdmin() || isSuperAdmin();
@@ -66,6 +66,26 @@ service cloud.firestore {
     match /services/{serviceId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // REVIEWS
+    // Security rules for the user reviews collection.
+    match /reviews/{reviewId} {
+      // READ: Anyone can read approved reviews. Admins can read all reviews.
+      allow read: if resource.data.status == 'approved' || isAdmin() || isSuperAdmin();
+      
+      // CREATE: Any signed-in user can create a review for themselves.
+      // The review must be for the user creating it.
+      // The initial status must be 'pending'.
+      allow create: if isSignedIn() 
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      // UPDATE, DELETE: Only Admins and Super Admins can update (e.g., approve) or delete reviews.
+      allow update, delete: if isAdmin() || isSuperAdmin();
+      
+      // LIST: Only Admins can list all reviews. Public users can list approved reviews.
+      allow list: if (isAdmin() || isSuperAdmin()) || request.query.status == 'approved';
     }
   }
 }
