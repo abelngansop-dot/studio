@@ -5,16 +5,8 @@ import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { services } from '@/lib/data';
-import { testimonials, type Testimonial } from '@/lib/testimonials';
 import { cn } from '@/lib/utils';
 import { ArrowRight, Star, Loader2, Edit } from 'lucide-react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
@@ -24,6 +16,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useUser } from '@/firebase';
 import { ContactFooter } from '@/components/ContactFooter';
 import { LeaveReviewTrigger } from '@/components/reviews/LeaveReviewTrigger';
+import { PublishedReviews } from '@/components/reviews/PublishedReviews';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -200,45 +193,7 @@ export default function Home() {
               {t('reviews_section.subtitle')}
             </p>
           </div>
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full max-w-sm sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto"
-          >
-            <CarouselContent>
-              {testimonials.map((testimonial) => {
-                const avatar = PlaceHolderImages.find(p => p.id === testimonial.avatarImageId);
-                return (
-                  <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
-                    <div className="p-1 h-full">
-                      <Card className="flex flex-col h-full justify-between shadow-md hover:shadow-primary/10 transition-shadow">
-                        <CardContent className="p-6 flex-grow">
-                          <StarRating rating={testimonial.rating} className="mb-4" />
-                          <p className="text-foreground/80 italic">"{testimonial.comment}"</p>
-                        </CardContent>
-                        <CardFooter className="bg-secondary/30 p-4 flex items-center gap-4">
-                          {avatar && (
-                            <Avatar>
-                              <AvatarImage src={avatar.imageUrl} alt={testimonial.name} data-ai-hint={avatar.imageHint} />
-                              <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                          )}
-                          <div>
-                            <p className="font-semibold">{testimonial.name}</p>
-                            <p className="text-sm text-muted-foreground">{testimonial.eventType}</p>
-                          </div>
-                        </CardFooter>
-                      </Card>
-                    </div>
-                  </CarouselItem>
-                );
-              })}
-            </CarouselContent>
-            <CarouselPrevious className="hidden sm:flex" />
-            <CarouselNext className="hidden sm:flex" />
-          </Carousel>
+          <PublishedReviews />
            <div className="text-center mt-12">
                 <LeaveReviewTrigger>
                     <Button variant="outline" size="lg">

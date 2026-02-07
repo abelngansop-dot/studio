@@ -38,7 +38,7 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
 const generateBookingSummaryText = (bookingData: any): string => {
   const summaryLines = [
     `Bonjour,`,
-    `Je souhaite confirmer ma demande de réservation pour un événement Inoubliable.`,
+    `Je souhaite confirmer ma demande de réservation pour un événement Inoublevent.`,
     `Voici le proforma de ma demande :`,
     ``,
     `--- DÉTAILS DE L'ÉVÉNEMENT ---`,
@@ -124,7 +124,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
         const whatsappUrl = `https://wa.me/${businessWhatsapp}?text=${encodeURIComponent(summaryText)}`;
         window.open(whatsappUrl, '_blank');
       } else { // method === 'email'
-        const subject = `Demande de réservation Inoubliable : ${bookingData.eventType}`;
+        const subject = `Demande de réservation Inoublevent : ${bookingData.eventType}`;
         const mailtoUrl = `mailto:${businessEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summaryText)}`;
         window.location.href = mailtoUrl;
       }
@@ -237,7 +237,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                                 Je confirme mes informations
                                 </label>
                                 <p className="text-sm text-muted-foreground">
-                                J’accepte que mon numéro et mon e-mail soient utilisés pour être contacté par l’équipe Inoubliable.
+                                J’accepte que mon numéro et mon e-mail soient utilisés pour être contacté par l’équipe Inoublevent.
                                 </p>
                                 {consentError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{consentError}</p>}
                             </div>

@@ -41,7 +41,7 @@ export default function ServicesPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Services</h2>
           <p className="text-muted-foreground">
-            Gérez les services proposés par Inoubliable.
+            Gérez les services proposés par Inoublevent.
           </p>
         </div>
         <Button onClick={handleAddNew}>
