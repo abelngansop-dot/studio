@@ -24,15 +24,19 @@ export default function UsersPage() {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
   
+  // Defensively create a boolean to ensure role check is explicit.
+  const isAdmin = userProfile && ['admin', 'superadmin'].includes(userProfile.role);
+
   const usersQuery = useMemoFirebase(() => {
-      // Defensively check that the profile is loaded AND the role is correct before building the query.
-      if(isProfileLoading || !firestore || !userProfile || !['admin', 'superadmin'].includes(userProfile.role)) return null;
+      // Stricter guard: only build query if profile is loaded AND user is admin.
+      if(isProfileLoading || !firestore || !isAdmin) return null;
       return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'))
-    }, [firestore, userProfile, isProfileLoading]);
+    }, [firestore, isAdmin, isProfileLoading]);
 
   const { data: users, isLoading: isUsersLoading } = useCollection<User>(usersQuery);
 
-  const isLoading = isProfileLoading || isUsersLoading;
+  // Show loading state only if the user is an admin and the data is actually loading.
+  const isLoading = isProfileLoading || (isAdmin && isUsersLoading);
   
   if (isLoading) {
       return (
