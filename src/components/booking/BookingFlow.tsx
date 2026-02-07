@@ -92,7 +92,10 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
 
   const handleBackFromOtherFlow = () => {
       setIsOtherFlow(false);
-      updateBookingData({ eventType: '' });
+      // If we entered this flow from step 1 (Event Type selection), reset event type
+      if (bookingData.eventType === 'autre') {
+          updateBookingData({ eventType: '' });
+      }
   };
 
 
@@ -133,6 +136,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
               updateBookingData={updateBookingData}
               onNext={nextStep}
               onBack={prevStep}
+              onSelectOther={() => setIsOtherFlow(true)}
             />
           )}
           {step === 3 && (

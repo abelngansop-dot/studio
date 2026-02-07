@@ -107,6 +107,12 @@
       "description": "Friends toasting with drinks.",
       "imageUrl": "https://images.unsplash.com/photo-1609240893975-4c8a5c37851a?q=80&w=1170&auto=format&fit=crop",
       "imageHint": "friends toast"
+    },
+    {
+      "id": "service-autre",
+      "description": "A team brainstorming ideas for a special event request.",
+      "imageUrl": "https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?q=80&w=1170&auto=format&fit=crop",
+      "imageHint": "special request"
     }
   ]
 }

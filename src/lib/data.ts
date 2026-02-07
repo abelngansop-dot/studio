@@ -73,6 +73,14 @@ export const services = [
     rating: 4.7,
     imageId: 'service-sonorisation',
   },
+  {
+    id: 'autre',
+    name: 'Autre',
+    icon: 'Sparkles',
+    description: 'Un besoin spécifique ? Décrivez-le nous et nous vous contacterons.',
+    rating: 5,
+    imageId: 'service-autre',
+  },
 ];
 
 export const cities = [

@@ -11,6 +11,7 @@ type ServiceStepProps = {
   updateBookingData: (data: Partial<BookingData>) => void;
   onNext: () => void;
   onBack: () => void;
+  onSelectOther: () => void;
 };
 
 export function ServiceStep({
@@ -18,8 +19,14 @@ export function ServiceStep({
   updateBookingData,
   onNext,
   onBack,
+  onSelectOther,
 }: ServiceStepProps) {
   const handleSelectService = (serviceId: string) => {
+    if (serviceId === 'autre') {
+      onSelectOther();
+      return;
+    }
+
     const newServices = bookingData.services.includes(serviceId)
       ? bookingData.services.filter((s) => s !== serviceId)
       : [...bookingData.services, serviceId];
@@ -42,7 +49,7 @@ export function ServiceStep({
             key={service.id}
             iconName={service.icon as keyof typeof icons}
             title={service.name}
-            isSelected={bookingData.services.includes(service.id)}
+            isSelected={service.id !== 'autre' && bookingData.services.includes(service.id)}
             onSelect={() => handleSelectService(service.id)}
           />
         ))}
