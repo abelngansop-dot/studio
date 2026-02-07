@@ -2,18 +2,17 @@
 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMemo } from 'react';
 import type { User } from './columns';
 
 
 export default function UsersPage() {
   const firestore = useFirestore();
   
-  const usersQuery = useMemo(() => {
+  const usersQuery = useMemoFirebase(() => {
       if(!firestore) return null;
       return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'))
     }, [firestore]);

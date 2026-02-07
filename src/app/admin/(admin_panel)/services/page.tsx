@@ -2,14 +2,14 @@
 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { ServiceDialog } from './service-dialog';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Service } from './columns';
 
 
@@ -18,7 +18,7 @@ export default function ServicesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   
-  const servicesQuery = useMemo(() => {
+  const servicesQuery = useMemoFirebase(() => {
       if(!firestore) return null;
       return query(collection(firestore, 'services'), orderBy('name', 'asc'))
     }, [firestore]);
