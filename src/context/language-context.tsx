@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import enMessages from '@/locales/en.json'; // Default messages
+import frMessages from '@/locales/fr.json'; // Default messages is now French
+import enMessages from '@/locales/en.json'; // Keep for fallback
 
 export type Locale = 'en' | 'fr' | 'de';
 type Messages = Record<string, any>;
@@ -15,11 +16,11 @@ interface LanguageContextType {
 export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 const supportedLocales: Locale[] = ['en', 'fr', 'de'];
-const defaultLocale: Locale = 'en';
+const defaultLocale: Locale = 'fr'; // Changed default to 'fr' to match layout.tsx
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>(defaultLocale);
-  const [messages, setMessages] = useState<Messages>(enMessages);
+  const [messages, setMessages] = useState<Messages>(frMessages); // Changed default messages to French
 
   useEffect(() => {
     // This effect runs only on the client
