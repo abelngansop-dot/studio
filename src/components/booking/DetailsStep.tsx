@@ -102,61 +102,57 @@ export function DetailsStep({
   };
 
   const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDateInput(value);
+    const rawValue = e.target.value;
+    const lowercasedValue = rawValue.trim().toLowerCase();
 
-    if (!value) {
-      updateBookingData({ date: undefined });
-      setDateError(undefined);
-      return;
-    }
-
-    const lowercasedValue = value.trim().toLowerCase();
-
-    if (lowercasedValue === "aujourd'hui") {
-      const today = startOfToday();
-      updateBookingData({ date: today });
-      setDateError(undefined);
-      if (errors.date) {
-        setErrors((prev) => ({ ...prev, date: undefined }));
-      }
-      return;
-    }
-
-    const supportedFormats = [
-      'dd/MM/yyyy',
-      'd/M/yyyy',
-      'dd-MM-yyyy',
-      'd-M-yyyy',
-      'd MMMM yyyy',
-    ];
-
-    let parsedDate: Date | null = null;
-    for (const fmt of supportedFormats) {
-      const dt = parse(value, fmt, new Date(), { locale: fr });
-      if (isValid(dt)) {
-        parsedDate = dt;
-        break;
-      }
-    }
-
-    if (parsedDate && isValid(parsedDate)) {
-      if (
-        isPast(parsedDate) &&
-        format(parsedDate, 'yyyy-MM-dd') !== format(startOfToday(), 'yyyy-MM-dd')
-      ) {
-        setDateError('La date ne peut pas être dans le passé.');
-        updateBookingData({ date: undefined });
-      } else {
+    // Preserve natural language input for "aujourd'hui"
+    if ("aujourd'hui".startsWith(lowercasedValue)) {
+      setDateInput(rawValue);
+      if (lowercasedValue === "aujourd'hui") {
+        const today = startOfToday();
+        updateBookingData({ date: today });
         setDateError(undefined);
-        updateBookingData({ date: parsedDate });
-        if (errors.date) {
-          setErrors((prev) => ({ ...prev, date: undefined }));
+        if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
+      } else {
+        // If user is typing it, clear any parsed date
+        updateBookingData({ date: undefined });
+        setDateError(undefined);
+      }
+      return;
+    }
+
+    // Auto-formatting logic for dd/mm/yyyy
+    const digits = rawValue.replace(/\D/g, '');
+    let formattedValue = digits;
+    if (digits.length > 2) {
+      formattedValue = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    if (digits.length > 4) {
+      formattedValue = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+    }
+    
+    setDateInput(formattedValue);
+
+    // Only validate when the date appears complete
+    if (formattedValue.length === 10) {
+      const parsedDate = parse(formattedValue, 'dd/MM/yyyy', new Date(), { locale: fr });
+      if (isValid(parsedDate)) {
+        if (isPast(parsedDate) && format(parsedDate, 'yyyy-MM-dd') !== format(startOfToday(), 'yyyy-MM-dd')) {
+          setDateError('La date ne peut pas être dans le passé.');
+          updateBookingData({ date: undefined });
+        } else {
+          setDateError(undefined);
+          updateBookingData({ date: parsedDate });
+          if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
         }
+      } else {
+        setDateError('Date invalide.');
+        updateBookingData({ date: undefined });
       }
     } else {
-      setDateError('Format de date invalide, veuillez réessayer.');
+      // If the date is incomplete, just clear the data and any potential error
       updateBookingData({ date: undefined });
+      setDateError(undefined);
     }
   };
 
@@ -231,7 +227,7 @@ export function DetailsStep({
                   <Input
                     id="date"
                     type="text"
-                    placeholder="ex: 17/01/2026 ou aujourd'hui"
+                    placeholder="dd/mm/yyyy ou aujourd'hui"
                     value={dateInput}
                     onChange={handleDateInputChange}
                     className={cn(
