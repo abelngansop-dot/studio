@@ -1,15 +1,19 @@
 'use client';
 
-import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
+import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { doc } from 'firebase/firestore';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Users, LineChart } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, LineChart, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
-import { usePathname } from 'next/navigation';
+
+type UserProfile = {
+  role: 'client' | 'admin' | 'superadmin';
+};
 
 export default function AdminLayout({
   children,
@@ -19,30 +23,62 @@ export default function AdminLayout({
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/admin');
-    }
-  }, [user, isUserLoading, router]);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-  if (isUserLoading || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p>Chargement...</p>
-      </div>
-    );
-  }
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
+  useEffect(() => {
+    // If auth state is resolved and there's no user, redirect to login.
+    if (!isUserLoading && !user) {
+      router.replace('/admin');
+      return;
+    }
+    
+    // If we have a user but their profile is still loading, we wait.
+    if (user && !isProfileLoading && userProfile) {
+      const allowedRoles = ['admin', 'superadmin'];
+      // If the profile is loaded and the role is not sufficient, redirect to home.
+      if (!allowedRoles.includes(userProfile.role)) {
+        router.replace('/');
+      }
+    } else if (user && !isProfileLoading && !userProfile) {
+      // If the user exists but has no profile document, they are not an admin.
+      router.replace('/');
+    }
+
+  }, [user, isUserLoading, userProfile, isProfileLoading, router]);
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
     }
+    // After logout, always redirect to the admin login page.
     router.push('/admin');
   };
 
   const isActive = (path: string) => pathname === path;
+
+  // Show a full-screen loader while checking auth state or profile.
+  if (isUserLoading || isProfileLoading || !user || !userProfile) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Vérification des autorisations...</p>
+      </div>
+    );
+  }
+  
+  // Final check before rendering children, if role is insufficient, render nothing to avoid flicker.
+  const allowedRoles = ['admin', 'superadmin'];
+  if (!allowedRoles.includes(userProfile.role)) {
+    return null; 
+  }
 
   return (
     <SidebarProvider>

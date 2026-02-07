@@ -16,7 +16,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && getUserRole(request.auth.uid) == 'admin';
+      return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'superadmin');
     }
     
     function isSuperAdmin() {
@@ -24,12 +24,26 @@ service cloud.firestore {
     }
     
     // USERS
-    // Admins and Super Admins can read all user data.
-    // Users can only read and write to their own document.
+    // Defines the security rules for the users collection.
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
+      // READ: Any user can read their own profile. Admins and Super Admins can read any profile.
+      allow read: if isOwner(userId) || isAdmin() || isSuperAdmin();
+      
+      // CREATE: A user can create their own profile, but they can ONLY assign the 'client' role to themselves.
+      // This prevents a user from creating an account with elevated privileges.
+      allow create: if isOwner(userId) && request.resource.data.role == 'client';
+
+      // UPDATE: A user can update their own profile, but crucially, they CANNOT change their own role.
+      // Only Admins or Super Admins are allowed to change a user's role.
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin() || isSuperAdmin();
+
+      // DELETE: Only Super Admins can delete user accounts.
+      allow delete: if isSuperAdmin();
+      
+      // LIST: Only Admins and Super Admins can list all users.
       allow list: if isAdmin() || isSuperAdmin();
     }
+
 
     // BOOKINGS
     // Any signed-in user can create a booking for themselves.
