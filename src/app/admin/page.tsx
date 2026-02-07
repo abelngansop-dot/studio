@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -20,6 +21,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
@@ -31,11 +33,11 @@ export default function AdminLoginPage() {
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
+    if (!auth || !firestore) {
         toast({
             variant: 'destructive',
             title: "Erreur d'authentification",
-            description: "Le service d'authentification n'est pas disponible.",
+            description: "Le service d'authentification ou de base de données n'est pas disponible.",
         });
         return;
     }
@@ -43,10 +45,23 @@ export default function AdminLoginPage() {
 
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const newUser = userCredential.user;
+        
+        // Create user document in Firestore
+        const userDocRef = doc(firestore, 'users', newUser.uid);
+        await setDoc(userDocRef, {
+            uid: newUser.uid,
+            email: newUser.email,
+            displayName: newUser.displayName || email.split('@')[0],
+            photoURL: newUser.photoURL,
+            role: 'superadmin', // Give superadmin role as requested
+            createdAt: serverTimestamp()
+        });
+
         toast({
           title: 'Compte créé !',
-          description: 'Vous êtes maintenant connecté.',
+          description: 'Vous êtes maintenant connecté avec les droits de super administrateur.',
         });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
