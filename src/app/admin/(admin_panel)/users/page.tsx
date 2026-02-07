@@ -15,7 +15,7 @@ type UserProfile = {
 
 export default function UsersPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -24,21 +24,21 @@ export default function UsersPage() {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
   
-  // Defensively create a boolean to ensure role check is explicit.
-  const isAdmin = userProfile && ['admin', 'superadmin'].includes(userProfile.role);
+  // Defensively create a boolean to ensure role check is explicit and only true when profile is loaded.
+  const isAuthorizedAdmin = !isProfileLoading && userProfile && ['admin', 'superadmin'].includes(userProfile.role);
 
   const usersQuery = useMemoFirebase(() => {
-      // Stricter guard: only build query if profile is loaded AND user is admin.
-      if(isProfileLoading || !firestore || !isAdmin) return null;
+      // Stricter guard: only build query if profile is loaded AND user is confirmed admin.
+      if(!isAuthorizedAdmin || !firestore) return null;
       return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'))
-    }, [firestore, isAdmin, isProfileLoading]);
+    }, [firestore, isAuthorizedAdmin]);
 
   const { data: users, isLoading: isUsersLoading } = useCollection<User>(usersQuery);
 
-  // Show loading state only if the user is an admin and the data is actually loading.
-  const isLoading = isProfileLoading || (isAdmin && isUsersLoading);
+  // The overall loading state depends on auth, profile, and then users if authorized.
+  const isLoading = isAuthLoading || isProfileLoading || (isAuthorizedAdmin && isUsersLoading);
   
-  if (isLoading) {
+  if (isLoading && !users) {
       return (
           <Card>
             <CardHeader>
@@ -61,6 +61,7 @@ export default function UsersPage() {
             <CardDescription>Gérez les utilisateurs de l'application et leurs rôles.</CardDescription>
         </CardHeader>
         <CardContent>
+            {/* If the user is not an admin, users will be null, and the table will show "Aucun résultat." */}
             <DataTable columns={columns} data={users || []} />
         </CardContent>
       </Card>

@@ -14,7 +14,7 @@ type UserProfile = {
 
 export default function BookingsPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -23,24 +23,25 @@ export default function BookingsPage() {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
   
-  // Defensively create a boolean to ensure role check is explicit.
-  const isAdmin = userProfile && ['admin', 'superadmin'].includes(userProfile.role);
+  // Defensively create a boolean to ensure role check is explicit and only true when profile is loaded.
+  const isAuthorizedAdmin = !isProfileLoading && userProfile && ['admin', 'superadmin'].includes(userProfile.role);
 
   const bookingsQuery = useMemoFirebase(() => {
-    // Stricter guard: only build query if profile is loaded AND user is admin.
-    if (isProfileLoading || !firestore || !isAdmin) {
+    // Stricter guard: only build query if profile is loaded AND user is confirmed admin.
+    if (!isAuthorizedAdmin || !firestore) {
       return null;
     }
     return query(collection(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore, isAdmin, isProfileLoading]);
+  }, [firestore, isAuthorizedAdmin]);
 
+  // Pass the authorized query to useCollection. It will be null for non-admins.
   const { data: bookings, isLoading: isBookingsLoading } = useCollection<Booking>(bookingsQuery);
 
-  const isLoading = isProfileLoading || (isAdmin && isBookingsLoading);
+  // The overall loading state depends on auth, profile, and then bookings if authorized.
+  const isLoading = isAuthLoading || isProfileLoading || (isAuthorizedAdmin && isBookingsLoading);
 
-  // For non-admins, bookingsQuery will be null, and useCollection will return isLoading: false.
-  // We show a loading state only if the user is an admin and the bookings are actually loading.
-  if (isLoading) {
+  // Render a loading state while we verify everything.
+  if (isLoading && !bookings) {
     return (
         <Card>
             <CardHeader>
@@ -63,6 +64,7 @@ export default function BookingsPage() {
         <CardTitle>Réservations</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* If the user is not an admin, bookings will be null, and the table will show "Aucun résultat." */}
         <DataTable columns={columns} data={bookings || []} />
       </CardContent>
     </Card>
