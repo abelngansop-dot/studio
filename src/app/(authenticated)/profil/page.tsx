@@ -32,10 +32,13 @@ type UserProfileData = {
   displayName: string;
   email: string;
   photoURL: string | null;
+  phone?: string | null;
 };
 
 const profileSchema = z.object({
   displayName: z.string().min(1, 'Le nom ne peut pas être vide.'),
+  phone: z.string().optional(),
+  photoURL: z.string().url('Veuillez entrer une URL valide.').or(z.literal('')).optional(),
 });
 
 function ProfileSkeleton() {
@@ -76,17 +79,30 @@ export default function ProfilPage() {
 
   const { data: userProfile, isLoading } = useDoc<UserProfileData>(userDocRef);
 
-  const { control, handleSubmit, formState: { isSubmitting, errors } } = useForm<z.infer<typeof profileSchema>>({
+  const { control, handleSubmit, formState: { isSubmitting, errors }, watch } = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     values: {
       displayName: userProfile?.displayName || '',
+      phone: userProfile?.phone || '',
+      photoURL: userProfile?.photoURL || '',
     },
+    resetOptions: {
+      keepDirtyValues: true,
+    },
+    mode: 'onChange',
   });
+
+  const photoUrlValue = watch('photoURL');
 
   const onSubmit = async (data: z.infer<typeof profileSchema>) => {
     if (!userDocRef) return;
     try {
-      await updateDoc(userDocRef, { displayName: data.displayName });
+      const updateData = {
+          displayName: data.displayName,
+          phone: data.phone || null,
+          photoURL: data.photoURL || null
+      }
+      await updateDoc(userDocRef, updateData);
       toast({ title: 'Profil mis à jour avec succès !' });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur', description: 'La mise à jour a échoué.' });
@@ -134,7 +150,6 @@ export default function ProfilPage() {
     }
 };
 
-
   if (isLoading) {
     return <ProfileSkeleton />;
   }
@@ -147,89 +162,110 @@ export default function ProfilPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <Card className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold font-headline">Mon Profil</CardTitle>
-            <CardDescription>Gérez vos informations personnelles et vos préférences.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <Avatar className="h-24 w-24 text-3xl">
-                <AvatarImage src={userProfile.photoURL || undefined} alt={userProfile.displayName || ''} />
-                <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="w-full space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Nom d'affichage</Label>
-                  <Controller
-                    name="displayName"
-                    control={control}
-                    render={({ field }) => <Input id="displayName" {...field} />}
-                  />
-                  {errors.displayName && <p className="text-sm text-destructive">{errors.displayName.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={userProfile.email} disabled />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-3xl font-bold font-headline">Mon Profil</CardTitle>
+              <CardDescription>Gérez vos informations personnelles et vos préférences.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <Avatar className="h-24 w-24 text-3xl">
+                  <AvatarImage src={photoUrlValue || undefined} alt={userProfile.displayName || ''} />
+                  <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="w-full space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Nom d'affichage</Label>
+                    <Controller
+                      name="displayName"
+                      control={control}
+                      render={({ field }) => <Input id="displayName" {...field} />}
+                    />
+                    {errors.displayName && <p className="text-sm text-destructive">{errors.displayName.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={userProfile.email} disabled />
+                  </div>
                 </div>
               </div>
-            </div>
-             <Card className="border-destructive/50 bg-destructive/5">
-                <CardHeader>
-                    <CardTitle className="text-destructive flex items-center gap-2">
-                        <ShieldAlert className="h-5 w-5" />
-                        Zone de Danger
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-destructive/90 mb-4">La suppression de votre compte est une action irréversible. Toutes vos données, y compris vos réservations, seront définitivement effacées.</p>
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Supprimer mon compte
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                   Cette action est irréversible et supprimera définitivement votre compte et vos données.
-                                   {isReauthRequired && (
-                                       <div className="mt-4 space-y-2">
-                                           <Label htmlFor="password">Veuillez entrer votre mot de passe pour confirmer</Label>
-                                           <Input 
-                                            id="password" 
-                                            type="password" 
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="********"
-                                            />
-                                       </div>
-                                   )}
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteAccount} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                                    {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Oui, supprimer mon compte
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </CardContent>
-            </Card>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enregistrer les modifications
-            </Button>
-          </CardFooter>
+              <div className="space-y-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="phone">Numéro de téléphone</Label>
+                      <Controller
+                          name="phone"
+                          control={control}
+                          render={({ field }) => <Input id="phone" type="tel" placeholder="+237 6 XX XX XX XX" {...field} />}
+                      />
+                      {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="photoURL">URL de la photo de profil</Label>
+                      <Controller
+                          name="photoURL"
+                          control={control}
+                          render={({ field }) => <Input id="photoURL" placeholder="https://exemple.com/image.png" {...field} />}
+                      />
+                      {errors.photoURL && <p className="text-sm text-destructive">{errors.photoURL.message}</p>}
+                  </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enregistrer les modifications
+              </Button>
+            </CardFooter>
+          </Card>
         </form>
-      </Card>
+
+        <div className="mt-12 pt-8 border-t border-destructive/20">
+          <h3 className="text-lg font-semibold text-destructive flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5" />
+              Zone de Danger
+          </h3>
+          <p className="text-sm text-destructive/90 my-2">
+              La suppression de votre compte est une action irréversible. Toutes vos données, y compris vos réservations, seront définitivement effacées.
+          </p>
+           <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Supprimer mon compte
+                  </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                         Cette action est irréversible et supprimera définitivement votre compte et vos données.
+                         {isReauthRequired && (
+                             <div className="mt-4 space-y-2">
+                                 <Label htmlFor="password">Veuillez entrer votre mot de passe pour confirmer</Label>
+                                 <Input 
+                                  id="password" 
+                                  type="password" 
+                                  value={password}
+                                  onChange={(e) => setPassword(e.target.value)}
+                                  placeholder="********"
+                                  />
+                             </div>
+                         )}
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Oui, supprimer mon compte
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
     </div>
   );
 }

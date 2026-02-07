@@ -85,7 +85,7 @@ export function LeaveReviewDialog({ isOpen, setIsOpen }: LeaveReviewDialogProps)
       photoURL: user.photoURL,
       rating,
       comment,
-      status: 'pending', // for moderation
+      status: 'approved', // for moderation
       createdAt: serverTimestamp(),
     };
 

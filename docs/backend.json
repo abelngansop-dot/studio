@@ -23,6 +23,10 @@
           "type": "string",
           "description": "URL of the user's profile picture."
         },
+        "phone": {
+          "type": "string",
+          "description": "The user's phone number."
+        },
         "role": {
           "type": "string",
           "description": "The role of the user (e.g., client, admin, superadmin).",

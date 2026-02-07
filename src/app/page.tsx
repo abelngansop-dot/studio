@@ -139,14 +139,16 @@ export default function Home() {
                        />
                     </div>
                   )}
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-accent/10 rounded-full">
-                        <Icon name={service.icon as keyof typeof icons} className="h-6 w-6 text-accent" />
+                  <BookingTrigger initialServiceId={service.id}>
+                    <CardHeader className="cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-accent/10 rounded-full">
+                          <Icon name={service.icon as keyof typeof icons} className="h-6 w-6 text-accent" />
+                        </div>
+                        <CardTitle className="text-xl font-headline">{service.name}</CardTitle>
                       </div>
-                      <CardTitle className="text-xl font-headline">{service.name}</CardTitle>
-                    </div>
-                  </CardHeader>
+                    </CardHeader>
+                  </BookingTrigger>
                   <CardContent className="flex-grow">
                     <p className="text-muted-foreground text-sm">{service.description}</p>
                   </CardContent>
