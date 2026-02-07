@@ -1,12 +1,13 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { services } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { ArrowRight, Star, Loader2, Edit } from 'lucide-react';
+import { ArrowRight, Star, Loader2, Edit, Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
@@ -17,6 +18,7 @@ import { useUser } from '@/firebase';
 import { ContactFooter } from '@/components/ContactFooter';
 import { LeaveReviewTrigger } from '@/components/reviews/LeaveReviewTrigger';
 import { PublishedReviews } from '@/components/reviews/PublishedReviews';
+import { SelectableCard } from '@/components/booking/SelectableCard';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -52,6 +54,15 @@ export default function Home() {
   const { user, isUserLoading } = useUser();
   const heroImage = PlaceHolderImages.find((p) => p.id === 'hero-background');
   const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+
+  const handleImageSelect = (imageId: string) => {
+    setSelectedImages((prev) =>
+      prev.includes(imageId)
+        ? prev.filter((id) => id !== imageId)
+        : [...prev, imageId]
+    );
+  };
 
 
   return (
@@ -165,22 +176,37 @@ export default function Home() {
               const image = PlaceHolderImages.find((p) => p.id === id);
               if (!image) return null;
               return (
-                <div key={id} className={cn(
-                  'relative aspect-square rounded-lg overflow-hidden group',
-                  index === 0 && 'md:col-span-2 md:row-span-2 md:aspect-auto'
-                )}>
+                <SelectableCard
+                  key={id}
+                  isSelected={selectedImages.includes(id)}
+                  onSelect={() => handleImageSelect(id)}
+                  className={cn(
+                    'aspect-square',
+                    index === 0 && 'md:col-span-2 md:row-span-2 md:aspect-auto'
+                  )}
+                >
                   <Image
                     src={image.imageUrl}
                     alt={image.description}
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover"
                     sizes="(max-width: 768px) 50vw, 33vw"
                     data-ai-hint={image.imageHint}
                   />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              )
+                </SelectableCard>
+              );
             })}
+          </div>
+          <div className="text-center mt-12">
+              <Button size="lg" disabled={selectedImages.length === 0}>
+                  <Heart className="mr-2 h-5 w-5" />
+                  Ajouter {selectedImages.length > 0 ? `(${selectedImages.length})` : ''} aux favoris
+              </Button>
+              {selectedImages.length === 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Cliquez sur les images pour les sélectionner.
+                </p>
+              )}
           </div>
         </div>
       </section>

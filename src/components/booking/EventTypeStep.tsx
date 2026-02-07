@@ -3,6 +3,8 @@
 import { eventTypes } from '@/lib/data';
 import { SelectableCard } from './SelectableCard';
 import type { icons } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import Icon from '@/components/Icon';
 
 type EventTypeStepProps = {
   onSelect: (eventType: string) => void;
@@ -23,11 +25,18 @@ export function EventTypeStep({ onSelect }: EventTypeStepProps) {
         {eventTypes.map((type) => (
           <SelectableCard
             key={type.id}
-            iconName={type.icon as keyof typeof icons}
-            title={type.name}
             isSelected={false} // This component navigates on select, so it's never "selected" in this view
             onSelect={() => onSelect(type.id)}
-          />
+          >
+            <Card className="h-full group-hover:-translate-y-1 transition-transform duration-300">
+                 <CardContent className="flex flex-col items-center justify-center p-6 gap-3 text-center h-full">
+                    <div className="p-4 bg-accent/10 rounded-full">
+                        <Icon name={type.icon as keyof typeof icons} className="h-10 w-10 text-accent" />
+                    </div>
+                    <span className="font-semibold text-lg text-foreground">{type.name}</span>
+                </CardContent>
+            </Card>
+          </SelectableCard>
         ))}
       </div>
     </div>

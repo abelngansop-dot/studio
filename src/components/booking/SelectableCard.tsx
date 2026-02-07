@@ -1,32 +1,28 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import Icon from '@/components/Icon';
 import { CheckCircle2 } from 'lucide-react';
-import type { icons } from 'lucide-react';
 
 type SelectableCardProps = {
-  iconName: keyof typeof icons;
-  title: string;
+  children: React.ReactNode;
   isSelected: boolean;
   onSelect: () => void;
+  className?: string;
 };
 
 export function SelectableCard({
-  iconName,
-  title,
+  children,
   isSelected,
   onSelect,
+  className
 }: SelectableCardProps) {
   return (
-    <Card
+    <div
       className={cn(
-        'cursor-pointer transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl',
-        isSelected
-          ? 'border-primary ring-2 ring-primary ring-offset-2 bg-primary/5'
-          : 'hover:border-primary/50',
-        'bg-background/80'
+        'relative cursor-pointer group transition-shadow duration-200 ease-in-out overflow-hidden rounded-lg',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        isSelected ? 'ring-2 ring-primary ring-offset-background' : 'shadow-sm hover:shadow-lg',
+        className
       )}
       onClick={onSelect}
       role="button"
@@ -34,15 +30,16 @@ export function SelectableCard({
       tabIndex={0}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect()}
     >
-      <CardContent className="relative flex flex-col items-center justify-center p-6 gap-3 text-center">
-        {isSelected && (
-          <CheckCircle2 className="absolute top-2 right-2 h-6 w-6 text-primary animate-in fade-in zoom-in" />
-        )}
-        <div className="p-4 bg-accent/10 rounded-full">
-            <Icon name={iconName} className="h-10 w-10 text-accent" />
-        </div>
-        <span className="font-semibold text-lg text-foreground">{title}</span>
-      </CardContent>
-    </Card>
+      {children}
+      {isSelected && (
+          <div className="absolute inset-0 bg-primary/10 pointer-events-none" />
+      )}
+      <div className={cn(
+        'absolute top-2 right-2 h-7 w-7 transition-all duration-200 ease-in-out rounded-full bg-background flex items-center justify-center shadow-md',
+        isSelected ? 'scale-100 opacity-100' : 'scale-125 opacity-0 group-hover:opacity-100 group-hover:scale-100'
+      )}>
+        <CheckCircle2 className="h-6 w-6 text-primary fill-primary-foreground" />
+      </div>
+    </div>
   );
 }
