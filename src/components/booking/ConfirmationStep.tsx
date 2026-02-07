@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MessageSquare, Mail, AlertCircle, ArrowLeft, PartyPopper, Briefcase, Sparkles, ListChecks, Calendar, Clock, MapPin, Hourglass, Loader2, CheckCircle } from 'lucide-react';
 import type { BookingData } from '@/components/booking/BookingFlow';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -39,18 +38,22 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
 const generateBookingSummaryText = (bookingData: any): string => {
   const summaryLines = [
     `Bonjour,`,
-    `Je souhaite confirmer ma demande de réservation pour un événement Inoubliable avec les détails suivants :`,
+    `Je souhaite confirmer ma demande de réservation pour un événement Inoubliable.`,
+    `Voici le proforma de ma demande :`,
     ``,
-    `Événement : ${bookingData.eventType}`,
-    `Service(s) : ${bookingData.services.join(', ')}`,
+    `--- DÉTAILS DE L'ÉVÉNEMENT ---`,
+    `Type d'événement : ${bookingData.eventType}`,
+    `Service(s) demandé(s) : ${bookingData.services.join(', ')}`,
     `Date : ${bookingData.date ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr }) : 'Non précisée'}`,
-    `Heure : ${bookingData.time || 'Non précisée'}`,
+    `Heure de début : ${bookingData.time || 'Non précisée'}`,
     `Ville : ${bookingData.city || 'Non précisée'}`,
-    `Durée : ${bookingData.duration || 'Non précisée'}`,
+    `Durée estimée : ${bookingData.duration || 'Non précisée'}`,
     ``,
-    `Merci de me recontacter aux coordonnées suivantes pour finaliser le devis :`,
+    `--- MES COORDONNÉES ---`,
     `Email : ${bookingData.contactInfo.email}`,
     `Téléphone : ${bookingData.contactInfo.phone}`,
+    ``,
+    `Merci de me recontacter pour finaliser le devis.`,
   ];
   return summaryLines.join('\n');
 };
