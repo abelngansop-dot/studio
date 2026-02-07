@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { format }s from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 // This type is used to define the shape of our data.
