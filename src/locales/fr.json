@@ -1,0 +1,32 @@
+{
+  "header": {
+    "services": "Services",
+    "reviews": "Avis",
+    "contact": "Contact",
+    "book": "Réserver",
+    "choose": "Choisir"
+  },
+  "hero": {
+    "title": "Inoubliable",
+    "subtitle": "Organisez votre événement en toute tranquillité, choisissez, on vous rappelle.",
+    "cta": "Réserver un service"
+  },
+  "services": {
+    "title": "Nos Prestations",
+    "subtitle": "Découvrez nos services conçus pour rendre votre événement mémorable."
+  },
+  "gallery": {
+    "title": "Nos Réalisations",
+    "subtitle": "Quelques souvenirs des moments inoubliables que nous avons aidé à créer."
+  },
+  "reviews_section": {
+    "title": "Ce que nos clients disent",
+    "subtitle": "Votre confiance est notre plus belle récompense."
+  },
+  "footer": {
+    "copyright": "Tous droits réservés."
+  },
+  "language": {
+    "change_language": "Changer de langue"
+  }
+}

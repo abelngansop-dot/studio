@@ -1,0 +1,32 @@
+{
+  "header": {
+    "services": "Dienstleistungen",
+    "reviews": "Bewertungen",
+    "contact": "Kontakt",
+    "book": "Buchen",
+    "choose": "Wählen"
+  },
+  "hero": {
+    "title": "Inoubliable",
+    "subtitle": "Organisieren Sie Ihre Veranstaltung in aller Ruhe, treffen Sie Ihre Wahl, wir rufen Sie zurück.",
+    "cta": "Dienstleistung buchen"
+  },
+  "services": {
+    "title": "Unsere Leistungen",
+    "subtitle": "Entdecken Sie unsere Dienstleistungen, die Ihre Veranstaltung unvergesslich machen."
+  },
+  "gallery": {
+    "title": "Unsere Arbeit",
+    "subtitle": "Einige Erinnerungen an die unvergesslichen Momente, die wir mitgestaltet haben."
+  },
+  "reviews_section": {
+    "title": "Was unsere Kunden sagen",
+    "subtitle": "Ihr Vertrauen ist unsere größte Belohnung."
+  },
+  "footer": {
+    "copyright": "Alle Rechte vorbehalten."
+  },
+  "language": {
+    "change_language": "Sprache ändern"
+  }
+}

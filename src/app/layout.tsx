@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
-import { Header } from '@/components/Header';
+import { LanguageProvider } from '@/context/language-context';
+import { HtmlLangUpdater } from '@/components/HtmlLangUpdater';
 
 export const metadata: Metadata = {
   title: 'Inoubliable Events',
@@ -26,8 +27,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          {children}
-          <Toaster />
+          <LanguageProvider>
+            <HtmlLangUpdater />
+            {children}
+            <Toaster />
+          </LanguageProvider>
         </FirebaseClientProvider>
       </body>
     </html>

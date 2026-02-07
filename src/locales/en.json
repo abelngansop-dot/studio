@@ -1,0 +1,32 @@
+{
+  "header": {
+    "services": "Services",
+    "reviews": "Reviews",
+    "contact": "Contact",
+    "book": "Book",
+    "choose": "Choose"
+  },
+  "hero": {
+    "title": "Inoubliable",
+    "subtitle": "Organize your event with peace of mind, make your choice, and we'll call you back.",
+    "cta": "Book a service"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Discover our services designed to make your event memorable."
+  },
+  "gallery": {
+    "title": "Our Work",
+    "subtitle": "Some memories of the unforgettable moments we've helped create."
+  },
+  "reviews_section": {
+    "title": "What our clients say",
+    "subtitle": "Your trust is our greatest reward."
+  },
+  "footer": {
+    "copyright": "All rights reserved."
+  },
+  "language": {
+    "change_language": "Change language"
+  }
+}

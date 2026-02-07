@@ -21,6 +21,7 @@ import type { icons } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { CurrentYear } from '@/components/CurrentYear';
 import { Header } from '@/components/Header';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -52,6 +53,7 @@ const galleryImages = [
 ];
 
 export default function Home() {
+  const { t } = useTranslation();
   const heroImage = PlaceHolderImages.find((p) => p.id === 'hero-background');
 
   return (
@@ -76,11 +78,10 @@ export default function Home() {
             <Card className="bg-background/80 backdrop-blur-sm max-w-3xl">
               <CardContent className="p-8 md:p-12">
                 <h1 className="text-4xl font-headline font-bold tracking-tighter text-primary sm:text-5xl lg:text-6xl/none">
-                  Inoubliable
+                  {t('hero.title')}
                 </h1>
                 <p className="mt-4 max-w-xl mx-auto text-foreground/80 md:text-xl">
-                  Organisez votre événement en toute tranquillité, choisissez, on
-                  vous rappelle.
+                  {t('hero.subtitle')}
                 </p>
                 <div className="mt-8">
                   <BookingTrigger>
@@ -88,7 +89,7 @@ export default function Home() {
                       size="lg"
                       className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105"
                     >
-                      Réserver un service
+                      {t('hero.cta')}
                     </Button>
                   </BookingTrigger>
                 </div>
@@ -101,9 +102,9 @@ export default function Home() {
       <section id="services" className="py-16 md:py-24 bg-background">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center text-center mb-12">
-            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Nos Prestations</h2>
+            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">{t('services.title')}</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground md:text-xl">
-              Découvrez nos services conçus pour rendre votre événement mémorable.
+              {t('services.subtitle')}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -136,7 +137,7 @@ export default function Home() {
                   <CardFooter className="flex justify-between items-center bg-secondary/30 py-3 px-4">
                      <StarRating rating={service.rating} />
                      <BookingTrigger initialServiceId={service.id}>
-                        <Button variant="ghost" size="sm">Choisir <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm">{t('header.choose')} <ArrowRight className="ml-2 h-4 w-4" /></Button>
                      </BookingTrigger>
                   </CardFooter>
                 </Card>
@@ -149,9 +150,9 @@ export default function Home() {
       <section id="gallery" className="py-16 md:py-24 bg-secondary/50">
         <div className="container px-4 md:px-6">
            <div className="flex flex-col items-center text-center mb-12">
-            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Nos Réalisations</h2>
+            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">{t('gallery.title')}</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground md:text-xl">
-              Quelques souvenirs des moments inoubliables que nous avons aidé à créer.
+              {t('gallery.subtitle')}
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
@@ -182,9 +183,9 @@ export default function Home() {
       <section id="reviews" className="py-16 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center text-center mb-12">
-            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Ce que nos clients disent</h2>
+            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">{t('reviews_section.title')}</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground md:text-xl">
-              Votre confiance est notre plus belle récompense.
+              {t('reviews_section.subtitle')}
             </p>
           </div>
           <Carousel
@@ -231,7 +232,7 @@ export default function Home() {
       
       <footer id="contact" className="bg-primary text-primary-foreground mt-16">
         <div className="container py-8 text-center">
-            <p>&copy; <CurrentYear /> Inoubliable Events. Tous droits réservés.</p>
+            <p>&copy; <CurrentYear /> Inoubliable Events. {t('footer.copyright')}</p>
         </div>
       </footer>
       </main>
