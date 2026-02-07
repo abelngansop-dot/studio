@@ -80,7 +80,6 @@ export default function LoginPage() {
   };
 
   const handleAuthError = (error: any) => {
-    console.error(error);
     let description = 'Une erreur est survenue.';
     if (error instanceof FirebaseError) {
       switch (error.code) {
