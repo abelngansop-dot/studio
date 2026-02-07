@@ -19,6 +19,7 @@ import { Loader2, Star, PartyPopper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import Link from 'next/link';
+import { Label } from '@/components/ui/label';
 
 type LeaveReviewDialogProps = {
   isOpen: boolean;
