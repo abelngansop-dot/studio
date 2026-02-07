@@ -93,12 +93,6 @@ export default function Home() {
                         <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                         Chargement...
                       </Button>
-                  ) : user ? (
-                    <Button asChild size="lg" className={ctaButtonClass}>
-                        <Link href="/mes-reservations">
-                          {t('hero.manage_bookings')}
-                        </Link>
-                    </Button>
                   ) : (
                     <BookingTrigger>
                       <Button
