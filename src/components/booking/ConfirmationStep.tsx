@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, MessageSquare, AlertCircle, ArrowLeft, PartyPopper, Briefcase, Sparkles, ListChecks, Calendar, Clock, MapPin, Hourglass, Loader2, CheckCircle } from 'lucide-react';
+import { MessageSquare, Mail, AlertCircle, ArrowLeft, PartyPopper, Briefcase, Sparkles, ListChecks, Calendar, Clock, MapPin, Hourglass, Loader2, CheckCircle } from 'lucide-react';
 import type { BookingData } from '@/components/booking/BookingFlow';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -36,13 +36,31 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
     </div>
 );
 
+const generateBookingSummaryText = (bookingData: BookingData): string => {
+  const summaryLines = [
+    `Bonjour,`,
+    `Je souhaite confirmer ma demande de réservation pour un événement Inoubliable avec les détails suivants :`,
+    ``,
+    `Événement : ${bookingData.eventType}`,
+    `Service(s) : ${bookingData.services.join(', ')}`,
+    `Date : ${bookingData.date ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr }) : 'Non précisée'}`,
+    `Heure : ${bookingData.time || 'Non précisée'}`,
+    `Ville : ${bookingData.city || 'Non précisée'}`,
+    `Durée : ${bookingData.duration || 'Non précisée'}`,
+    ``,
+    `Merci de prendre contact avec moi pour finaliser.`,
+  ];
+  return summaryLines.join('\n');
+};
+
 
 export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBookingComplete }: ConfirmationStepProps) {
   const [email, setEmail] = useState(bookingData.email);
   const [phone, setPhone] = useState(bookingData.phone);
   const [consent, setConsent] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; phone?: string, consent?: string }>({});
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [phoneError, setPhoneError] = useState<string | undefined>();
+  const [consentError, setConsentError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -50,41 +68,30 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const isEmailValid = (email: string) => /^\S+@\S+\.\S+$/.test(email);
-  const isPhoneValid = (phone: string) => /^\+?[0-9\s-()]{8,}$/.test(phone);
+  const isEmailFormatValid = useMemo(() => (email ? /^\S+@\S+\.\S+$/.test(email) : false), [email]);
+  const isPhoneFormatValid = useMemo(() => (phone ? /^\+?[0-9\s-()]{8,}$/.test(phone) : false), [phone]);
 
-  const validate = () => {
-    const newErrors: { email?: string; phone?: string, consent?: string } = {};
-    if (!email) {
-      newErrors.email = 'Veuillez saisir un e-mail.';
-    } else if (!isEmailValid(email)) {
-      newErrors.email = 'Veuillez saisir un e-mail valide.';
-    }
-
-    if (!phone) {
-      newErrors.phone = 'Veuillez saisir un numéro de téléphone.';
-    } else if (!isPhoneValid(phone)) {
-        newErrors.phone = "Format du numéro de téléphone invalide."
-    }
-
-    if (!consent) {
-        newErrors.consent = "Vous devez accepter les conditions pour être contacté."
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }
-  
   useEffect(() => {
-    if (hasAttemptedSubmit) {
-      validate();
-    }
-  }, [email, phone, consent, hasAttemptedSubmit]);
+    if (email && !isEmailFormatValid) setEmailError('Email invalide.');
+    else setEmailError(undefined);
+  }, [email, isEmailFormatValid]);
+
+  useEffect(() => {
+    if (phone && !isPhoneFormatValid) setPhoneError('Téléphone invalide.');
+    else setPhoneError(undefined);
+  }, [phone, isPhoneFormatValid]);
+
+  useEffect(() => {
+    if (consent) setConsentError(undefined);
+  }, [consent]);
   
-  const handleFinalSubmit = async (contactMethod: 'call' | 'message') => {
-    setHasAttemptedSubmit(true);
-    if (!validate() || !firestore) {
-      return;
+  const handleConfirm = async (method: 'whatsapp' | 'email') => {
+    if (!consent) {
+        setConsentError("Vous devez accepter les conditions pour être contacté.");
+        return;
     }
+    
+    if (!firestore) return;
     setIsSubmitting(true);
 
     const bookingPayload = {
@@ -102,16 +109,19 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
       const bookingsCol = collection(firestore, 'bookings');
       await addDocumentNonBlocking(bookingsCol, bookingPayload);
 
-      setIsSubmitted(true); // Set submitted state on success
+      setIsSubmitted(true);
 
-      if (contactMethod === 'call') {
-        window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+      const summaryText = generateBookingSummaryText(bookingData);
+
+      if (method === 'whatsapp') {
+        const whatsappUrl = `https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${encodeURIComponent(summaryText)}`;
+        window.open(whatsappUrl, '_blank');
       } else {
-        const message = encodeURIComponent("Bonjour, je confirme ma réservation avec Inoubliable.");
-        window.open(`https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${message}`, '_blank');
+        const subject = "Confirmation de votre demande de réservation Inoubliable Events";
+        const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summaryText)}`;
+        window.location.href = mailtoUrl;
       }
 
-      // Automatically close after a delay
       setTimeout(() => {
           onBookingComplete();
       }, 3000);
@@ -127,8 +137,6 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
       setIsSubmitting(false);
     }
   };
-
-  const isFormValid = email && phone && consent && isEmailValid(email) && isPhoneValid(phone);
   
   const getEventIcon = () => {
     switch (bookingData.eventType) {
@@ -180,7 +188,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                     <CardContent className="space-y-6">
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="email" className={cn("font-semibold", errors.email && "text-destructive")}>Email</Label>
+                                <Label htmlFor="email" className={cn("font-semibold", emailError && "text-destructive")}>Email</Label>
                                 <Input
                                   id="email"
                                   type="email"
@@ -191,12 +199,12 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                                     setEmail(newValue);
                                     updateBookingData({ email: newValue });
                                   }}
-                                  className={cn(errors.email && 'border-destructive focus-visible:ring-destructive')}
+                                  className={cn(emailError && 'border-destructive focus-visible:ring-destructive')}
                                 />
-                                {errors.email && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{errors.email}</p>}
+                                {emailError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{emailError}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="phone" className={cn("font-semibold", errors.phone && "text-destructive")}>Téléphone</Label>
+                                <Label htmlFor="phone" className={cn("font-semibold", phoneError && "text-destructive")}>Téléphone</Label>
                                 <Input
                                   id="phone"
                                   type="tel"
@@ -207,13 +215,13 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                                     setPhone(newValue);
                                     updateBookingData({ phone: newValue });
                                   }}
-                                  className={cn(errors.phone && 'border-destructive focus-visible:ring-destructive')}
+                                  className={cn(phoneError && 'border-destructive focus-visible:ring-destructive')}
                                 />
-                                {errors.phone && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{errors.phone}</p>}
+                                {phoneError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{phoneError}</p>}
                             </div>
                         </div>
                         <div className="items-top flex space-x-3 pt-2">
-                            <Checkbox id="terms1" checked={consent} onCheckedChange={(checked) => setConsent(checked as boolean)} className={cn('mt-0.5', errors.consent && 'border-destructive')}/>
+                            <Checkbox id="terms1" checked={consent} onCheckedChange={(checked) => setConsent(checked as boolean)} className={cn('mt-0.5', consentError && 'border-destructive')}/>
                             <div className="grid gap-1.5 leading-none">
                                 <label
                                 htmlFor="terms1"
@@ -224,7 +232,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                                 <p className="text-sm text-muted-foreground">
                                 J’accepte que mon numéro et mon e-mail soient utilisés pour être contacté par l’équipe Inoubliable.
                                 </p>
-                                {errors.consent && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{errors.consent}</p>}
+                                {consentError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{consentError}</p>}
                             </div>
                         </div>
                     </CardContent>
@@ -257,15 +265,15 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                     <CardFooter className="flex-col gap-4 pt-6 bg-secondary/30">
                         <p className="text-xs text-center text-muted-foreground px-4">En confirmant, notre équipe vous contactera pour établir le devis final.</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleFinalSubmit('call')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                              {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                              <Phone className="mr-2 h-5 w-5" />
-                              Confirmer par Appel
-                            </Button>
-                            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleFinalSubmit('message')}>
+                            <Button size="lg" disabled={!isPhoneFormatValid || !consent || isSubmitting} onClick={() => handleConfirm('whatsapp')} className="bg-green-600 hover:bg-green-700 text-white">
                               {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                               <MessageSquare className="mr-2 h-5 w-5" />
-                              Confirmer par Message
+                              Confirmer par WhatsApp
+                            </Button>
+                            <Button size="lg" disabled={!isEmailFormatValid || !consent || isSubmitting} onClick={() => handleConfirm('email')}>
+                              {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                              <Mail className="mr-2 h-5 w-5" />
+                              Confirmer par Email
                             </Button>
                         </div>
                     </CardFooter>
