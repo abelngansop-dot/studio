@@ -21,10 +21,10 @@ export type Booking = {
   id: string;
   userId: string;
   eventType: string;
-  services: string[];
-  date: { seconds: number; nanoseconds: number };
+  services?: string[];
+  date?: { seconds: number; nanoseconds: number };
   status: 'pending' | 'confirmed' | 'cancelled';
-  contactInfo: {
+  contactInfo?: {
     email: string;
   };
 };
@@ -39,7 +39,7 @@ export const columns: ColumnDef<Booking>[] = [
       if (status === 'confirmed') variant = 'default';
       if (status === 'cancelled') variant = 'destructive';
 
-      return <Badge variant={variant} className="capitalize">{status}</Badge>;
+      return <Badge variant={variant} className="capitalize">{status || 'N/A'}</Badge>;
     },
   },
   {
@@ -56,7 +56,8 @@ export const columns: ColumnDef<Booking>[] = [
       );
     },
     cell: ({ row }) => {
-      return <div className="lowercase">{row.original.contactInfo.email}</div>
+      const email = row.getValue('contactInfo.email') as string | undefined;
+      return <div className="lowercase">{email || 'Non renseigné'}</div>
     }
   },
   {
@@ -70,15 +71,15 @@ export const columns: ColumnDef<Booking>[] = [
     accessorKey: 'services',
     header: 'Services',
     cell: ({ row }) => {
-      const services = row.getValue('services') as string[];
-      return <div className="capitalize truncate max-w-xs">{services.join(', ')}</div>;
+      const services = row.getValue('services') as string[] | undefined;
+      return <div className="capitalize truncate max-w-xs">{Array.isArray(services) ? services.join(', ') : 'N/A'}</div>;
     },
   },
   {
     accessorKey: 'date',
     header: 'Date',
     cell: ({ row }) => {
-      const date = row.getValue('date') as { seconds: number, nanoseconds: number };
+      const date = row.getValue('date') as { seconds: number, nanoseconds: number } | undefined;
       const formattedDate = date ? format(new Date(date.seconds * 1000), 'd MMMM yyyy', { locale: fr }) : 'N/A';
       return <div>{formattedDate}</div>;
     },
