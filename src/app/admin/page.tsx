@@ -7,18 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth, useUser } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoginView, setIsLoginView] = useState(true);
+  
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
 
   // Redirects the user to the dashboard if they are already logged in.
@@ -28,50 +32,63 @@ export default function AdminLoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: "Le service d'authentification n'est pas disponible.",
-      });
+    if (!auth || !firestore) {
+      toast({ variant: 'destructive', title: 'Erreur', description: "Les services Firebase ne sont pas disponibles." });
       return;
     }
     setIsSubmitting(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: 'Connexion réussie !',
-        description: 'Bienvenue sur votre tableau de bord.',
-      });
-      // On success, the useEffect hook above will handle redirection.
+      if (isLoginView) {
+        await signInWithEmailAndPassword(auth, email, password);
+        toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
+      } else {
+        // Registration Logic
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const newUser = userCredential.user;
+        
+        // Create the user document with the default 'client' role.
+        // This is a secure operation allowed by Firestore rules.
+        const userDocRef = doc(firestore, 'users', newUser.uid);
+        await setDoc(userDocRef, {
+            uid: newUser.uid,
+            email: newUser.email,
+            displayName: newUser.displayName,
+            photoURL: newUser.photoURL,
+            role: 'client', // Always create as a non-privileged user first.
+            createdAt: serverTimestamp()
+        });
+        
+        toast({ title: 'Compte créé !', description: 'Veuillez maintenant vous connecter et suivre les instructions pour devenir administrateur.' });
+        setIsLoginView(true); // Switch to login view after successful registration
+      }
     } catch (error) {
       console.error(error);
       let description = 'Une erreur est survenue.';
       if (error instanceof FirebaseError) {
         switch (error.code) {
           case 'auth/user-not-found':
+            description = 'Aucun compte trouvé pour cet email.';
+            break;
           case 'auth/wrong-password':
           case 'auth/invalid-credential':
             description = 'Email ou mot de passe invalide.';
+            break;
+          case 'auth/email-already-in-use':
+            description = 'Un compte existe déjà avec cette adresse email.';
             break;
           default:
             description = "Une erreur inconnue est survenue. Veuillez réessayer.";
         }
       }
-      toast({
-        variant: 'destructive',
-        title: 'Échec de la connexion',
-        description: description,
-      });
+      toast({ variant: 'destructive', title: isLoginView ? 'Échec de la connexion' : "Échec de l'inscription", description });
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // While checking auth state, show a generic loader.
   if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -81,8 +98,7 @@ export default function AdminLoginPage() {
     );
   }
 
-  // If user is logged in, show a redirection message while useEffect redirects.
-  if (user) {
+  if (user && !isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -91,18 +107,17 @@ export default function AdminLoginPage() {
     );
   }
 
-  // If not loading and no user, show the login form.
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader>
-          <CardTitle className="text-2xl">Accès Administrateur</CardTitle>
+          <CardTitle className="text-2xl">{isLoginView ? 'Accès Administrateur' : 'Créer un Compte'}</CardTitle>
           <CardDescription>
-            Entrez vos identifiants pour accéder à votre tableau de bord.
+            {isLoginView ? "Entrez vos identifiants pour accéder à votre tableau de bord." : "Créez un compte, puis connectez-vous."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -128,9 +143,15 @@ export default function AdminLoginPage() {
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Se connecter
+              {isLoginView ? 'Se connecter' : "S'inscrire"}
             </Button>
           </form>
+           <div className="mt-4 text-center text-sm">
+              {isLoginView ? "Besoin d'un compte ?" : "Déjà un compte ?"}
+              <Button variant="link" onClick={() => setIsLoginView(!isLoginView)}>
+               {isLoginView ? "S'inscrire" : "Se connecter"}
+              </Button>
+           </div>
         </CardContent>
       </Card>
     </div>
