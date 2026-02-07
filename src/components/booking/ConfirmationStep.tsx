@@ -36,7 +36,7 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
     </div>
 );
 
-const generateBookingSummaryText = (bookingData: BookingData): string => {
+const generateBookingSummaryText = (bookingData: any): string => {
   const summaryLines = [
     `Bonjour,`,
     `Je souhaite confirmer ma demande de réservation pour un événement Inoubliable avec les détails suivants :`,
@@ -48,7 +48,9 @@ const generateBookingSummaryText = (bookingData: BookingData): string => {
     `Ville : ${bookingData.city || 'Non précisée'}`,
     `Durée : ${bookingData.duration || 'Non précisée'}`,
     ``,
-    `Merci de prendre contact avec moi pour finaliser.`,
+    `Merci de me recontacter aux coordonnées suivantes pour finaliser le devis :`,
+    `Email : ${bookingData.contactInfo.email}`,
+    `Téléphone : ${bookingData.contactInfo.phone}`,
   ];
   return summaryLines.join('\n');
 };
@@ -100,8 +102,8 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
       status: 'pending',
       createdAt: serverTimestamp(),
       contactInfo: {
-        email: bookingData.email,
-        phone: bookingData.phone
+        email: email,
+        phone: phone
       }
     };
     
@@ -111,14 +113,16 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
 
       setIsSubmitted(true);
 
-      const summaryText = generateBookingSummaryText(bookingData);
+      const summaryText = generateBookingSummaryText(bookingPayload);
+      const businessWhatsapp = "491637100993";
+      const businessEmail = "whyseekassistance@gmail.com";
 
       if (method === 'whatsapp') {
-        const whatsappUrl = `https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${encodeURIComponent(summaryText)}`;
+        const whatsappUrl = `https://wa.me/${businessWhatsapp}?text=${encodeURIComponent(summaryText)}`;
         window.open(whatsappUrl, '_blank');
-      } else {
-        const subject = "Confirmation de votre demande de réservation Inoubliable Events";
-        const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summaryText)}`;
+      } else { // method === 'email'
+        const subject = `Demande de réservation Inoubliable : ${bookingData.eventType}`;
+        const mailtoUrl = `mailto:${businessEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summaryText)}`;
         window.location.href = mailtoUrl;
       }
 
