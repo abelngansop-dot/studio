@@ -15,12 +15,13 @@ import { Loader2 } from 'lucide-react';
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
 
+  // Redirects the user to the dashboard if they are already logged in.
   useEffect(() => {
     if (!isUserLoading && user) {
       router.replace('/admin/dashboard');
@@ -37,7 +38,7 @@ export default function AdminLoginPage() {
       });
       return;
     }
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -45,7 +46,7 @@ export default function AdminLoginPage() {
         title: 'Connexion réussie !',
         description: 'Bienvenue sur votre tableau de bord.',
       });
-      // On success, the useEffect hook will handle redirection.
+      // On success, the useEffect hook above will handle redirection.
     } catch (error) {
       console.error(error);
       let description = 'Une erreur est survenue.';
@@ -66,19 +67,31 @@ export default function AdminLoginPage() {
         description: description,
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-
-  if (isUserLoading || user) {
+  
+  // While checking auth state, show a generic loader.
+  if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="ml-2">Redirection...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Vérification...</p>
       </div>
     );
   }
 
+  // If user is logged in, show a redirection message while useEffect redirects.
+  if (user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Redirection...</p>
+      </div>
+    );
+  }
+
+  // If not loading and no user, show the login form.
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
@@ -99,7 +112,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </div>
             <div className="grid gap-2">
@@ -110,11 +123,11 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Se connecter
             </Button>
           </form>
