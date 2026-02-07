@@ -11,7 +11,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'fire
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -48,14 +48,14 @@ export default function AdminLoginPage() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const newUser = userCredential.user;
         
-        // Create user document in Firestore
+        // Create user document in Firestore with superadmin role
         const userDocRef = doc(firestore, 'users', newUser.uid);
         await setDoc(userDocRef, {
             uid: newUser.uid,
             email: newUser.email,
             displayName: newUser.displayName || email.split('@')[0],
             photoURL: newUser.photoURL,
-            role: 'superadmin', // Give superadmin role as requested
+            role: 'superadmin',
             createdAt: serverTimestamp()
         });
 
@@ -64,7 +64,26 @@ export default function AdminLoginPage() {
           description: 'Vous êtes maintenant connecté avec les droits de super administrateur.',
         });
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // Ensure user has a role document in Firestore.
+        // This handles cases where a user was created in Auth but not in Firestore.
+        const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (!userDocSnap.exists()) {
+          // If the user document doesn't exist, create it with superadmin role.
+          // This is a failsafe for the admin user.
+          await setDoc(userDocRef, {
+            uid: userCredential.user.uid,
+            email: userCredential.user.email,
+            displayName: userCredential.user.displayName || email.split('@')[0],
+            photoURL: userCredential.user.photoURL,
+            role: 'superadmin',
+            createdAt: serverTimestamp()
+          });
+        }
+        
         toast({
           title: 'Connexion réussie !',
           description: 'Bienvenue sur votre tableau de bord.',
