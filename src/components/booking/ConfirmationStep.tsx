@@ -13,6 +13,10 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
 
 type ConfirmationStepProps = {
   bookingData: BookingData;
@@ -41,6 +45,10 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
   const isEmailValid = (email: string) => /^\S+@\S+\.\S+$/.test(email);
   const isPhoneValid = (phone: string) => /^\+?[0-9\s-()]{8,}$/.test(phone);
@@ -72,25 +80,51 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
     }
   }, [email, phone, consent, hasAttemptedSubmit]);
   
-  const handleContactClick = (contactMethod: 'call' | 'message') => {
+  const handleFinalSubmit = async (contactMethod: 'call' | 'message') => {
     setHasAttemptedSubmit(true);
-    if (validate()) {
-      setIsSubmitting(true);
-      // Simulate backend submission
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setIsSubmitted(true);
-        if (contactMethod === 'call') {
-          window.location.href = `tel:${phone.replace(/\s/g, '')}`;
-        } else {
-          const message = encodeURIComponent("Bonjour, je confirme ma réservation avec Inoubliable.");
-          window.open(`https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${message}`, '_blank');
-        }
-        setTimeout(() => {
-            onBookingComplete();
-        }, 3000);
+    if (!validate() || !firestore) {
+      return;
+    }
+    setIsSubmitting(true);
 
-      }, 1500)
+    const bookingPayload = {
+      ...bookingData,
+      userId: user?.uid || null,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      contactInfo: {
+        email: bookingData.email,
+        phone: bookingData.phone
+      }
+    };
+    
+    try {
+      const bookingsCol = collection(firestore, 'bookings');
+      await addDocumentNonBlocking(bookingsCol, bookingPayload);
+
+      setIsSubmitted(true); // Set submitted state on success
+
+      if (contactMethod === 'call') {
+        window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+      } else {
+        const message = encodeURIComponent("Bonjour, je confirme ma réservation avec Inoubliable.");
+        window.open(`https://wa.me/${phone.replace(/[\s+()-]/g, '')}?text=${message}`, '_blank');
+      }
+
+      // Automatically close after a delay
+      setTimeout(() => {
+          onBookingComplete();
+      }, 3000);
+
+    } catch (error) {
+      console.error("Error saving booking:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Votre réservation n\'a pas pu être sauvegardée. Veuillez réessayer.'
+      })
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -215,12 +249,12 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
            </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleContactClick('call')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleFinalSubmit('call')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               <Phone className="mr-2 h-5 w-5" />
               Confirmer par Appel
             </Button>
-            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleContactClick('message')}>
+            <Button size="lg" disabled={!isFormValid || isSubmitting} onClick={() => handleFinalSubmit('message')}>
               {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
               <MessageSquare className="mr-2 h-5 w-5" />
               Confirmer par Message

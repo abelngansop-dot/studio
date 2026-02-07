@@ -5,9 +5,13 @@ import { Button } from './ui/button';
 import { BookingTrigger } from './booking/BookingTrigger';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTranslation } from '@/hooks/use-translation';
+import { useUser } from '@/firebase';
+import { UserNav } from './UserNav';
+import { Skeleton } from './ui/skeleton';
 
 export function Header() {
   const { t } = useTranslation();
+  const { user, isUserLoading } = useUser();
 
   return (
     <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-50 border-b">
@@ -18,7 +22,7 @@ export function Header() {
         >
           Inoubliable
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <nav className="hidden md:flex gap-1">
             <Button variant="ghost" asChild>
               <Link href="/#services">{t('header.services')}</Link>
@@ -30,10 +34,25 @@ export function Header() {
               <Link href="/#contact">{t('header.contact')}</Link>
             </Button>
           </nav>
-          <BookingTrigger>
-            <Button className="rounded-full shadow-lg">{t('header.book')}</Button>
-          </BookingTrigger>
-          <LanguageSwitcher />
+          
+          <div className='flex items-center gap-1'>
+            {isUserLoading ? (
+              <Skeleton className="h-10 w-24 rounded-full" />
+            ) : user ? (
+              <UserNav user={user} />
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Se connecter</Link>
+                </Button>
+                <BookingTrigger>
+                  <Button className="rounded-full shadow-lg">{t('header.book')}</Button>
+                </BookingTrigger>
+              </>
+            )}
+            <LanguageSwitcher />
+          </div>
+
         </div>
       </div>
     </header>
