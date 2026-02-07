@@ -1,36 +1,23 @@
 'use client';
 
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './columns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-export default function BookingsPage() {
-  const firestore = useFirestore();
-  
-  const bookingsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+/**
+ * This page is a temporary redirect to the correct admin path.
+ */
+export default function RedirectPage() {
+  const router = useRouter();
 
-  // The hook will return this type, but we must cast it for use in the data-table
-  const { data: bookings, isLoading } = useCollection<any>(bookingsQuery);
-
-  if (isLoading) {
-    return <div>Chargement des réservations...</div>;
-  }
+  useEffect(() => {
+    router.replace('/admin/bookings');
+  }, [router]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Réservations</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <DataTable columns={columns} data={bookings || []} />
-      </CardContent>
-    </Card>
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="text-center">
+        <p className="text-lg text-muted-foreground">Redirection en cours...</p>
+      </div>
+    </div>
   );
 }
