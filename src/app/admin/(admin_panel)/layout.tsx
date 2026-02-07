@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
-import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
@@ -28,7 +27,6 @@ export default function AdminLayout({
   const auth = useAuth();
   const firestore = useFirestore();
   const pathname = usePathname();
-  const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   const userDocRef = useMemoFirebase(() => {
@@ -54,22 +52,12 @@ export default function AdminLayout({
             setIsAuthorized(true);
         } else {
             setIsAuthorized(false);
-            toast({
-                variant: 'destructive',
-                title: 'Accès refusé',
-                description: 'Vous n\'avez pas les autorisations nécessaires pour accéder à cette page.',
-            });
         }
     } else if (user && !userProfile) {
         // User exists but has no profile document, definitely not an admin.
         setIsAuthorized(false);
-        toast({
-            variant: 'destructive',
-            title: 'Accès refusé',
-            description: 'Vous n\'avez pas les autorisations nécessaires pour accéder à cette page.',
-        });
     }
-  }, [user, isUserLoading, userProfile, isProfileLoading, router, toast]);
+  }, [user, isUserLoading, userProfile, isProfileLoading, router]);
 
   const handleLogout = async () => {
     if (auth) {
