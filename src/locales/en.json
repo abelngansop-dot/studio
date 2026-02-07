@@ -9,7 +9,8 @@
   "hero": {
     "title": "Inoubliable",
     "subtitle": "Organize your event with peace of mind, make your choice, and we'll call you back.",
-    "cta": "Book a service"
+    "cta": "Book a service",
+    "manage_bookings": "Manage my bookings"
   },
   "services": {
     "title": "Our Services",

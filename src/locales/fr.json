@@ -9,7 +9,8 @@
   "hero": {
     "title": "Inoubliable",
     "subtitle": "Organisez votre événement en toute tranquillité, choisissez, on vous rappelle.",
-    "cta": "Réserver un service"
+    "cta": "Réserver un service",
+    "manage_bookings": "Gérer mes réservations"
   },
   "services": {
     "title": "Nos Prestations",

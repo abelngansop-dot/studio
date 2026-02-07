@@ -9,7 +9,8 @@
   "hero": {
     "title": "Inoubliable",
     "subtitle": "Organisieren Sie Ihre Veranstaltung in aller Ruhe, treffen Sie Ihre Wahl, wir rufen Sie zurück.",
-    "cta": "Dienstleistung buchen"
+    "cta": "Dienstleistung buchen",
+    "manage_bookings": "Meine Buchungen verwalten"
   },
   "services": {
     "title": "Unsere Leistungen",

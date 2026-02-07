@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { services } from '@/lib/data';
 import { testimonials, type Testimonial } from '@/lib/testimonials';
 import { cn } from '@/lib/utils';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight, Star, Loader2 } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -22,6 +22,7 @@ import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { CurrentYear } from '@/components/CurrentYear';
 import { Header } from '@/components/Header';
 import { useTranslation } from '@/hooks/use-translation';
+import { useUser } from '@/firebase';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -54,7 +55,10 @@ const galleryImages = [
 
 export default function Home() {
   const { t } = useTranslation();
+  const { user, isUserLoading } = useUser();
   const heroImage = PlaceHolderImages.find((p) => p.id === 'hero-background');
+  const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
+
 
   return (
     <div className="bg-background">
@@ -84,14 +88,27 @@ export default function Home() {
                   {t('hero.subtitle')}
                 </p>
                 <div className="mt-8">
-                  <BookingTrigger>
-                    <Button
-                      size="lg"
-                      className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105"
-                    >
-                      {t('hero.cta')}
+                  {isUserLoading ? (
+                     <Button size="lg" className={ctaButtonClass} disabled>
+                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                        Chargement...
+                      </Button>
+                  ) : user ? (
+                    <Button asChild size="lg" className={ctaButtonClass}>
+                        <Link href="/mes-reservations">
+                          {t('hero.manage_bookings')}
+                        </Link>
                     </Button>
-                  </BookingTrigger>
+                  ) : (
+                    <BookingTrigger>
+                      <Button
+                        size="lg"
+                        className={ctaButtonClass}
+                      >
+                        {t('hero.cta')}
+                      </Button>
+                    </BookingTrigger>
+                  )}
                 </div>
               </CardContent>
             </Card>
