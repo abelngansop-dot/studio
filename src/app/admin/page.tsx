@@ -66,22 +66,24 @@ export default function AdminLoginPage() {
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
-        // Ensure user has a role document in Firestore.
-        // This handles cases where a user was created in Auth but not in Firestore.
         const userDocRef = doc(firestore, 'users', userCredential.user.uid);
         const userDocSnap = await getDoc(userDocRef);
 
-        if (!userDocSnap.exists()) {
-          // If the user document doesn't exist, create it with superadmin role.
-          // This is a failsafe for the admin user.
-          await setDoc(userDocRef, {
-            uid: userCredential.user.uid,
-            email: userCredential.user.email,
-            displayName: userCredential.user.displayName || email.split('@')[0],
-            photoURL: userCredential.user.photoURL,
-            role: 'superadmin',
-            createdAt: serverTimestamp()
-          });
+        if (userDocSnap.exists()) {
+            // Document exists, check if role is correct. If not, update it.
+            if (userDocSnap.data().role !== 'superadmin') {
+                await setDoc(userDocRef, { role: 'superadmin' }, { merge: true });
+            }
+        } else {
+            // Document does not exist, create it with the superadmin role.
+            await setDoc(userDocRef, {
+                uid: userCredential.user.uid,
+                email: userCredential.user.email,
+                displayName: userCredential.user.displayName || email.split('@')[0],
+                photoURL: userCredential.user.photoURL,
+                role: 'superadmin',
+                createdAt: serverTimestamp()
+            });
         }
         
         toast({
