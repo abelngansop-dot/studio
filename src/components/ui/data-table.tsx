@@ -52,21 +52,23 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const filterableColumnIds = ["displayName", "name", "contactInfo.email"];
+  const allColumnIds = table.getAllColumns().map(c => c.id);
+  const availableFilterColumnId = filterableColumnIds.find(id => allColumnIds.includes(id));
+
   return (
     <div>
         <div className="flex items-center py-4">
-            <Input
-            placeholder="Filtrer..."
-            value={(table.getColumn("displayName")?.getFilterValue() as string) ?? (table.getColumn("name")?.getFilterValue() as string) ?? (table.getColumn("contactInfo.email")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-                {
-                  table.getColumn("displayName")?.setFilterValue(event.target.value)
-                  table.getColumn("name")?.setFilterValue(event.target.value)
-                  table.getColumn("contactInfo.email")?.setFilterValue(event.target.value)
-                }
-            }
-            className="max-w-sm"
-            />
+            {availableFilterColumnId && (
+              <Input
+              placeholder="Filtrer..."
+              value={(table.getColumn(availableFilterColumnId)?.getFilterValue() as string) ?? ""}
+              onChange={(event) =>
+                  table.getColumn(availableFilterColumnId)?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+              />
+            )}
       </div>
       <div className="rounded-md border">
         <Table>
