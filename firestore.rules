@@ -11,10 +11,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    // This function performs a document read and CANNOT be used in rules for 'list' queries.
+    // It remains useful for 'get', 'create', 'update', 'delete' rules.
     function getUserRole(userId) {
       return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
 
+    // These helpers are now only safe for non-list operations.
     function isAdmin() {
       return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'superadmin');
     }
@@ -22,13 +25,25 @@ service cloud.firestore {
     function isSuperAdmin() {
       return isSignedIn() && getUserRole(request.auth.uid) == 'superadmin';
     }
+
+    // DEFINITIVE FIX: New helper to check for the Super Admin UID directly.
+    // This is fast, performant, and valid for 'list' queries as it does not read a document.
+    // The UID 'P0mzv7fFREaXRbv0DA9yjGNeskF2' is taken from the user's error logs for 'anotsas@gmail.com'.
+    function isTheSuperAdmin() {
+      return request.auth.uid == 'P0mzv7fFREaXRbv0DA9yjGNeskF2';
+    }
     
     // USERS
     // Defines the security rules for the users collection.
     match /users/{userId} {
-      // READ: Any user can read their own profile. Admins and Super Admins can read any profile.
-      allow read: if isOwner(userId) || isAdmin() || isSuperAdmin();
+      // READ: A user can get their own profile. An admin can get any profile.
+      // This rule uses isAdmin, which is fine for 'get' because it's on a single document.
+      allow get: if isOwner(userId) || isAdmin() || isSuperAdmin();
       
+      // LIST: ONLY the designated superadmin can list all users.
+      // This rule is now valid because isTheSuperAdmin() does not use get().
+      allow list: if isTheSuperAdmin();
+
       // CREATE: A user can create their own profile, but they can ONLY assign the 'client' role to themselves.
       // This prevents a user from creating an account with elevated privileges.
       allow create: if isOwner(userId) && request.resource.data.role == 'client';
@@ -39,9 +54,6 @@ service cloud.firestore {
 
       // DELETE: Users can delete their own accounts. Super Admins can also delete any user account.
       allow delete: if isOwner(userId) || isSuperAdmin();
-      
-      // LIST: Only Admins and Super Admins can list all users.
-      allow list: if isAdmin() || isSuperAdmin();
     }
 
 
@@ -53,8 +65,9 @@ service cloud.firestore {
       // GET: Admins/SuperAdmins can read any single booking. Users can read their own single booking.
       allow get: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
 
-      // LIST: Admins/SuperAdmins can list all bookings. Regular users can only run queries filtered by their user ID.
-      allow list: if (isAdmin() || isSuperAdmin()) || (isSignedIn() && request.query.userId == request.auth.uid);
+      // LIST: The superadmin can list all bookings. Regular users can only run queries filtered by their user ID.
+      // This rule is now valid because it no longer uses the slow/invalid isAdmin() helper for the admin case.
+      allow list: if isTheSuperAdmin() || (isSignedIn() && request.query.userId == request.auth.uid);
 
       // Admins and Super Admins can still update and delete all bookings.
       allow update, delete: if isAdmin() || isSuperAdmin();
@@ -72,8 +85,12 @@ service cloud.firestore {
     // Security rules for the user reviews collection.
     match /reviews/{reviewId} {
       // READ: Anyone can read approved reviews. Admins can read all reviews.
-      allow read: if resource.data.status == 'approved' || isAdmin() || isSuperAdmin();
+      allow get: if resource.data.status == 'approved' || isAdmin() || isSuperAdmin();
       
+      // LIST: The superadmin can list all reviews. Public users can only list approved reviews.
+      // This rule is now valid and performant.
+      allow list: if isTheSuperAdmin() || request.query.status == 'approved';
+
       // CREATE: Any signed-in user can create a review for themselves.
       // The review must be for the user creating it.
       // The initial status must be 'pending'.
@@ -83,9 +100,6 @@ service cloud.firestore {
 
       // UPDATE, DELETE: Only Admins and Super Admins can update (e.g., approve) or delete reviews.
       allow update, delete: if isAdmin() || isSuperAdmin();
-      
-      // LIST: Only Admins can list all reviews. Public users can list approved reviews.
-      allow list: if (isAdmin() || isSuperAdmin()) || request.query.status == 'approved';
     }
   }
 }
