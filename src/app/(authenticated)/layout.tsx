@@ -1,10 +1,11 @@
 'use client';
 
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Header } from '@/components/Header';
+import { useNavigationHistory } from '@/hooks/use-navigation-history';
 
 export default function AuthenticatedLayout({
   children,
@@ -13,12 +14,15 @@ export default function AuthenticatedLayout({
 }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const { saveLastRoute } = useNavigationHistory();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
+      saveLastRoute(pathname);
       router.replace('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, pathname, saveLastRoute]);
 
   if (isUserLoading || !user) {
     return (

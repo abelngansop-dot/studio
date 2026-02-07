@@ -10,6 +10,7 @@ import { DetailsStep } from '@/components/booking/DetailsStep';
 import { ConfirmationStep } from '@/components/booking/ConfirmationStep';
 import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useBookingProgress } from '@/hooks/use-booking-progress';
 
 
 export type BookingData = {
@@ -44,16 +45,11 @@ type BookingFlowProps = {
 export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const [bookingData, setBookingData] =
-    useState<BookingData>({
-        ...initialBookingData,
-        services: initialServiceId ? [initialServiceId] : []
-    });
+  const { bookingData, updateBookingData, clearBookingProgress } = useBookingProgress({
+    ...initialBookingData,
+    services: initialServiceId ? [initialServiceId] : []
+  });
   const [isConfirmed, setIsConfirmed] = useState(false);
-
-  const updateBookingData = (data: Partial<BookingData>) => {
-    setBookingData((prev) => ({ ...prev, ...data }));
-  };
 
   const nextStep = () => {
     if (step < TOTAL_STEPS) {
@@ -74,6 +70,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
   };
   
   const handleBookingComplete = () => {
+    clearBookingProgress();
     closeModal();
     toast({
       title: "Votre demande a été envoyée !",

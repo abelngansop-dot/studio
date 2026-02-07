@@ -14,6 +14,7 @@ import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useNavigationHistory } from '@/hooks/use-navigation-history';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -25,6 +26,12 @@ export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
+  const { popLastRoute } = useNavigationHistory();
+
+  const handleSuccess = () => {
+    const lastRoute = popLastRoute();
+    router.push(lastRoute || '/mes-reservations');
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +40,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Connexion réussie !' });
-      router.push('/mes-reservations');
+      handleSuccess();
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -62,7 +69,7 @@ export default function LoginPage() {
       setDocumentNonBlocking(userDocRef, newUser, { merge: false });
 
       toast({ title: 'Compte créé avec succès !' });
-      router.push('/mes-reservations');
+      handleSuccess();
 
     } catch (error) {
       handleAuthError(error);

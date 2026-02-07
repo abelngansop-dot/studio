@@ -2,14 +2,17 @@
 
 import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Users, LineChart, Loader2 } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 type UserProfile = {
   role: 'client' | 'admin' | 'superadmin';
@@ -25,6 +28,8 @@ export default function AdminLayout({
   const auth = useAuth();
   const firestore = useFirestore();
   const pathname = usePathname();
+  const { toast } = useToast();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -34,25 +39,37 @@ export default function AdminLayout({
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    // If auth state is resolved and there's no user, redirect to login.
-    if (!isUserLoading && !user) {
-      router.replace('/admin');
-      return;
-    }
-    
-    // If we have a user but their profile is still loading, we wait.
-    if (user && !isProfileLoading && userProfile) {
-      const allowedRoles = ['admin', 'superadmin'];
-      // If the profile is loaded and the role is not sufficient, redirect to home.
-      if (!allowedRoles.includes(userProfile.role)) {
-        router.replace('/');
-      }
-    } else if (user && !isProfileLoading && !userProfile) {
-      // If the user exists but has no profile document, they are not an admin.
-      router.replace('/');
+    if (isUserLoading || isProfileLoading) {
+      return; // Wait for all data to load
     }
 
-  }, [user, isUserLoading, userProfile, isProfileLoading, router]);
+    if (!user) {
+        router.replace('/admin'); // Not logged in, go to login page
+        return;
+    }
+
+    if (user && userProfile) {
+        const allowedRoles = ['admin', 'superadmin'];
+        if (allowedRoles.includes(userProfile.role)) {
+            setIsAuthorized(true);
+        } else {
+            setIsAuthorized(false);
+            toast({
+                variant: 'destructive',
+                title: 'Accès refusé',
+                description: 'Vous n\'avez pas les autorisations nécessaires pour accéder à cette page.',
+            });
+        }
+    } else if (user && !userProfile) {
+        // User exists but has no profile document, definitely not an admin.
+        setIsAuthorized(false);
+        toast({
+            variant: 'destructive',
+            title: 'Accès refusé',
+            description: 'Vous n\'avez pas les autorisations nécessaires pour accéder à cette page.',
+        });
+    }
+  }, [user, isUserLoading, userProfile, isProfileLoading, router, toast]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -65,7 +82,7 @@ export default function AdminLayout({
   const isActive = (path: string) => pathname === path;
 
   // Show a full-screen loader while checking auth state or profile.
-  if (isUserLoading || isProfileLoading || !user || !userProfile) {
+  if (isUserLoading || isProfileLoading || isAuthorized === null) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -74,10 +91,23 @@ export default function AdminLayout({
     );
   }
   
-  // Final check before rendering children, if role is insufficient, render nothing to avoid flicker.
-  const allowedRoles = ['admin', 'superadmin'];
-  if (!allowedRoles.includes(userProfile.role)) {
-    return null; 
+  if (isAuthorized === false) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background p-4">
+           <Alert variant="destructive" className="max-w-md">
+              <ShieldAlert className="h-4 w-4" />
+              <AlertTitle>Accès non autorisé</AlertTitle>
+              <AlertDescription>
+                Vous n'avez pas les permissions requises pour voir cette page. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur du site.
+                <div className="mt-4">
+                    <Button variant="outline" onClick={() => router.replace('/')}>
+                        Retour à l'accueil
+                    </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+        </div>
+    );
   }
 
   return (
