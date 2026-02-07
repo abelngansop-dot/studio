@@ -50,10 +50,11 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       
-      // READ (GET/LIST): Admins/SuperAdmins can read any booking. Users can read their own bookings.
-      // This combined rule is necessary for both the user-facing "Mes Réservations" page
-      // and the admin panel to function correctly.
-      allow read: if (isAdmin() || isSuperAdmin()) || isOwner(resource.data.userId);
+      // GET: Admins/SuperAdmins can read any single booking. Users can read their own single booking.
+      allow get: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
+
+      // LIST: Admins/SuperAdmins can list all bookings. Regular users can only run queries filtered by their user ID.
+      allow list: if isAdmin() || isSuperAdmin() || (isSignedIn() && request.query.get('userId') == request.auth.uid);
 
       // Admins and Super Admins can still update and delete all bookings.
       allow update, delete: if isAdmin() || isSuperAdmin();
