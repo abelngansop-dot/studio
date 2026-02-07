@@ -52,7 +52,7 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow list: if isSignedIn();
-      allow read: if isAdmin() || isSuperAdmin() || (isOwner(resource.data.userId));
+      allow get: if isAdmin() || isSuperAdmin() || (isOwner(resource.data.userId));
       allow update, delete: if isAdmin() || isSuperAdmin();
     }
 
