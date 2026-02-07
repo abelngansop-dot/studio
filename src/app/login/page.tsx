@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -131,6 +132,11 @@ export default function LoginPage() {
                   Se connecter
                 </Button>
               </form>
+               <div className="mt-4 text-center text-sm">
+                <Button variant="link" asChild className="text-muted-foreground">
+                    <Link href="/">Retour à l'accueil</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -161,6 +167,11 @@ export default function LoginPage() {
                   Créer mon compte
                 </Button>
               </form>
+              <div className="mt-4 text-center text-sm">
+                <Button variant="link" asChild className="text-muted-foreground">
+                    <Link href="/">Retour à l'accueil</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
