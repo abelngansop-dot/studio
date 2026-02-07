@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { useAuth, useFirestore, useUser } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -25,14 +25,6 @@ export default function AdminLoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
-
-  // Redirects the user to the dashboard if they are already logged in.
-  useEffect(() => {
-    if (!isUserLoading && user) {
-      router.replace('/admin/dashboard');
-    }
-  }, [user, isUserLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,26 +38,21 @@ export default function AdminLoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const authenticatedUser = userCredential.user;
 
-      // RADICAL FIX: Check for user profile and create if it's the first time for the superadmin.
-      // This solves the "user exists in Auth but not in Firestore" problem which causes the auth guard to fail.
       const userDocRef = doc(firestore, "users", authenticatedUser.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
-        // If the user document does not exist, we check if it's the designated superadmin.
         if (authenticatedUser.email === SUPERADMIN_EMAIL) {
-          // Create the superadmin document to bootstrap the system.
           await setDoc(userDocRef, {
               uid: authenticatedUser.uid,
               email: authenticatedUser.email,
               displayName: 'Super Admin',
               photoURL: null,
-              role: 'superadmin', // Assign the superadmin role
+              role: 'superadmin',
               createdAt: serverTimestamp()
           });
           toast({ title: 'Compte Super Admin initialisé !', description: 'Redirection vers votre tableau de bord...' });
         } else {
-          // Any other user without a profile is not authorized to access the admin panel.
           await signOut(auth);
           toast({ variant: 'destructive', title: 'Accès non autorisé', description: "Ce compte n'est pas configuré pour l'accès administrateur." });
           setIsSubmitting(false);
@@ -73,9 +60,8 @@ export default function AdminLoginPage() {
         }
       }
       
-      // If the user document already exists, we proceed with the login.
       toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
-      // The useEffect will handle the redirect to the dashboard.
+      router.replace('/admin/dashboard');
 
     } catch (error) {
       console.error(error);
@@ -96,16 +82,6 @@ export default function AdminLoginPage() {
       setIsSubmitting(false);
     }
   };
-  
-  // While checking auth state, show a loader to prevent flashes of content
-  if (isUserLoading || user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-3 text-muted-foreground">Vérification...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
