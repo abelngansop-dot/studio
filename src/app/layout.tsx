@@ -6,7 +6,7 @@ import { LanguageProvider } from '@/context/language-context';
 import { HtmlLangUpdater } from '@/components/HtmlLangUpdater';
 
 export const metadata: Metadata = {
-  title: 'Inoublevent',
+  title: 'Inoubleven',
   description: 'Organisez votre événement en toute tranquillité, choisissez, on vous rappelle.',
 };
 

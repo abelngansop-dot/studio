@@ -13,8 +13,8 @@ import { Separator } from './ui/separator';
 export function ContactFooter() {
     const ceo = companyContacts.find(c => c.role === 'CEO');
     const hr = companyContacts.find(c => c.role === 'Directeur des Ressources Humaines');
-    const emergency = companyContacts.find(c => c.role === 'Urgence');
-    const complaints = companyContacts.find(c => c.role === 'Réclamations');
+    const emergency = companyContacts.find(c => c.id === 'emergency');
+    const complaints = companyContacts.find(c => c.id === 'complaints');
     const serviceContacts = companyContacts.filter(c => c.type === 'service');
 
     return (
@@ -23,7 +23,7 @@ export function ContactFooter() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
                     {/* Column 1: About & Management */}
                     <div className="space-y-4">
-                        <h3 className="text-xl font-bold font-headline text-primary">Inoublevent</h3>
+                        <h3 className="text-xl font-bold font-headline text-primary">Inoubleven</h3>
                         <p className="text-sm text-muted-foreground">Organisez votre événement en toute tranquillité. Notre équipe d'experts est à votre écoute pour donner vie à vos projets.</p>
                         <div className="space-y-4 pt-2">
                            {ceo && <ContactPerson contact={ceo} />}
@@ -53,13 +53,13 @@ export function ContactFooter() {
                          <ul className="space-y-3 text-sm">
                             {emergency && (
                                 <li className="flex flex-col items-start">
-                                    <p className="font-semibold text-destructive">Contact d'Urgence</p>
+                                    <p className="font-semibold text-destructive">{emergency.name}</p>
                                     <a href={`mailto:${emergency.email}`} className="text-muted-foreground hover:text-destructive transition-colors">{emergency.email}</a>
                                 </li>
                             )}
                             {complaints && (
                                 <li className="flex flex-col items-start">
-                                    <p className="font-semibold">Réclamations</p>
+                                    <p className="font-semibold">{complaints.name}</p>
                                     <p className="text-muted-foreground">{complaints.phone}</p>
                                 </li>
                             )}
@@ -86,7 +86,7 @@ export function ContactFooter() {
                 <Separator className="my-8" />
 
                 <div className="text-center text-sm text-muted-foreground">
-                    <p>&copy; <CurrentYear /> Inoublevent. Tous droits réservés.</p>
+                    <p>&copy; <CurrentYear /> Inoubleven. Tous droits réservés.</p>
                 </div>
             </div>
         </footer>

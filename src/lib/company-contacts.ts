@@ -28,7 +28,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'service-photo',
         name: 'Service Photographie',
         role: 'Responsable',
-        email: 'photo@inoubliable.com',
+        email: 'photo@inoubleven.com',
         avatarId: 'avatar-1',
         type: 'service',
         icon: 'Camera'
@@ -37,7 +37,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'service-video',
         name: 'Service Vidéo & Drone',
         role: 'Responsable',
-        email: 'video@inoubliable.com',
+        email: 'video@inoubleven.com',
         avatarId: 'avatar-2',
         type: 'service',
         icon: 'Video'
@@ -46,24 +46,24 @@ export const companyContacts: CompanyContact[] = [
         id: 'service-event',
         name: 'Service Événementiel',
         role: 'Responsable',
-        email: 'event@inoubliable.com',
+        email: 'event@inoubleven.com',
         avatarId: 'avatar-3',
         type: 'service',
         icon: 'PartyPopper'
     },
     {
         id: 'emergency',
-        name: 'Contact d\'urgence',
-        role: 'Urgence',
-        email: 'urgence@inoubliable.com',
+        name: 'Contact d\'urgence & Légal',
+        role: 'Support',
+        email: 'inoubleven@gmail.com',
         avatarId: 'none',
         type: 'support'
     },
     {
         id: 'complaints',
-        name: 'Service des réclamations',
-        role: 'Réclamations',
-        phone: '+237 600 00 00 02',
+        name: 'Réclamations & WhatsApp',
+        role: 'Support',
+        phone: '+237699264201',
         avatarId: 'none',
         type: 'support'
     }
