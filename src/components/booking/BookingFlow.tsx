@@ -8,6 +8,7 @@ import { EventTypeStep } from '@/components/booking/EventTypeStep';
 import { ServiceStep } from '@/components/booking/ServiceStep';
 import { DetailsStep } from '@/components/booking/DetailsStep';
 import { ConfirmationStep } from '@/components/booking/ConfirmationStep';
+import { OtherRequestStep } from '@/components/booking/OtherRequestStep';
 import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useBookingProgress } from '@/hooks/use-booking-progress';
@@ -50,6 +51,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
     services: initialServiceId ? [initialServiceId] : []
   });
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isOtherFlow, setIsOtherFlow] = useState(false);
 
   const nextStep = () => {
     if (step < TOTAL_STEPS) {
@@ -65,6 +67,16 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
     }
   };
 
+  const handleEventTypeSelect = (eventType: string) => {
+    updateBookingData({ eventType });
+    if (eventType === 'autre') {
+      setIsOtherFlow(true);
+    } else {
+      setIsOtherFlow(false);
+      nextStep();
+    }
+  };
+
   const handleBackFromConfirmation = () => {
     setIsConfirmed(false);
   };
@@ -76,6 +88,16 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
       title: "Votre demande a été envoyée !",
       description: "Notre équipe vous contactera très bientôt.",
     })
+  }
+
+  const handleBackFromOtherFlow = () => {
+      setIsOtherFlow(false);
+      updateBookingData({ eventType: '' });
+  };
+
+
+  if (isOtherFlow) {
+    return <OtherRequestStep onBack={handleBackFromOtherFlow} closeModal={closeModal} />;
   }
 
   if (isConfirmed) {
@@ -102,10 +124,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
         <div className="mt-8">
           {step === 1 && (
             <EventTypeStep
-              onSelect={(eventType) => {
-                updateBookingData({ eventType });
-                nextStep();
-              }}
+              onSelect={handleEventTypeSelect}
             />
           )}
           {step === 2 && (

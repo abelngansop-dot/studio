@@ -85,6 +85,10 @@
           "type": "string",
           "description": "The date and time the booking was created.",
           "format": "date-time"
+        },
+        "requestDetails": {
+          "type": "string",
+          "description": "Specific details for an 'other' type event request."
         }
       },
       "required": ["userId", "eventType", "services", "city", "date", "status", "createdAt"]

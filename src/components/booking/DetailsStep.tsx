@@ -174,7 +174,9 @@ export function DetailsStep({
         newErrors.phone = 'Veuillez entrer un numéro de téléphone valide.';
     }
 
-    if (bookingData.email && !/^\S+@\S+\.\S+$/.test(bookingData.email)) {
+    if (!bookingData.email) {
+      newErrors.email = 'L\'adresse e-mail est obligatoire.';
+    } else if (!/^\S+@\S+\.\S+$/.test(bookingData.email)) {
       newErrors.email = 'Veuillez entrer un email valide.';
     }
 
@@ -428,7 +430,7 @@ export function DetailsStep({
                 Vos Coordonnées
               </CardTitle>
               <p className="text-sm text-muted-foreground pt-1">
-                Le numéro de téléphone est obligatoire pour continuer.
+                Ces champs sont obligatoires pour continuer.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -451,7 +453,9 @@ export function DetailsStep({
                 )}
               </div>
                <div className="space-y-2">
-                <Label htmlFor="email" className={cn(errors.email && 'text-destructive')}>Email (Optionnel)</Label>
+                <Label htmlFor="email" className={cn(errors.email && 'text-destructive')}>
+                  Email <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="email"
                   type="email"

@@ -22,10 +22,12 @@ export type Booking = {
   userId: string;
   eventType: string;
   services?: string[];
+  requestDetails?: string;
   date?: { seconds: number; nanoseconds: number };
   status: 'pending' | 'confirmed' | 'cancelled';
   contactInfo?: {
     email: string;
+    phone: string;
   };
 };
 
@@ -72,7 +74,7 @@ export const columns: ColumnDef<Booking>[] = [
     header: 'Services',
     cell: ({ row }) => {
       const services = row.getValue('services') as string[] | undefined;
-      return <div className="capitalize truncate max-w-xs">{Array.isArray(services) ? services.join(', ') : 'N/A'}</div>;
+      return <div className="capitalize truncate max-w-xs">{Array.isArray(services) && services.length > 0 ? services.join(', ') : 'N/A'}</div>;
     },
   },
   {
