@@ -23,11 +23,12 @@ export default function BookingsPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
   
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !userProfile || !['admin', 'superadmin'].includes(userProfile.role)) {
+    // Defensively check that the profile is loaded AND the role is correct before building the query.
+    if (isProfileLoading || !firestore || !userProfile || !['admin', 'superadmin'].includes(userProfile.role)) {
       return null;
     }
     return query(collection(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore, userProfile]);
+  }, [firestore, userProfile, isProfileLoading]);
 
   const { data: bookings, isLoading: isBookingsLoading } = useCollection<Booking>(bookingsQuery);
 

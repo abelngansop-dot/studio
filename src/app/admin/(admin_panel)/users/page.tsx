@@ -25,9 +25,10 @@ export default function UsersPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
   
   const usersQuery = useMemoFirebase(() => {
-      if(!firestore || !userProfile || !['admin', 'superadmin'].includes(userProfile.role)) return null;
+      // Defensively check that the profile is loaded AND the role is correct before building the query.
+      if(isProfileLoading || !firestore || !userProfile || !['admin', 'superadmin'].includes(userProfile.role)) return null;
       return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'))
-    }, [firestore, userProfile]);
+    }, [firestore, userProfile, isProfileLoading]);
 
   const { data: users, isLoading: isUsersLoading } = useCollection<User>(usersQuery);
 
