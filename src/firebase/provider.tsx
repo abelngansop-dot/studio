@@ -6,8 +6,6 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
 
 import { firebaseConfig } from '@/firebase/config';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-
 
 interface UserAuthState {
   user: User | null;
@@ -83,7 +81,6 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   return (
     <FirebaseContext.Provider value={contextValue}>
-      <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
   );
