@@ -7,20 +7,19 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTranslation } from '@/hooks/use-translation';
 import { useUser } from '@/firebase/provider';
 import { UserNav } from './UserNav';
-import { Skeleton } from './ui/skeleton';
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutGrid } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { useState, useEffect } from 'react';
 
 export function Header() {
   const { t } = useTranslation();
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -50,11 +49,19 @@ export function Header() {
           </Button>
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {/* Auth/Booking Buttons for larger screens */}
-          <div className="hidden sm:flex items-center gap-1">
+          <div className="hidden sm:flex items-center gap-2">
             {user ? (
-              <UserNav user={user} />
+              <>
+                <UserNav user={user} />
+                <Button asChild className="rounded-full shadow-lg">
+                  <Link href="/mes-reservations">
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                    Mes réservations
+                  </Link>
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="ghost" asChild>
