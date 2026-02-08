@@ -6,6 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
+import { useUser } from '@/firebase/provider';
+import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type HeroSectionProps = {
     heroImage: ImagePlaceholder | undefined;
@@ -13,7 +16,31 @@ type HeroSectionProps = {
 
 export function HeroSection({ heroImage }: HeroSectionProps) {
     const { t } = useTranslation();
+    const { user, isUserLoading } = useUser();
     const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
+
+    const CtaButton = () => {
+        if (isUserLoading) {
+            return <Skeleton className="h-[68px] w-64 rounded-full" />;
+        }
+        if (user) {
+            return (
+                <Button asChild size="lg" className={ctaButtonClass}>
+                    <Link href="/mes-reservations">{t('hero.manage_bookings')}</Link>
+                </Button>
+            )
+        }
+        return (
+            <BookingTrigger>
+                <Button
+                    size="lg"
+                    className={ctaButtonClass}
+                >
+                    {t('hero.cta')}
+                </Button>
+            </BookingTrigger>
+        )
+    }
 
     return (
         <section className="relative w-full h-[calc(100vh-4rem)] flex items-center justify-center">
@@ -40,14 +67,7 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
                                 {t('hero.subtitle')}
                             </p>
                             <div className="mt-8">
-                                <BookingTrigger>
-                                    <Button
-                                        size="lg"
-                                        className={ctaButtonClass}
-                                    >
-                                        {t('hero.cta')}
-                                    </Button>
-                                </BookingTrigger>
+                                <CtaButton />
                             </div>
                         </CardContent>
                     </Card>
