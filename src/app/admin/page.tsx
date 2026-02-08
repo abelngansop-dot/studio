@@ -44,8 +44,7 @@ export default function AdminLoginPage() {
       const userDoc = await getDoc(userDocRef);
 
       let userRole: string | null = null;
-      let isNewSuperAdmin = false;
-
+      
       if (userDoc.exists()) {
           userRole = userDoc.data()?.role;
       } else if (user.email === SUPERADMIN_EMAIL) {
@@ -55,20 +54,16 @@ export default function AdminLoginPage() {
               email: user.email,
               displayName: 'Super Admin',
               role: 'superadmin',
-              active: true, // Tel que demandé
+              active: true,
               createdAt: serverTimestamp()
           });
           userRole = 'superadmin';
-          isNewSuperAdmin = true;
+          toast({ title: 'Compte Super Admin initialisé !', description: 'Redirection vers votre tableau de bord...' });
       }
 
       // Étape 3 : AUTORISER en fonction du rôle.
       if (userRole === 'admin' || userRole === 'superadmin') {
-          if(isNewSuperAdmin) {
-            toast({ title: 'Compte Super Admin initialisé !', description: 'Redirection vers votre tableau de bord...' });
-          } else {
-            toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
-          }
+          toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
           router.replace('/admin/dashboard');
       } else {
           // Si l'authentification a réussi mais que le rôle n'est pas suffisant, déconnectez et affichez un message clair.
@@ -90,7 +85,7 @@ export default function AdminLoginPage() {
                 case 'auth/user-not-found':
                 case 'auth/wrong-password':
                 case 'auth/invalid-credential':
-                    description = 'Email ou mot de passe invalide. Accès refusé.';
+                    description = 'Email ou mot de passe invalide.';
                     break;
                 default:
                     console.error("Erreur de connexion inattendue:", error);
