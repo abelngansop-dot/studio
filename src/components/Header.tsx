@@ -16,6 +16,7 @@ import {
 import { Menu, X, LayoutGrid } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { useState, useEffect } from 'react';
+import { Skeleton } from './ui/skeleton';
 
 export function Header() {
   const { t } = useTranslation();
@@ -52,27 +53,35 @@ export function Header() {
         <div className="flex items-center gap-2">
           {/* Auth/Booking Buttons for larger screens */}
           <div className="hidden sm:flex items-center gap-2">
-            {user ? (
-              <>
-                <UserNav user={user} />
-                <Button asChild className="rounded-full shadow-lg">
-                  <Link href="/mes-reservations">
-                    <LayoutGrid className="mr-2 h-4 w-4" />
-                    Mes réservations
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Se connecter</Link>
-                </Button>
-                <BookingTrigger>
-                  <Button className="rounded-full shadow-lg">
-                    {t('header.book')}
+            {hasMounted ? (
+              user ? (
+                <>
+                  <UserNav user={user} />
+                  <Button asChild className="rounded-full shadow-lg">
+                    <Link href="/mes-reservations">
+                      <LayoutGrid className="mr-2 h-4 w-4" />
+                      Mes réservations
+                    </Link>
                   </Button>
-                </BookingTrigger>
-              </>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Se connecter</Link>
+                  </Button>
+                  <BookingTrigger>
+                    <Button className="rounded-full shadow-lg">
+                      {t('header.book')}
+                    </Button>
+                  </BookingTrigger>
+                </>
+              )
+            ) : (
+              // Placeholder to avoid layout shift and hydration errors
+              <div className="flex items-center gap-2 h-10">
+                  <Skeleton className="h-full w-24" />
+                  <Skeleton className="h-full w-32 rounded-full" />
+              </div>
             )}
           </div>
 
