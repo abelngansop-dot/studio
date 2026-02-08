@@ -19,10 +19,6 @@
           "type": "string",
           "description": "The display name of the user."
         },
-        "photoURL": {
-          "type": "string",
-          "description": "URL of the user's profile picture."
-        },
         "phone": {
           "type": "string",
           "description": "The user's phone number."
@@ -145,7 +141,6 @@
         "properties": {
             "userId": { "type": "string" },
             "displayName": { "type": "string" },
-            "photoURL": { "type": "string" },
             "rating": { "type": "number" },
             "comment": { "type": "string" },
             "status": { "enum": ["pending", "approved", "rejected"] },

@@ -82,7 +82,6 @@ export function LeaveReviewDialog({ isOpen, setIsOpen }: LeaveReviewDialogProps)
     const reviewData = {
       userId: user.uid,
       displayName: user.displayName || user.email,
-      photoURL: user.photoURL,
       rating,
       comment,
       status: 'approved', // for moderation

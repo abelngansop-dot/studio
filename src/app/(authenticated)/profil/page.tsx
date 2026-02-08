@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useFirebaseApp } from '@/firebase';
+import { useState } from 'react';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getAuth, deleteUser as deleteAuthUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ShieldAlert, Trash2, Camera } from 'lucide-react';
+import { Loader2, ShieldAlert, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,14 +27,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
-import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 
 type UserProfileData = {
   displayName: string;
   email: string;
-  photoURL: string | null;
   phone?: string | null;
   gender?: 'homme' | 'femme';
 };
@@ -70,18 +67,12 @@ function ProfileSkeleton() {
 export default function ProfilPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const app = useFirebaseApp();
-  const storage = getStorage(app);
   const { toast } = useToast();
   const router = useRouter();
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReauthRequired, setIsReauthRequired] = useState(false);
   const [password, setPassword] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -118,42 +109,6 @@ export default function ProfilPage() {
     }
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user || !storage) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const filePath = `profile-pictures/${user.uid}/${file.name}`;
-    const fileRef = storageRef(storage, filePath);
-    const uploadTask = uploadBytesResumable(fileRef, file);
-
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        setIsUploading(false);
-        toast({ variant: 'destructive', title: 'Erreur de téléversement', description: 'Impossible de téléverser l\'image.' });
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-          if(userDocRef) {
-            await updateDoc(userDocRef, { photoURL: downloadURL });
-          }
-          setIsUploading(false);
-          toast({ title: 'Photo de profil mise à jour !' });
-        });
-      }
-    );
-  };
-  
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     const auth = getAuth();
@@ -213,22 +168,10 @@ export default function ProfilPage() {
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="relative group">
-                    <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/png, image/jpeg" hidden/>
-                    <Avatar className="h-24 w-24 text-3xl cursor-pointer" onClick={handleAvatarClick}>
-                      <AvatarImage src={userProfile.photoURL || undefined} alt={userProfile.displayName || ''} />
-                      <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleAvatarClick}>
-                        <Camera className="h-8 w-8 text-white" />
-                    </div>
-                    {isUploading && (
-                        <div className="absolute inset-0 bg-black/70 rounded-full flex flex-col items-center justify-center">
-                           <Loader2 className="h-8 w-8 text-white animate-spin" />
-                           <Progress value={uploadProgress} className="h-1 w-16 mt-2 bg-gray-600" />
-                        </div>
-                    )}
-                </div>
+                <Avatar className="h-24 w-24 text-3xl">
+                  <AvatarImage src={undefined} alt={userProfile.displayName || ''} />
+                  <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
+                </Avatar>
                 <div className="w-full space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="displayName">Nom d'affichage</Label>
@@ -277,8 +220,8 @@ export default function ProfilPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" disabled={isSubmitting || isUploading}>
-                {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enregistrer les modifications
               </Button>
             </CardFooter>
