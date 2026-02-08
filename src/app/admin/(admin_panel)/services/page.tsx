@@ -59,9 +59,16 @@ export default function CataloguePage() {
     setSelectedService(service);
     setIsServiceDialogOpen(true);
   }
-  
+
   const handleDeleteServiceRequest = (service: Service) => {
     setServiceToDelete(service);
+  }
+  
+  const handleServiceDialogChange = (open: boolean) => {
+    setIsServiceDialogOpen(open);
+    if (!open) {
+      setSelectedService(null);
+    }
   }
 
   const handleDeleteServiceConfirm = () => {
@@ -76,6 +83,13 @@ export default function CataloguePage() {
   const handleEditEventType = (eventType: EventType) => {
     setSelectedEventType(eventType);
     setIsEventTypeDialogOpen(true);
+  }
+  
+  const handleEventTypeDialogChange = (open: boolean) => {
+    setIsEventTypeDialogOpen(open);
+    if (!open) {
+      setSelectedEventType(null);
+    }
   }
 
   const handleDeleteEventTypeRequest = (eventType: EventType) => {
@@ -146,12 +160,12 @@ export default function CataloguePage() {
         
         <ServiceDialog 
           isOpen={isServiceDialogOpen} 
-          setIsOpen={setIsServiceDialogOpen}
+          setIsOpen={handleServiceDialogChange}
           service={selectedService}
         />
         <EventTypeDialog 
           isOpen={isEventTypeDialogOpen}
-          setIsOpen={setIsEventTypeDialogOpen}
+          setIsOpen={handleEventTypeDialogChange}
           eventType={selectedEventType}
         />
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -93,31 +94,37 @@ export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{image ? 'Modifier l\'image' : 'Ajouter une image'}</DialogTitle>
           <DialogDescription>
             Remplissez les détails de l'image ci-dessous.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="imageUrl" className="text-right">
-              URL de l'image
-            </Label>
-            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/image.png" />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="imageUrl">URL de l'image</Label>
+            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/image.png" />
+            {imageUrl && (
+                <div className="mt-2 rounded-md border p-2 bg-muted/50">
+                    <div className="relative aspect-video">
+                         <Image 
+                            src={imageUrl} 
+                            alt="Aperçu" 
+                            fill
+                            className="object-contain rounded"
+                        />
+                    </div>
+                </div>
+            )}
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="col-span-3" placeholder="Ex: Mariage à Douala" />
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex: Mariage à Douala" />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="imageHint" className="text-right">
-              Indice IA
-            </Label>
-            <Input id="imageHint" value={imageHint} onChange={(e) => setImageHint(e.target.value)} className="col-span-3" placeholder="Ex: wedding couple" />
+          <div className="space-y-2">
+            <Label htmlFor="imageHint">Indice IA</Label>
+            <Input id="imageHint" value={imageHint} onChange={(e) => setImageHint(e.target.value)} placeholder="Ex: wedding couple" />
           </div>
         </div>
         <DialogFooter>

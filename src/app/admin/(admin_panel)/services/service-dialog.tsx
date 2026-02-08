@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -95,32 +96,26 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{service ? 'Modifier le service' : 'Ajouter un service'}</DialogTitle>
           <DialogDescription>
             Remplissez les détails du service ci-dessous.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Nom
-            </Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nom</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="col-span-3" />
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="icon" className="text-right">
-              Icône
-            </Label>
+           <div className="space-y-2">
+            <Label htmlFor="icon">Icône</Label>
             <Select onValueChange={(value) => setIcon(value as keyof typeof icons)} value={icon}>
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger id="icon">
                     <SelectValue placeholder="Choisir une icône">
                         <div className="flex items-center gap-2">
                            <Icon name={icon} /> 
@@ -140,23 +135,29 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
                 </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="rating" className="text-right">
-              Note
-            </Label>
-            <Input id="rating" type="number" value={rating} onChange={(e) => setRating(Number(e.target.value))} className="col-span-3" />
+          <div className="space-y-2">
+            <Label htmlFor="rating">Note</Label>
+            <Input id="rating" type="number" value={rating} onChange={(e) => setRating(Number(e.target.value))} />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="imageUrl" className="text-right">
-              URL de l'image
-            </Label>
-            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/image.png" />
+          <div className="space-y-2">
+            <Label htmlFor="imageUrl">URL de l'image</Label>
+            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/image.png" />
+             {imageUrl && (
+                <div className="mt-2 rounded-md border p-2 bg-muted/50">
+                    <div className="relative aspect-video">
+                         <Image 
+                            src={imageUrl} 
+                            alt="Aperçu" 
+                            fill
+                            className="object-contain rounded"
+                        />
+                    </div>
+                </div>
+            )}
           </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="videoUrl" className="text-right">
-              URL de la vidéo
-            </Label>
-            <Input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/video.mp4" />
+           <div className="space-y-2">
+            <Label htmlFor="videoUrl">URL de la vidéo</Label>
+            <Input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://exemple.com/video.mp4" />
           </div>
         </div>
         <DialogFooter>
