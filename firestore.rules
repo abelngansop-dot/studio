@@ -30,7 +30,7 @@ service cloud.firestore {
     // This is fast, performant, and valid for 'list' queries as it does not read a document.
     // The UID 'P0mzv7fFREaXRbv0DA9yjGNeskF2' is taken from the user's error logs for 'anotsas@gmail.com'.
     function isTheSuperAdmin() {
-      return request.auth.uid == 'P0mzv7fFREaXRbv0DA9yjGNeskF2';
+      return isSignedIn() && request.auth.uid == 'P0mzv7fFREaXRbv0DA9yjGNeskF2';
     }
     
     // USERS
