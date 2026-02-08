@@ -13,19 +13,17 @@ import {
 import Icon from '@/components/Icon';
 import { icons } from 'lucide-react';
 
-export type Service = {
+export type EventType = {
   id: string;
   name: string;
-  description: string;
   icon: keyof typeof icons;
-  rating: number;
   imageUrl?: string;
 };
 
 export const columns = (
-    onEdit: (service: Service) => void,
-    onDelete: (service: Service) => void
-    ): ColumnDef<Service>[] => [
+    onEdit: (eventType: EventType) => void,
+    onDelete: (eventType: EventType) => void
+    ): ColumnDef<EventType>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -40,28 +38,19 @@ export const columns = (
       );
     },
      cell: ({ row }) => {
-      const service = row.original;
+      const eventType = row.original;
       return (
         <div className="flex items-center gap-2">
-            <Icon name={service.icon} className="h-5 w-5 text-muted-foreground" />
-            <span className="font-medium">{service.name}</span>
+            <Icon name={eventType.icon} className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium">{eventType.name}</span>
         </div>
       )
     }
   },
   {
-    accessorKey: 'description',
-    header: 'Description',
-    cell: ({ row }) => <div className="truncate max-w-sm">{row.getValue('description')}</div>,
-  },
-  {
-    accessorKey: 'rating',
-    header: 'Note',
-  },
-  {
     id: 'actions',
     cell: ({ row }) => {
-      const service = row.original;
+      const eventType = row.original;
 
       return (
         <DropdownMenu>
@@ -73,12 +62,12 @@ export const columns = (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onEdit(service)}>
+            <DropdownMenuItem onClick={() => onEdit(eventType)}>
               Modifier
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => onDelete(service)}
+              onClick={() => onDelete(eventType)}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Supprimer
             </DropdownMenuItem>

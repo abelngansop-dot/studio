@@ -138,7 +138,7 @@ export default function AdminLayout({
                 <SidebarMenuButton asChild isActive={isActive('/admin/services')}>
                    <Link href="/admin/services">
                     <Package />
-                    Services
+                    Catalogue
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

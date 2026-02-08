@@ -75,10 +75,14 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || isSuperAdmin();
     }
 
-    // SERVICES
+    // SERVICES & EVENT TYPES
     // Publicly readable by anyone.
     // Writable only by Admins and Super Admins.
     match /services/{serviceId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
+    match /eventTypes/{eventTypeId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin() || isSuperAdmin();
     }

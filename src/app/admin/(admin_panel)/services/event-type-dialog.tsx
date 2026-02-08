@@ -12,31 +12,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useFirestore } from '@/firebase';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, addDoc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Service } from './columns';
+import { EventType } from './event-types-columns';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon';
 
-
-type ServiceDialogProps = {
+type EventTypeDialogProps = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  service: Service | null;
+  eventType: EventType | null;
 };
 
 const iconNames = Object.keys(icons) as (keyof typeof icons)[];
 
-export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps) {
+export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialogProps) {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [icon, setIcon] = useState<keyof typeof icons>('Package');
-  const [rating, setRating] = useState(0);
+  const [icon, setIcon] = useState<keyof typeof icons>('Sparkles');
   const [imageUrl, setImageUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -44,46 +40,42 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
   const { toast } = useToast();
 
   useEffect(() => {
-    if (service) {
-      setName(service.name);
-      setDescription(service.description);
-      setIcon(service.icon);
-      setRating(service.rating);
-      setImageUrl(service.imageUrl || '');
+    if (eventType) {
+      setName(eventType.name);
+      setIcon(eventType.icon);
+      setImageUrl(eventType.imageUrl || '');
     } else {
-      // Reset form for new service
+      // Reset form
       setName('');
-      setDescription('');
-      setIcon('Package');
-      setRating(0);
+      setIcon('Sparkles');
       setImageUrl('');
     }
-  }, [service, isOpen]);
+  }, [eventType, isOpen]);
 
   const handleSubmit = async () => {
     if (!firestore) return;
     setIsSaving(true);
 
-    const serviceData = { name, description, icon, rating, imageUrl };
+    const eventTypeData = { name, icon, imageUrl };
 
     try {
-      if (service) {
-        // Update existing service
-        const serviceRef = doc(firestore, 'services', service.id);
-        setDocumentNonBlocking(serviceRef, serviceData, { merge: true });
-        toast({ title: 'Service mis à jour !' });
+      if (eventType) {
+        // Update existing
+        const eventTypeRef = doc(firestore, 'eventTypes', eventType.id);
+        setDocumentNonBlocking(eventTypeRef, eventTypeData, { merge: true });
+        toast({ title: 'Type d\'événement mis à jour !' });
       } else {
-        // Add new service
-        const collectionRef = collection(firestore, 'services');
-        await addDocumentNonBlocking(collectionRef, serviceData);
-        toast({ title: 'Service ajouté !' });
+        // Add new
+        const collectionRef = collection(firestore, 'eventTypes');
+        await addDocumentNonBlocking(collectionRef, eventTypeData);
+        toast({ title: 'Type d\'événement ajouté !' });
       }
       setIsOpen(false);
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
-        description: 'Impossible de sauvegarder le service.',
+        description: 'Impossible de sauvegarder le type d\'événement.',
       });
     } finally {
       setIsSaving(false);
@@ -94,9 +86,9 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{service ? 'Modifier le service' : 'Ajouter un service'}</DialogTitle>
+          <DialogTitle>{eventType ? 'Modifier le type' : 'Ajouter un type d\'événement'}</DialogTitle>
           <DialogDescription>
-            Remplissez les détails du service ci-dessous.
+            Remplissez les détails ci-dessous.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -107,12 +99,6 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="col-span-3" />
-          </div>
-           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="icon" className="text-right">
               Icône
             </Label>
@@ -136,12 +122,6 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
                     ))}
                 </SelectContent>
             </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="rating" className="text-right">
-              Note
-            </Label>
-            <Input id="rating" type="number" value={rating} onChange={(e) => setRating(Number(e.target.value))} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="imageUrl" className="text-right">

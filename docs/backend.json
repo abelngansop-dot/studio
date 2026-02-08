@@ -113,29 +113,30 @@
         "description": { "type": "string" },
         "icon": { "type": "string" },
         "rating": { "type": "number" },
-        "media": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "type": { "enum": ["image", "video"] },
-              "url": { "type": "string" }
-            }
-          }
-        },
-        "testimonials": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": { "type": "string" },
-              "eventType": { "type": "string" },
-              "comment": { "type": "string" }
-            }
-          }
+        "imageUrl": {
+          "type": "string",
+          "description": "URL for an image representing the service.",
+          "format": "uri"
         }
       },
       "required": ["name", "description", "icon"]
+    },
+    "EventType": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EventType",
+      "type": "object",
+      "description": "Represents a type of event that can be booked.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL for an image representing the event type.",
+          "format": "uri"
+        }
+      },
+      "required": ["name", "icon"]
     },
     "Review": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -180,6 +181,14 @@
           "entityName": "Service",
           "schema": { "$ref": "#/entities/Service" },
           "description": "Stores all available services and their details."
+        }
+      },
+      {
+        "path": "/eventTypes/{eventTypeId}",
+        "definition": {
+          "entityName": "EventType",
+          "schema": { "$ref": "#/entities/EventType" },
+          "description": "Stores all available event types."
         }
       },
       {

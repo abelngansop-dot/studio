@@ -23,8 +23,10 @@ import { collection, query } from 'firebase/firestore';
 import type { Booking } from '../bookings/columns';
 import { format, getMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { services as serviceData, eventTypes as eventTypeData } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Service } from '../services/columns';
+
+type EventType = { id: string; name: string; };
 
 const chartColors = [
   'hsl(var(--chart-1))',
@@ -67,11 +69,17 @@ const LoadingState = () => (
 
 export default function AnalyticsPage() {
   const firestore = useFirestore();
+
   const bookingsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'bookings')), [firestore]);
-  const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
+  const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services')), [firestore]);
+  const eventTypesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'eventTypes')), [firestore]);
+
+  const { data: bookings, isLoading: bookingsLoading } = useCollection<Booking>(bookingsQuery);
+  const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
+  const { data: eventTypes, isLoading: eventTypesLoading } = useCollection<EventType>(eventTypesQuery);
 
   const { bookingsByMonth, servicesDistribution, eventTypesDistribution } = useMemo(() => {
-    if (!bookings) return { bookingsByMonth: [], servicesDistribution: [], eventTypesDistribution: [] };
+    if (!bookings || !services || !eventTypes) return { bookingsByMonth: [], servicesDistribution: [], eventTypesDistribution: [] };
 
     const monthlyCounts: { [key: number]: number } = {};
     bookings.forEach(booking => {
@@ -93,8 +101,8 @@ export default function AnalyticsPage() {
       });
     });
 
-    const servicesDistribution = Object.entries(serviceCounts).map(([name, count], index) => ({
-      name: serviceData.find(s => s.id === name)?.name || name,
+    const servicesDistribution = Object.entries(serviceCounts).map(([id, count], index) => ({
+      name: services.find(s => s.id === id)?.name || id,
       count,
       fill: chartColors[index % chartColors.length]
     })).sort((a, b) => b.count - a.count);
@@ -104,15 +112,15 @@ export default function AnalyticsPage() {
         eventTypeCounts[booking.eventType] = (eventTypeCounts[booking.eventType] || 0) + 1;
     });
 
-    const eventTypesDistribution = Object.entries(eventTypeCounts).map(([name, count], index) => ({
-      name: eventTypeData.find(e => e.id === name)?.name || name,
+    const eventTypesDistribution = Object.entries(eventTypeCounts).map(([id, count], index) => ({
+      name: eventTypes.find(e => e.id === id)?.name || id,
       count,
       fill: chartColors[index % chartColors.length]
     })).sort((a, b) => b.count - a.count);
 
 
     return { bookingsByMonth, servicesDistribution, eventTypesDistribution };
-  }, [bookings]);
+  }, [bookings, services, eventTypes]);
 
   const chartConfig = useMemo(() => {
       const config: any = {
@@ -126,6 +134,8 @@ export default function AnalyticsPage() {
       });
       return config;
   }, [servicesDistribution, eventTypesDistribution]);
+  
+  const isLoading = bookingsLoading || servicesLoading || eventTypesLoading;
 
   if (isLoading) {
       return <LoadingState />;

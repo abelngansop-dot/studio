@@ -3,23 +3,23 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { services } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { ArrowRight, Star, Loader2, Edit, Heart } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Icon from '@/components/Icon';
 import type { icons } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { Header } from '@/components/Header';
 import { useTranslation } from '@/hooks/use-translation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { ContactFooter } from '@/components/ContactFooter';
 import { LeaveReviewTrigger } from '@/components/reviews/LeaveReviewTrigger';
 import { PublishedReviews } from '@/components/reviews/PublishedReviews';
 import { SelectableCard } from '@/components/booking/SelectableCard';
-
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { Service } from './admin/(admin_panel)/services/columns';
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
   const roundedRating = Math.round(rating);
@@ -40,6 +40,29 @@ const StarRating = ({ rating, className }: { rating: number, className?: string 
   );
 };
 
+const ServiceSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {Array.from({length: 8}).map((_, i) => (
+      <Card key={i}>
+        <Skeleton className="h-48 w-full" />
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6 mt-2" />
+        </CardContent>
+        <CardFooter className="bg-secondary/30 py-3 px-4">
+          <Skeleton className="h-6 w-24" />
+        </CardFooter>
+      </Card>
+    ))}
+  </div>
+);
+
 const galleryImages = [
   'gallery-1',
   'gallery-2',
@@ -52,6 +75,11 @@ const galleryImages = [
 export default function Home() {
   const { t } = useTranslation();
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
+  const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
+
   const heroImage = PlaceHolderImages.find((p) => p.id === 'hero-background');
   const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -123,45 +151,45 @@ export default function Home() {
               {t('services.subtitle')}
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {services.map((service) => {
-               const serviceImage = PlaceHolderImages.find((p) => p.id === service.imageId);
-               return (
-                <Card key={service.id} className="flex flex-col overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
-                  {serviceImage && (
-                    <div className="relative h-48 w-full">
-                       <Image
-                          src={serviceImage.imageUrl}
-                          alt={service.name}
-                          fill
-                          className="object-cover"
-                          data-ai-hint={serviceImage.imageHint}
-                       />
-                    </div>
-                  )}
-                  <BookingTrigger initialServiceId={service.id}>
-                    <CardHeader className="cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-accent/10 rounded-full">
-                          <Icon name={service.icon as keyof typeof icons} className="h-6 w-6 text-accent" />
-                        </div>
-                        <CardTitle className="text-xl font-headline">{service.name}</CardTitle>
+          {servicesLoading ? (
+            <ServiceSkeleton />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {services?.map((service) => (
+                  <Card key={service.id} className="flex flex-col overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
+                    {service.imageUrl && (
+                      <div className="relative h-48 w-full">
+                        <Image
+                            src={service.imageUrl}
+                            alt={service.name}
+                            fill
+                            className="object-cover"
+                        />
                       </div>
-                    </CardHeader>
-                  </BookingTrigger>
-                  <CardContent className="flex-grow">
-                    <p className="text-muted-foreground text-sm">{service.description}</p>
-                  </CardContent>
-                  <CardFooter className="flex justify-between items-center bg-secondary/30 py-3 px-4">
-                     <StarRating rating={service.rating} />
-                     <BookingTrigger initialServiceId={service.id}>
-                        <Button variant="ghost" size="sm">{t('header.choose')} <ArrowRight className="ml-2 h-4 w-4" /></Button>
-                     </BookingTrigger>
-                  </CardFooter>
-                </Card>
-               );
-            })}
-          </div>
+                    )}
+                    <BookingTrigger initialServiceId={service.id}>
+                      <CardHeader className="cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-accent/10 rounded-full">
+                            <Icon name={service.icon as keyof typeof icons} className="h-6 w-6 text-accent" />
+                          </div>
+                          <CardTitle className="text-xl font-headline">{service.name}</CardTitle>
+                        </div>
+                      </CardHeader>
+                    </BookingTrigger>
+                    <CardContent className="flex-grow">
+                      <p className="text-muted-foreground text-sm">{service.description}</p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between items-center bg-secondary/30 py-3 px-4">
+                      <StarRating rating={service.rating} />
+                      <BookingTrigger initialServiceId={service.id}>
+                          <Button variant="ghost" size="sm">{t('header.choose')} <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                      </BookingTrigger>
+                    </CardFooter>
+                  </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
