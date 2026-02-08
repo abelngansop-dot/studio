@@ -198,6 +198,10 @@ export default function AnalyticsPage() {
                         <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                       ))}
                     </Pie>
+                    <ChartLegend
+                      content={<ChartLegendContent nameKey="name" />}
+                      className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                    />
                   </PieChart>
                 </ChartContainer>
               </CardContent>
@@ -205,10 +209,6 @@ export default function AnalyticsPage() {
                  <div className="flex items-center gap-2 font-medium leading-none">
                     <PartyPopper className="h-4 w-4" /> Total de {bookings?.length} réservations
                 </div>
-                 <ChartLegend
-                      content={<ChartLegendContent nameKey="name" />}
-                      className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                    />
               </CardFooter>
             </Card>
 
