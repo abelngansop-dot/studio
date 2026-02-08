@@ -43,9 +43,12 @@ service cloud.firestore {
       // This rule is now valid because isTheSuperAdmin() does not use get().
       allow list: if isTheSuperAdmin();
 
-      // CREATE: A user can create their own profile, but they can ONLY assign the 'client' role to themselves.
+      // CREATE: A user can create their own profile with the 'client' role.
+      // The designated superadmin can create their own profile with the 'superadmin' role.
       // This prevents a user from creating an account with elevated privileges.
-      allow create: if isOwner(userId) && request.resource.data.role == 'client';
+      allow create: if isOwner(userId) && 
+                    (request.resource.data.role == 'client' || 
+                    (request.auth.token.email == 'abelnono1994@gmail.com' && request.resource.data.role == 'superadmin'));
 
       // UPDATE: A user can update their own profile, but crucially, they CANNOT change their own role.
       // Only Admins or Super Admins are allowed to change a user's role.
