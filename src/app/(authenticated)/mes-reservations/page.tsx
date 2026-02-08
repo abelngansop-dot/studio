@@ -30,15 +30,9 @@ function EmptyState() {
                 <Rocket className="h-4 w-4" />
                 <AlertTitle className="font-bold">Vous n'avez aucune réservation.</AlertTitle>
                 <AlertDescription>
-                    Commencez par créer une demande pour la voir apparaître ici.
+                    Utilisez le bouton ci-dessus pour créer une demande et la voir apparaître ici.
                 </AlertDescription>
             </Alert>
-            <BookingTrigger>
-                <Button className="mt-8">
-                    <CalendarPlus className="mr-2 h-4 w-4" />
-                    Faire une nouvelle réservation
-                </Button>
-            </BookingTrigger>
         </div>
     )
 }
@@ -69,9 +63,17 @@ export default function MyBookingsPage() {
 
     return (
         <div className="container mx-auto">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold font-headline tracking-tight">Mes Réservations</h1>
-                <p className="text-muted-foreground mt-2">Suivez l'état de vos demandes et préparez votre événement.</p>
+            <div className="mb-8 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div>
+                    <h1 className="text-4xl font-bold font-headline tracking-tight">Mes Réservations</h1>
+                    <p className="text-muted-foreground mt-2">Suivez l'état de vos demandes et préparez votre événement.</p>
+                </div>
+                <BookingTrigger>
+                    <Button>
+                        <CalendarPlus className="mr-2 h-4 w-4" />
+                        Nouvelle réservation
+                    </Button>
+                </BookingTrigger>
             </div>
 
             {isLoading && <BookingSkeleton />}

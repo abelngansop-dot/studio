@@ -12,8 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { CalendarPlus, LayoutGrid, LogOut, User as UserIcon, LifeBuoy, FileText } from 'lucide-react';
-import { BookingTrigger } from './booking/BookingTrigger';
+import { LayoutGrid, LogOut, User as UserIcon, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export function UserNav({ user }: { user: User }) {
@@ -32,7 +31,7 @@ export function UserNav({ user }: { user: User }) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
+                <AvatarImage src={undefined} alt={user.displayName || ''} />
                 <AvatarFallback className="bg-primary/20">{userInitial.toUpperCase()}</AvatarFallback>
             </Avatar>
         </Button>
@@ -58,12 +57,6 @@ export function UserNav({ user }: { user: User }) {
             <span>Mes réservations</span>
           </Link>
         </DropdownMenuItem>
-         <BookingTrigger>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
-                <CalendarPlus className="mr-2 h-4 w-4" />
-                <span>Nouvelle réservation</span>
-            </DropdownMenuItem>
-        </BookingTrigger>
         
         <DropdownMenuSeparator />
 
