@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useState, useRef } from 'react';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useFirebaseApp } from '@/firebase';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getAuth, deleteUser as deleteAuthUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ShieldAlert, Trash2 } from 'lucide-react';
+import { Loader2, ShieldAlert, Trash2, Camera } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,18 +28,22 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
+import { Progress } from '@/components/ui/progress';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 type UserProfileData = {
   displayName: string;
   email: string;
   photoURL: string | null;
   phone?: string | null;
+  gender?: 'homme' | 'femme';
 };
 
 const profileSchema = z.object({
   displayName: z.string().min(1, 'Le nom ne peut pas être vide.'),
   phone: z.string().optional(),
-  photoURL: z.string().url('Veuillez entrer une URL valide.').or(z.literal('')).optional(),
+  gender: z.enum(['homme', 'femme']).optional(),
 });
 
 function ProfileSkeleton() {
@@ -65,12 +70,18 @@ function ProfileSkeleton() {
 export default function ProfilPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const app = useFirebaseApp();
+  const storage = getStorage(app);
   const { toast } = useToast();
   const router = useRouter();
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReauthRequired, setIsReauthRequired] = useState(false);
   const [password, setPassword] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -84,7 +95,7 @@ export default function ProfilPage() {
     values: {
       displayName: userProfile?.displayName || '',
       phone: userProfile?.phone || '',
-      photoURL: userProfile?.photoURL || '',
+      gender: userProfile?.gender || undefined,
     },
     resetOptions: {
       keepDirtyValues: true,
@@ -92,21 +103,55 @@ export default function ProfilPage() {
     mode: 'onChange',
   });
 
-  const photoUrlValue = watch('photoURL');
-
   const onSubmit = async (data: z.infer<typeof profileSchema>) => {
     if (!userDocRef) return;
     try {
       const updateData = {
           displayName: data.displayName,
           phone: data.phone || null,
-          photoURL: data.photoURL || null
+          gender: data.gender || null
       }
       await updateDoc(userDocRef, updateData);
       toast({ title: 'Profil mis à jour avec succès !' });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur', description: 'La mise à jour a échoué.' });
     }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !storage) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const filePath = `profile-pictures/${user.uid}/${file.name}`;
+    const fileRef = storageRef(storage, filePath);
+    const uploadTask = uploadBytesResumable(fileRef, file);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        setIsUploading(false);
+        toast({ variant: 'destructive', title: 'Erreur de téléversement', description: 'Impossible de téléverser l\'image.' });
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+          if(userDocRef) {
+            await updateDoc(userDocRef, { photoURL: downloadURL });
+          }
+          setIsUploading(false);
+          toast({ title: 'Photo de profil mise à jour !' });
+        });
+      }
+    );
   };
   
   const handleDeleteAccount = async () => {
@@ -131,14 +176,11 @@ export default function ProfilPage() {
             await reauthenticateWithCredential(currentUser, credential);
         }
 
-        // 1. Delete Firestore document
         await deleteDoc(doc(firestore, 'users', currentUser.uid));
-        
-        // 2. Delete Firebase Auth user
         await deleteAuthUser(currentUser);
 
         toast({ title: 'Compte supprimé', description: 'Votre compte et vos données ont été supprimés.' });
-        router.push('/'); // Redirect to homepage
+        router.push('/');
     } catch (error: any) {
         if(error.code === 'auth/requires-recent-login') {
             setIsReauthRequired(true);
@@ -148,7 +190,7 @@ export default function ProfilPage() {
         }
         setIsDeleting(false);
     }
-};
+  };
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -171,10 +213,22 @@ export default function ProfilPage() {
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <Avatar className="h-24 w-24 text-3xl">
-                  <AvatarImage src={photoUrlValue || undefined} alt={userProfile.displayName || ''} />
-                  <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                    <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/png, image/jpeg" hidden/>
+                    <Avatar className="h-24 w-24 text-3xl cursor-pointer" onClick={handleAvatarClick}>
+                      <AvatarImage src={userProfile.photoURL || undefined} alt={userProfile.displayName || ''} />
+                      <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleAvatarClick}>
+                        <Camera className="h-8 w-8 text-white" />
+                    </div>
+                    {isUploading && (
+                        <div className="absolute inset-0 bg-black/70 rounded-full flex flex-col items-center justify-center">
+                           <Loader2 className="h-8 w-8 text-white animate-spin" />
+                           <Progress value={uploadProgress} className="h-1 w-16 mt-2 bg-gray-600" />
+                        </div>
+                    )}
+                </div>
                 <div className="w-full space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="displayName">Nom d'affichage</Label>
@@ -197,24 +251,34 @@ export default function ProfilPage() {
                       <Controller
                           name="phone"
                           control={control}
-                          render={({ field }) => <Input id="phone" type="tel" placeholder="+237 6 XX XX XX XX" {...field} />}
+                          render={({ field }) => <Input id="phone" type="tel" placeholder="+237 6 XX XX XX XX" {...field} value={field.value || ''} />}
                       />
                       {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
                   </div>
                   <div className="space-y-2">
-                      <Label htmlFor="photoURL">URL de la photo de profil</Label>
+                      <Label htmlFor="gender">Genre</Label>
                       <Controller
-                          name="photoURL"
+                          name="gender"
                           control={control}
-                          render={({ field }) => <Input id="photoURL" placeholder="https://exemple.com/image.png" {...field} />}
+                          render={({ field }) => (
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4 pt-2">
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="homme" id="male" />
+                                    <Label htmlFor="male">Homme</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="femme" id="female" />
+                                    <Label htmlFor="female">Femme</Label>
+                                </div>
+                            </RadioGroup>
+                          )}
                       />
-                      {errors.photoURL && <p className="text-sm text-destructive">{errors.photoURL.message}</p>}
                   </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isSubmitting || isUploading}>
+                {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enregistrer les modifications
               </Button>
             </CardFooter>
