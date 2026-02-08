@@ -2,7 +2,7 @@
 
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import {
   Carousel,
   CarouselContent,
@@ -77,8 +77,7 @@ export function PublishedReviews() {
     if (!firestore) return null;
     return query(
       collection(firestore, 'reviews'),
-      where('status', '==', 'approved'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'approved')
     );
   }, [firestore]);
 

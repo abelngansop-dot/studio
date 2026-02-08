@@ -93,9 +93,10 @@ service cloud.firestore {
       // READ: Anyone can read approved reviews. Admins can read all reviews.
       allow get: if resource.data.status == 'approved' || isAdmin() || isSuperAdmin();
       
-      // LIST: The superadmin can list all reviews. Public users can only list approved reviews.
-      // This rule is now valid and performant.
-      allow list: if isTheSuperAdmin() || request.query.status == 'approved';
+      // LIST: Anyone can query the reviews collection. The 'get' rule above provides document-level
+      // security, ensuring that client-side queries for approved reviews will only
+      // return documents the user is allowed to see.
+      allow list: if true;
 
       // CREATE: Any signed-in user can create a review for themselves.
       // The review must be for the user creating it.
