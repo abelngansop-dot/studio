@@ -68,7 +68,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
   const [emailError, setEmailError] = useState<string | undefined>();
   const [phoneError, setPhoneError] = useState<string | undefined>();
   const [consentError, setConsentError] = useState<string | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingMethod, setSubmittingMethod] = useState<'whatsapp' | 'email' | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const { user } = useUser();
@@ -99,7 +99,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
     }
     
     if (!firestore) return;
-    setIsSubmitting(true);
+    setSubmittingMethod(method);
 
     const bookingPayload = {
       ...bookingData,
@@ -142,8 +142,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
         title: 'Erreur',
         description: 'Votre réservation n\'a pas pu être sauvegardée. Veuillez réessayer.'
       })
-    } finally {
-      setIsSubmitting(false);
+      setSubmittingMethod(null);
     }
   };
   
@@ -246,19 +245,10 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                         </div>
                     </CardContent>
                 </Card>
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
-                    <Button variant="outline" size="lg" onClick={onBack}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Précédent
-                    </Button>
-                    <Button asChild variant="link" className="text-muted-foreground">
-                        <Link href="/">Retour à l'accueil</Link>
-                    </Button>
-                </div>
             </div>
 
-            {/* Summary Section (Right & Sticky) */}
-            <div className="lg:col-span-2 lg:sticky top-6">
+            {/* Summary Section (Right) */}
+            <div className="lg:col-span-2">
                 <Card className="border-primary/20 shadow-xl">
                     <CardHeader className="bg-primary/5">
                         <CardTitle className="text-2xl font-headline text-primary">Proforma de votre demande</CardTitle>
@@ -270,7 +260,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                             <SummaryItem icon={<MessageSquare className="h-5 w-5 text-primary" />} label="Détails 'Autre'" value={<p className="text-sm font-normal normal-case whitespace-pre-wrap">{bookingData.requestDetails}</p>} />
                         )}
                         <SummaryItem icon={<Calendar className="h-5 w-5 text-primary" />} label="Date" value={selectedDateDisplay} />
-                        <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure" value={bookingData.time || 'Non précisée'} />
+                        <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure de début" value={bookingData.time || 'Non précisée'} />
                         <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Pays" value={bookingData.country || 'Non précisé'} />
                         <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Ville" value={bookingData.city || 'Non précisée'} />
                         <SummaryItem icon={<Hourglass className="h-5 w-5 text-primary" />} label="Durée" value={bookingData.duration || 'Non précisée'} />
@@ -278,13 +268,13 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                     <CardFooter className="flex-col gap-4 pt-6 bg-secondary/30">
                         <p className="text-xs text-center text-muted-foreground px-4">En confirmant, notre équipe vous contactera pour établir le devis final.</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                            <Button size="lg" disabled={!isPhoneFormatValid || !consent || isSubmitting} onClick={() => handleConfirm('whatsapp')} className="bg-green-600 hover:bg-green-700 text-white">
-                              {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                            <Button size="lg" disabled={!isPhoneFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('whatsapp')} className="bg-green-600 hover:bg-green-700 text-white">
+                              {submittingMethod === 'whatsapp' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                               <MessageSquare className="mr-2 h-5 w-5" />
                               Confirmer par WhatsApp
                             </Button>
-                            <Button size="lg" disabled={!isEmailFormatValid || !consent || isSubmitting} onClick={() => handleConfirm('email')}>
-                              {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                            <Button size="lg" disabled={!isEmailFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
+                              {submittingMethod === 'email' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                               <Mail className="mr-2 h-5 w-5" />
                               Confirmer par Email
                             </Button>
@@ -292,6 +282,16 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                     </CardFooter>
                 </Card>
             </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 mt-8 border-t">
+            <Button variant="outline" size="lg" onClick={onBack}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Précédent
+            </Button>
+            <Button asChild variant="link" className="text-muted-foreground">
+                <Link href="/">Retour à l'accueil</Link>
+            </Button>
         </div>
     </div>
   );
