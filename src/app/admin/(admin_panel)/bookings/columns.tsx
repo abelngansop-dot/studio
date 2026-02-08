@@ -58,7 +58,7 @@ export const columns: ColumnDef<Booking>[] = [
       );
     },
     cell: ({ row }) => {
-      const email = row.getValue('contactInfo.email') as string | undefined;
+      const email = row.original.contactInfo?.email;
       return <div className="lowercase">{email || 'Non renseigné'}</div>
     }
   },
