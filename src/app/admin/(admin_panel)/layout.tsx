@@ -1,7 +1,7 @@
 'use client';
 
-import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase/provider';
-import { useAuth } from '@/firebase/provider';
+import { useUser, useMemoFirebase, useFirestore, useAuth } from '@/firebase/provider';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
