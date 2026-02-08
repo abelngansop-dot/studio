@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
@@ -35,71 +35,83 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
 
     try {
-      // Étape 1 : AUTHENTIFIER l'utilisateur via Firebase Auth.
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+        // --- ÉTAPE 1: Tenter la connexion ---
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-      // Étape 2 : IDENTIFIER le rôle en consultant Firestore.
-      const userDocRef = doc(firestore, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+        // --- ÉTAPE 2: Connexion réussie, vérifier l'autorisation ---
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-      let userRole: string | null = null;
-      
-      if (userDoc.exists()) {
-          userRole = userDoc.data()?.role;
-      } else if (user.email === SUPERADMIN_EMAIL) {
-          // Étape 2.1 : Si le document n'existe pas et que l'email correspond, créez le superadmin.
-          await setDoc(userDocRef, {
-              uid: user.uid,
-              email: user.email,
-              displayName: 'Super Admin',
-              role: 'superadmin',
-              active: true,
-              createdAt: serverTimestamp()
-          });
-          userRole = 'superadmin';
-          toast({ title: 'Compte Super Admin initialisé !', description: 'Redirection vers votre tableau de bord...' });
-      }
-
-      // Étape 3 : AUTORISER en fonction du rôle.
-      if (userRole === 'admin' || userRole === 'superadmin') {
-          toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
-          router.replace('/admin/dashboard');
-      } else {
-          // Si l'authentification a réussi mais que le rôle n'est pas suffisant, déconnectez et affichez un message clair.
-          await signOut(auth);
-          toast({
-              variant: 'destructive',
-              title: 'Accès non autorisé',
-              description: "Vous n'avez pas les permissions nécessaires pour accéder à cette section."
-          });
-      }
-
-    } catch (error) {
-        // Ce bloc ne gère QUE les erreurs d'authentification réelles ou les problèmes techniques.
-        let title = 'Échec de la connexion';
-        let description = 'Une erreur est survenue.';
+        let userRole = userDoc.exists() ? userDoc.data()?.role : null;
         
-        if (error instanceof FirebaseError) {
-            switch (error.code) {
-                case 'auth/user-not-found':
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential':
-                    description = 'Email ou mot de passe invalide.';
-                    break;
-                default:
-                    console.error("Erreur de connexion inattendue:", error);
-                    description = "Une erreur technique est survenue. Veuillez réessayer.";
-                    break;
-            }
-        } else {
-             console.error("Erreur non-Firebase:", error);
+        // Si l'utilisateur connecté est le superadmin mais n'a pas de document, on le crée
+        if (!userDoc.exists() && user.email === SUPERADMIN_EMAIL) {
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                email: user.email,
+                displayName: 'Super Admin',
+                role: 'superadmin',
+                createdAt: serverTimestamp()
+            });
+            userRole = 'superadmin';
         }
-        toast({ variant: 'destructive', title, description });
+
+        // --- ÉTAPE 3: Rediriger ou éjecter ---
+        if (userRole === 'admin' || userRole === 'superadmin') {
+            toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
+            router.replace('/admin/dashboard');
+        } else {
+            await signOut(auth);
+            toast({
+                variant: 'destructive',
+                title: 'Accès non autorisé',
+                description: "Vous n'avez pas les permissions nécessaires pour accéder à cette section."
+            });
+        }
+    } catch (error) {
+        // --- ÉTAPE 1.1: La connexion a échoué, analyser pourquoi ---
+        if (error instanceof FirebaseError && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && email === SUPERADMIN_EMAIL) {
+            // --- CAS SPÉCIAL: L'utilisateur est le SUPERADMIN et n'existe pas, on le crée ---
+            try {
+                const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUser = newUserCredential.user;
+                
+                // Créer le document Firestore pour le nouveau superadmin
+                const userDocRef = doc(firestore, "users", newUser.uid);
+                await setDoc(userDocRef, {
+                    uid: newUser.uid,
+                    email: newUser.email,
+                    displayName: 'Super Admin',
+                    role: 'superadmin',
+                    createdAt: serverTimestamp()
+                });
+
+                toast({ title: 'Compte Super Admin créé !', description: 'Redirection vers votre tableau de bord...' });
+                router.replace('/admin/dashboard');
+
+            } catch (creationError) {
+                // Erreur lors de la création (ex: mot de passe trop faible)
+                let description = "Une erreur est survenue lors de la création du compte admin.";
+                if (creationError instanceof FirebaseError) {
+                    if(creationError.code === 'auth/weak-password') {
+                        description = 'Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.';
+                    }
+                }
+                toast({ variant: 'destructive', title: 'Erreur de création', description });
+            }
+        } else if (error instanceof FirebaseError && (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential')) {
+            // --- CAS CLASSIQUE: Identifiants incorrects ---
+             toast({ variant: 'destructive', title: 'Échec de la connexion', description: 'Email ou mot de passe invalide.' });
+        } else {
+            // --- AUTRES ERREURS INATTENDUES ---
+            console.error("Erreur de connexion inattendue:", error);
+            toast({ variant: 'destructive', title: 'Échec de la connexion', description: "Une erreur technique est survenue." });
+        }
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  };
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
