@@ -38,6 +38,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
   const [icon, setIcon] = useState<keyof typeof icons>('Package');
   const [rating, setRating] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const firestore = useFirestore();
@@ -50,6 +51,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
       setIcon(service.icon);
       setRating(service.rating);
       setImageUrl(service.imageUrl || '');
+      setVideoUrl(service.videoUrl || '');
     } else {
       // Reset form for new service
       setName('');
@@ -57,6 +59,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
       setIcon('Package');
       setRating(0);
       setImageUrl('');
+      setVideoUrl('');
     }
   }, [service, isOpen]);
 
@@ -64,7 +67,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
     if (!firestore) return;
     setIsSaving(true);
 
-    const serviceData = { name, description, icon, rating, imageUrl };
+    const serviceData = { name, description, icon, rating, imageUrl, videoUrl };
 
     try {
       if (service) {
@@ -148,6 +151,12 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
               URL de l'image
             </Label>
             <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/image.png" />
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="videoUrl" className="text-right">
+              URL de la vidéo
+            </Label>
+            <Input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/video.mp4" />
           </div>
         </div>
         <DialogFooter>

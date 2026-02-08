@@ -18,6 +18,7 @@ export type EventType = {
   name: string;
   icon: keyof typeof icons;
   imageUrl?: string;
+  videoUrl?: string;
 };
 
 export const columns = (

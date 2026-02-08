@@ -34,6 +34,7 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
   const [name, setName] = useState('');
   const [icon, setIcon] = useState<keyof typeof icons>('Sparkles');
   const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const firestore = useFirestore();
@@ -44,11 +45,13 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
       setName(eventType.name);
       setIcon(eventType.icon);
       setImageUrl(eventType.imageUrl || '');
+      setVideoUrl(eventType.videoUrl || '');
     } else {
       // Reset form
       setName('');
       setIcon('Sparkles');
       setImageUrl('');
+      setVideoUrl('');
     }
   }, [eventType, isOpen]);
 
@@ -56,7 +59,7 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
     if (!firestore) return;
     setIsSaving(true);
 
-    const eventTypeData = { name, icon, imageUrl };
+    const eventTypeData = { name, icon, imageUrl, videoUrl };
 
     try {
       if (eventType) {
@@ -128,6 +131,12 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
               URL de l'image
             </Label>
             <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/image.png" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="videoUrl" className="text-right">
+              URL de la vidéo
+            </Label>
+            <Input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="col-span-3" placeholder="https://exemple.com/video.mp4" />
           </div>
         </div>
         <DialogFooter>

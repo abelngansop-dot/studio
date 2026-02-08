@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -74,6 +74,82 @@ const GallerySkeleton = () => (
         <Skeleton className="aspect-square" />
     </div>
 );
+
+const ServiceCard = ({ service }: { service: Service }) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleMouseEnter = () => {
+        setIsHovered(true);
+        if (videoRef.current) {
+            videoRef.current.play().catch(error => console.error("Video play failed:", error));
+        }
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    };
+
+    const hasVideo = !!service.videoUrl;
+
+    return (
+        <Card 
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="flex flex-col overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1"
+        >
+            <div className="relative h-48 w-full">
+                {service.imageUrl && (
+                    <Image
+                        src={service.imageUrl}
+                        alt={service.name}
+                        fill
+                        className={cn(
+                            "object-cover transition-opacity duration-300",
+                            hasVideo && isHovered && "opacity-0"
+                        )}
+                    />
+                )}
+                {hasVideo && (
+                    <video
+                        ref={videoRef}
+                        src={service.videoUrl}
+                        loop
+                        muted
+                        playsInline
+                        className={cn(
+                            "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+                            isHovered ? "opacity-100" : "opacity-0"
+                        )}
+                    />
+                )}
+            </div>
+            <BookingTrigger initialServiceId={service.id}>
+                <CardHeader className="cursor-pointer">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-accent/10 rounded-full">
+                            <Icon name={service.icon as keyof typeof icons} className="h-6 w-6 text-accent" />
+                        </div>
+                        <CardTitle className="text-xl font-headline">{service.name}</CardTitle>
+                    </div>
+                </CardHeader>
+            </BookingTrigger>
+            <CardContent className="flex-grow">
+                <p className="text-muted-foreground text-sm">{service.description}</p>
+            </CardContent>
+            <CardFooter className="flex justify-between items-center bg-secondary/30 py-3 px-4">
+                <StarRating rating={service.rating} />
+                <BookingTrigger initialServiceId={service.id}>
+                    <Button variant="ghost" size="sm">Choisir <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                </BookingTrigger>
+            </CardFooter>
+        </Card>
+    );
+};
 
 
 export default function Home() {
@@ -163,37 +239,7 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {services?.map((service) => (
-                  <Card key={service.id} className="flex flex-col overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
-                    {service.imageUrl && (
-                      <div className="relative h-48 w-full">
-                        <Image
-                            src={service.imageUrl}
-                            alt={service.name}
-                            fill
-                            className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <BookingTrigger initialServiceId={service.id}>
-                      <CardHeader className="cursor-pointer">
-                        <div className="flex items-center gap-3">
-                          <div className="p-3 bg-accent/10 rounded-full">
-                            <Icon name={service.icon as keyof typeof icons} className="h-6 w-6 text-accent" />
-                          </div>
-                          <CardTitle className="text-xl font-headline">{service.name}</CardTitle>
-                        </div>
-                      </CardHeader>
-                    </BookingTrigger>
-                    <CardContent className="flex-grow">
-                      <p className="text-muted-foreground text-sm">{service.description}</p>
-                    </CardContent>
-                    <CardFooter className="flex justify-between items-center bg-secondary/30 py-3 px-4">
-                      <StarRating rating={service.rating} />
-                      <BookingTrigger initialServiceId={service.id}>
-                          <Button variant="ghost" size="sm">{t('header.choose')} <ArrowRight className="ml-2 h-4 w-4" /></Button>
-                      </BookingTrigger>
-                    </CardFooter>
-                  </Card>
+                 <ServiceCard key={service.id} service={service} />
               ))}
             </div>
           )}

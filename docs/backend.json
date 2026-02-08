@@ -117,6 +117,11 @@
           "type": "string",
           "description": "URL for an image representing the service.",
           "format": "uri"
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "URL for a short video representing the service.",
+          "format": "uri"
         }
       },
       "required": ["name", "description", "icon"]
@@ -133,6 +138,11 @@
         "imageUrl": {
           "type": "string",
           "description": "URL for an image representing the event type.",
+          "format": "uri"
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "URL for a short video representing the event type.",
           "format": "uri"
         }
       },

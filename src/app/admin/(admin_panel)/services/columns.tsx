@@ -20,6 +20,7 @@ export type Service = {
   icon: keyof typeof icons;
   rating: number;
   imageUrl?: string;
+  videoUrl?: string;
 };
 
 export const columns = (
