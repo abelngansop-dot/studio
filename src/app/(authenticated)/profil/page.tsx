@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getAuth, deleteUser as deleteAuthUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useForm, Controller } from 'react-hook-form';

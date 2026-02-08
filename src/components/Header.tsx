@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { BookingTrigger } from './booking/BookingTrigger';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTranslation } from '@/hooks/use-translation';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/provider';
 import { UserNav } from './UserNav';
 import { Skeleton } from './ui/skeleton';
 

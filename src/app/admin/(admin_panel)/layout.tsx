@@ -1,6 +1,7 @@
 'use client';
 
-import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase/provider';
+import { useAuth } from '@/firebase/provider';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
@@ -9,7 +10,6 @@ import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, Me
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
@@ -34,7 +34,7 @@ export default function AdminLayout({
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
   useEffect(() => {
     if (isUserLoading || isProfileLoading) {

@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/provider';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
 
 type HeroSectionProps = {

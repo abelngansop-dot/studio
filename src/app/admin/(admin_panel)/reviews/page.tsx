@@ -2,7 +2,8 @@
 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useFirestore, useMemoFirebase, useUser } from '@/firebase/provider';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { Review } from '@/components/reviews/PublishedReviews';
 

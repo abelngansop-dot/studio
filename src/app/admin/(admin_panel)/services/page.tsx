@@ -2,7 +2,8 @@
 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { DataTable } from '@/components/ui/data-table';
 import { columns as serviceColumns } from './columns';
 import { columns as eventTypeColumns } from './event-types-columns';

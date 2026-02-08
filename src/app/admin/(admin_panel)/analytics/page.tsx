@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/chart';
 import { useMemo } from 'react';
 import { TrendingUp, PartyPopper } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query } from 'firebase/firestore';
 import type { Booking } from '../bookings/columns';
 import { format, getMonth } from 'date-fns';

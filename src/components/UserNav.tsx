@@ -1,7 +1,7 @@
 'use client';
 import { signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { useAuth } from '@/firebase/provider';
 import {
   DropdownMenu,
   DropdownMenuContent,

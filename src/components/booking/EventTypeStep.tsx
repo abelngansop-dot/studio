@@ -4,7 +4,8 @@ import { SelectableCard } from './SelectableCard';
 import type { icons } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/Icon';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 

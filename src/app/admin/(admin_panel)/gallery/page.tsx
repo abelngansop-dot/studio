@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
