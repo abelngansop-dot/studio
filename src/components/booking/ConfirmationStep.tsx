@@ -44,6 +44,7 @@ const generateBookingSummaryText = (bookingData: any): string => {
     `--- DÉTAILS DE L'ÉVÉNEMENT ---`,
     `Type d'événement : ${bookingData.eventType}`,
     `Service(s) demandé(s) : ${bookingData.services.join(', ')}`,
+    bookingData.requestDetails ? `Détails "Autre" : ${bookingData.requestDetails}` : null,
     `Date : ${bookingData.date ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr }) : 'Non précisée'}`,
     `Heure de début : ${bookingData.time || 'Non précisée'}`,
     `Ville : ${bookingData.city || 'Non précisée'}`,
@@ -54,7 +55,7 @@ const generateBookingSummaryText = (bookingData: any): string => {
     `Téléphone : ${bookingData.phone}`,
     ``,
     `Merci de me recontacter pour finaliser le devis.`,
-  ];
+  ].filter(Boolean); // filter(Boolean) removes null/undefined lines
   return summaryLines.join('\n');
 };
 
@@ -264,6 +265,9 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                     <CardContent className="divide-y divide-border pt-4">
                         <SummaryItem icon={getEventIcon()} label="Événement" value={bookingData.eventType} />
                         <SummaryItem icon={<ListChecks className="h-5 w-5 text-primary" />} label="Services" value={bookingData.services.join(', ') || 'Non précisés'} />
+                        {bookingData.requestDetails && (
+                            <SummaryItem icon={<MessageSquare className="h-5 w-5 text-primary" />} label="Détails 'Autre'" value={<p className="text-sm font-normal normal-case whitespace-pre-wrap">{bookingData.requestDetails}</p>} />
+                        )}
                         <SummaryItem icon={<Calendar className="h-5 w-5 text-primary" />} label="Date" value={selectedDateDisplay} />
                         <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure" value={bookingData.time || 'Non précisée'} />
                         <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Ville" value={bookingData.city || 'Non précisée'} />

@@ -23,6 +23,7 @@ import {
   PartyPopper,
   Briefcase,
   CheckCircle,
+  MessageSquare,
 } from 'lucide-react';
 import { format, parse, isValid, isPast, startOfToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -30,6 +31,7 @@ import type { BookingData } from './BookingFlow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
 
 const timeSlots = Array.from({ length: 29 }, (_, i) => {
   const hour = Math.floor(i / 2) + 8;
@@ -308,6 +310,25 @@ export function DetailsStep({
               </div>
             </CardContent>
           </Card>
+
+          {bookingData.services.includes('autre') && (
+            <Card className="shadow-md animate-in fade-in duration-300">
+                <CardHeader className="flex-row items-center gap-4 space-y-0">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                        <MessageSquare className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl font-headline">Précisez votre demande "Autre"</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Textarea
+                        placeholder="Décrivez le service ou le besoin spécifique que vous recherchez..."
+                        value={bookingData.requestDetails || ''}
+                        onChange={(e) => updateBookingData({ requestDetails: e.target.value })}
+                        className="min-h-[100px]"
+                    />
+                </CardContent>
+            </Card>
+          )}
 
           {/* Location & Duration */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

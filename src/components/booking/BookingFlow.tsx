@@ -23,6 +23,7 @@ export type BookingData = {
   duration: string;
   email: string;
   phone: string;
+  requestDetails?: string;
 };
 
 const initialBookingData: BookingData = {
@@ -34,6 +35,7 @@ const initialBookingData: BookingData = {
   duration: '',
   email: '',
   phone: '',
+  requestDetails: '',
 };
 
 const TOTAL_STEPS = 3;
@@ -136,7 +138,6 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
               updateBookingData={updateBookingData}
               onNext={nextStep}
               onBack={prevStep}
-              onSelectOther={() => setIsOtherFlow(true)}
             />
           )}
           {step === 3 && (
