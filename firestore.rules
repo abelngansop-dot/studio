@@ -26,11 +26,10 @@ service cloud.firestore {
       return isSignedIn() && getUserRole(request.auth.uid) == 'superadmin';
     }
 
-    // DEFINITIVE FIX: New helper to check for the Super Admin UID directly.
-    // This is fast, performant, and valid for 'list' queries as it does not read a document.
-    // The UID 'P0mzv7fFREaXRbv0DA9yjGNeskF2' is taken from the user's error logs for 'anotsas@gmail.com'.
+    // This function identifies the superadmin by their email address.
+    // This is valid for 'list' queries as it does not read a document.
     function isTheSuperAdmin() {
-      return isSignedIn() && request.auth.uid == 'P0mzv7fFREaXRbv0DA9yjGNeskF2';
+      return isSignedIn() && request.auth.token.email == 'abelnono1994@gmail.com';
     }
     
     // USERS

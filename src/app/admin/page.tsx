@@ -14,7 +14,7 @@ import { Loader2 } from 'lucide-react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // The designated email for the superadmin to bootstrap the application.
-const SUPERADMIN_EMAIL = 'anotsas@gmail.com';
+const SUPERADMIN_EMAIL = 'abelnono1994@gmail.com';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -47,7 +47,6 @@ export default function AdminLoginPage() {
               uid: authenticatedUser.uid,
               email: authenticatedUser.email,
               displayName: 'Super Admin',
-              photoURL: null,
               role: 'superadmin',
               createdAt: serverTimestamp()
           });
