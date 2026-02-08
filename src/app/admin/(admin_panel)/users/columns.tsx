@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,7 +22,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
@@ -62,7 +62,7 @@ const UserCell = ({ row }: { row: any }) => {
     )
 }
 
-const RoleSelector = ({ user }: { user: User }) => {
+const RoleSelector = ({ user, isSelf }: { user: User; isSelf: boolean }) => {
     const firestore = useFirestore();
     const roles: User['role'][] = ['client', 'admin', 'superadmin'];
 
@@ -74,7 +74,7 @@ const RoleSelector = ({ user }: { user: User }) => {
 
     return (
         <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Changer le rôle</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger disabled={isSelf}>Changer le rôle</DropdownMenuSubTrigger>
             <DropdownMenuPortal>
                 <DropdownMenuSubContent>
                     <DropdownMenuRadioGroup value={user.role} onValueChange={handleRoleChange}>
@@ -90,8 +90,7 @@ const RoleSelector = ({ user }: { user: User }) => {
     )
 }
 
-
-export const columns: ColumnDef<User>[] = [
+export const columns = (onDelete: (user: User) => void): ColumnDef<User>[] => [
   {
     accessorKey: 'displayName',
     header: ({ column }) => {
@@ -130,6 +129,8 @@ export const columns: ColumnDef<User>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const user = row.original;
+      const { user: currentUser } = useUser();
+      const isSelf = currentUser?.uid === user.uid;
 
       return (
         <DropdownMenu>
@@ -147,8 +148,10 @@ export const columns: ColumnDef<User>[] = [
               Copier l'ID utilisateur
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <RoleSelector user={user} />
-            <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
+            <RoleSelector user={user} isSelf={isSelf} />
+            <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive" disabled={isSelf}>
+                <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

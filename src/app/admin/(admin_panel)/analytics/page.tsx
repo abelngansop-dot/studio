@@ -1,6 +1,6 @@
 'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Sector } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell } from 'recharts';
 import {
   Card,
   CardContent,
@@ -17,144 +17,206 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart';
 import { useMemo } from 'react';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, PartyPopper } from 'lucide-react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
+import type { Booking } from '../bookings/columns';
+import { format, getMonth } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { services as serviceData, eventTypes as eventTypeData } from '@/lib/data';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const revenueData = [
-  { month: 'Janvier', revenue: 186000 },
-  { month: 'Février', revenue: 305000 },
-  { month: 'Mars', revenue: 237000 },
-  { month: 'Avril', revenue: 73000 },
-  { month: 'Mai', revenue: 209000 },
-  { month: 'Juin', revenue: 214000 },
+const chartColors = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
 ];
 
-const serviceDistributionData = [
-  { service: 'Photographe', bookings: 275, fill: 'var(--color-photographe)' },
-  { service: 'Vidéo', bookings: 200, fill: 'var(--color-video)' },
-  { service: 'Traiteur', bookings: 187, fill: 'var(--color-traiteur)' },
-  { service: 'Logistique', bookings: 173, fill: 'var(--color-logistique)' },
-  { service: 'Drone', bookings: 90, fill: 'var(--color-drone)' },
-];
+const LoadingState = () => (
+    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <Card className="lg:col-span-3">
+            <CardHeader>
+                <Skeleton className="h-7 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+        </Card>
+        <Card className="flex flex-col xl:col-span-2">
+            <CardHeader className="items-center pb-0">
+                <Skeleton className="h-7 w-3/4" />
+            </CardHeader>
+            <CardContent className="flex-1 pb-0 flex items-center justify-center">
+                <Skeleton className="h-[200px] w-[200px] rounded-full" />
+            </CardContent>
+        </Card>
+        <Card className="flex flex-col">
+            <CardHeader className="items-center pb-0">
+                <Skeleton className="h-7 w-3/4" />
+            </CardHeader>
+            <CardContent className="flex-1 pb-0 flex items-center justify-center">
+                <Skeleton className="h-[200px] w-[200px] rounded-full" />
+            </CardContent>
+        </Card>
+    </div>
+);
 
-const chartConfig = {
-  revenue: {
-    label: 'Revenu',
-    color: 'hsl(var(--chart-1))',
-  },
-  photographe: {
-    label: 'Photographe',
-    color: 'hsl(var(--chart-1))',
-  },
-  video: {
-    label: 'Vidéo',
-    color: 'hsl(var(--chart-2))',
-  },
-  traiteur: {
-    label: 'Traiteur',
-    color: 'hsl(var(--chart-3))',
-  },
-  logistique: {
-    label: 'Logistique',
-    color: 'hsl(var(--chart-4))',
-  },
-  drone: {
-    label: 'Drone',
-    color: 'hsl(var(--chart-5))',
-  },
-};
 
 export default function AnalyticsPage() {
-  const totalRevenue = useMemo(() => {
-    return revenueData.reduce((acc, curr) => acc + curr.revenue, 0);
-  }, []);
-  
-  const totalBookings = useMemo(() => {
-    return serviceDistributionData.reduce((acc, curr) => acc + curr.bookings, 0);
-  }, []);
+  const firestore = useFirestore();
+  const bookingsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'bookings')), [firestore]);
+  const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
 
+  const { bookingsByMonth, servicesDistribution, eventTypesDistribution } = useMemo(() => {
+    if (!bookings) return { bookingsByMonth: [], servicesDistribution: [], eventTypesDistribution: [] };
+
+    const monthlyCounts: { [key: number]: number } = {};
+    bookings.forEach(booking => {
+      if (booking.date) {
+        const month = getMonth(new Date(booking.date.seconds * 1000));
+        monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+      }
+    });
+
+    const bookingsByMonth = Array.from({ length: 12 }, (_, i) => ({
+      month: format(new Date(2024, i, 1), 'MMMM', { locale: fr }),
+      total: monthlyCounts[i] || 0,
+    }));
+
+    const serviceCounts: { [key: string]: number } = {};
+    bookings.forEach(booking => {
+      booking.services?.forEach(service => {
+        serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+      });
+    });
+
+    const servicesDistribution = Object.entries(serviceCounts).map(([name, count], index) => ({
+      name: serviceData.find(s => s.id === name)?.name || name,
+      count,
+      fill: chartColors[index % chartColors.length]
+    })).sort((a, b) => b.count - a.count);
+
+    const eventTypeCounts: { [key: string]: number } = {};
+    bookings.forEach(booking => {
+        eventTypeCounts[booking.eventType] = (eventTypeCounts[booking.eventType] || 0) + 1;
+    });
+
+    const eventTypesDistribution = Object.entries(eventTypeCounts).map(([name, count], index) => ({
+      name: eventTypeData.find(e => e.id === name)?.name || name,
+      count,
+      fill: chartColors[index % chartColors.length]
+    })).sort((a, b) => b.count - a.count);
+
+
+    return { bookingsByMonth, servicesDistribution, eventTypesDistribution };
+  }, [bookings]);
+
+  const chartConfig = useMemo(() => {
+      const config: any = {
+          total: { label: 'Réservations', color: 'hsl(var(--primary))' },
+      };
+      servicesDistribution.forEach(item => {
+          config[item.name] = { label: item.name, color: item.fill };
+      });
+      eventTypesDistribution.forEach(item => {
+          config[item.name] = { label: item.name, color: item.fill };
+      });
+      return config;
+  }, [servicesDistribution, eventTypesDistribution]);
+
+  if (isLoading) {
+      return <LoadingState />;
+  }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Revenu Mensuel</CardTitle>
-          <CardDescription>Janvier - Juin 2024</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig}>
-            <BarChart
-              accessibilityLayer
-              data={revenueData}
-              margin={{
-                left: 12,
-                right: 12,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
-              />
-              <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-        <CardFooter className="flex-col items-start gap-2 text-sm">
-          <div className="flex gap-2 font-medium leading-none">
-            Revenu en hausse de 5.2% ce mois-ci <TrendingUp className="h-4 w-4" />
-          </div>
-          <div className="leading-none text-muted-foreground">
-            Affichage des 6 derniers mois
-          </div>
-        </CardFooter>
-      </Card>
-      
-      <Card className="flex flex-col">
-          <CardHeader className="items-center pb-0">
-            <CardTitle>Répartition des Services</CardTitle>
-            <CardDescription>Janvier - Juin 2024</CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 pb-0">
-            <ChartContainer
-              config={chartConfig}
-              className="mx-auto aspect-square max-h-[250px]"
-            >
-              <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
-                <Pie
-                  data={serviceDistributionData}
-                  dataKey="bookings"
-                  nameKey="service"
-                  innerRadius={60}
-                  strokeWidth={5}
+    <div className="space-y-8">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Statistiques</h1>
+            <p className="text-muted-foreground">Analyse détaillée de l'activité de la plateforme.</p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Activité des réservations par mois</CardTitle>
+              <CardDescription>Affichage des données de l'année en cours.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                <BarChart accessibilityLayer data={bookingsByMonth}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Bar dataKey="total" fill="var(--color-total)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+             <CardFooter className="flex-col items-start gap-2 text-sm">
+              <div className="flex gap-2 font-medium leading-none">
+                Hausse de l'activité observée sur les derniers mois <TrendingUp className="h-4 w-4" />
+              </div>
+            </CardFooter>
+          </Card>
+          
+          <Card className="flex flex-col lg:col-span-2">
+              <CardHeader className="items-center pb-0">
+                <CardTitle>Répartition par Type d'événement</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 pb-0">
+                <ChartContainer
+                  config={chartConfig}
+                  className="mx-auto aspect-square max-h-[300px]"
                 >
-                </Pie>
-                <ChartLegend
-                  content={<ChartLegendContent nameKey="service" />}
-                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-          <CardFooter className="flex-col gap-2 text-sm">
-             <div className="flex items-center gap-2 font-medium leading-none">
-              Total de {totalBookings} réservations ce semestre
-            </div>
-            <div className="leading-none text-muted-foreground">
-              Le service de photographie est le plus populaire.
-            </div>
-          </CardFooter>
-        </Card>
+                  <PieChart>
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent hideLabel />}
+                    />
+                    <Pie data={eventTypesDistribution} dataKey="count" nameKey="name" innerRadius={60} strokeWidth={5}>
+                       {eventTypesDistribution.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+              </CardContent>
+              <CardFooter className="flex-col gap-2 text-sm pt-4">
+                 <div className="flex items-center gap-2 font-medium leading-none">
+                    <PartyPopper className="h-4 w-4" /> Total de {bookings?.length} réservations
+                </div>
+                 <ChartLegend
+                      content={<ChartLegendContent nameKey="name" />}
+                      className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                    />
+              </CardFooter>
+            </Card>
+
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle>Services les plus populaires</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  {servicesDistribution.slice(0, 5).map(service => (
+                      <div key={service.name} className="flex items-center">
+                          <div className="capitalize text-sm font-medium">{service.name}</div>
+                          <div className="ml-auto font-semibold">{service.count}</div>
+                      </div>
+                  ))}
+              </CardContent>
+            </Card>
+
+        </div>
     </div>
   );
 }

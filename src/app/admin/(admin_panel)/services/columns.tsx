@@ -1,14 +1,13 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Icon from '@/components/Icon';
@@ -22,7 +21,10 @@ export type Service = {
   rating: number;
 };
 
-export const columns = (onEdit: (service: Service) => void): ColumnDef<Service>[] => [
+export const columns = (
+    onEdit: (service: Service) => void,
+    onDelete: (service: Service) => void
+    ): ColumnDef<Service>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -73,7 +75,12 @@ export const columns = (onEdit: (service: Service) => void): ColumnDef<Service>[
             <DropdownMenuItem onClick={() => onEdit(service)}>
               Modifier
             </DropdownMenuItem>
-            <DropdownMenuItem>Supprimer</DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onDelete(service)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

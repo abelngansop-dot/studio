@@ -10,13 +10,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type Booking = {
   id: string;
   userId: string;
@@ -29,7 +36,36 @@ export type Booking = {
     email: string;
     phone: string;
   };
+  createdAt?: any;
 };
+
+const StatusSelector = ({ booking }: { booking: Booking }) => {
+    const firestore = useFirestore();
+    const statuses: Booking['status'][] = ['pending', 'confirmed', 'cancelled'];
+
+    const handleStatusChange = (status: string) => {
+        if (!firestore) return;
+        const bookingRef = doc(firestore, 'bookings', booking.id);
+        updateDocumentNonBlocking(bookingRef, { status });
+    }
+
+    return (
+        <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Changer le statut</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup value={booking.status} onValueChange={handleStatusChange}>
+                        {statuses.map(status => (
+                            <DropdownMenuRadioItem key={status} value={status} className="capitalize">
+                                {status}
+                            </DropdownMenuRadioItem>
+                        ))}
+                    </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+        </DropdownMenuSub>
+    )
+}
 
 export const columns: ColumnDef<Booking>[] = [
   {
@@ -106,6 +142,7 @@ export const columns: ColumnDef<Booking>[] = [
             >
               Copier l'ID de la réservation
             </DropdownMenuItem>
+             <StatusSelector booking={booking} />
             <DropdownMenuSeparator />
             <DropdownMenuItem>Voir les détails</DropdownMenuItem>
             <DropdownMenuItem>Contacter le client</DropdownMenuItem>
