@@ -80,20 +80,20 @@ export function ContactFooter() {
                         <div className="flex gap-2">
                             <Button variant="outline" size="icon" asChild>
                                 <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                                    <Icon name="Facebook" />
+                                    <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Facebook_f_logo_%282019%29.svg/1024px-Facebook_f_logo_%282019%29.svg.png" alt="Facebook logo" width={20} height={20} />
                                 </a>
                             </Button>
                             {whatsappNumber && (
                                 <Button variant="outline" size="icon" asChild>
                                     <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-                                        <Icon name="MessageSquare" />
+                                        <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1200px-WhatsApp.svg.png" alt="WhatsApp logo" width={24} height={24} />
                                     </a>
                                 </Button>
                             )}
                             {emergency?.email && (
                                 <Button variant="outline" size="icon" asChild>
                                     <a href={`mailto:${emergency.email}`} aria-label="Email">
-                                        <Icon name="Mail" />
+                                        <Image src="https://static.vecteezy.com/system/resources/previews/022/484/516/original/google-mail-gmail-icon-logo-symbol-free-png.png" alt="Gmail logo" width={24} height={24} />
                                     </a>
                                 </Button>
                             )}

@@ -55,7 +55,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'emergency',
         name: 'Contact d\'urgence & Légal',
         role: 'Support',
-        email: 'inoubleven@gmail.com',
+        email: 'inoublevents@gmail.com',
         avatarId: 'none',
         type: 'support'
     },
