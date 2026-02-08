@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { SelectableCard } from './SelectableCard';
 import type { icons } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +9,6 @@ import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
 
 type EventType = {
   id: string;
@@ -21,8 +20,8 @@ type EventTypeStepProps = {
   onSelect: (eventType: string) => void;
 };
 
-// Default data to ensure the booking flow is always usable, even with an empty database.
-// The admin can override this by adding event types in the admin panel.
+// Default data to ensure the booking flow is always usable.
+// Admin can override or add to this by adding event types in the admin panel.
 const defaultEventTypes: EventType[] = [
     { id: 'mariage', name: 'Mariage', icon: 'Heart' },
     { id: 'anniversaire', name: 'Anniversaire', icon: 'Cake' },
@@ -49,10 +48,22 @@ const EventTypeSkeleton = () => (
 export function EventTypeStep({ onSelect }: EventTypeStepProps) {
   const firestore = useFirestore();
   const eventTypesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'eventTypes'), orderBy('name', 'asc')), [firestore]);
-  const { data: eventTypes, isLoading, error } = useCollection<EventType>(eventTypesQuery);
+  const { data: eventTypes, isLoading } = useCollection<EventType>(eventTypesQuery);
 
-  // If firestore has data, use it. Otherwise, use the default list.
-  const displayTypes = (!isLoading && eventTypes && eventTypes.length > 0) ? eventTypes : defaultEventTypes;
+  // Combine Firestore data with defaults, ensuring no duplicates.
+  const displayTypes = useMemo(() => {
+    const firestoreTypes = eventTypes || [];
+    const combinedTypes = [...firestoreTypes];
+    const names = new Set(firestoreTypes.map(t => t.name.toLowerCase()));
+
+    defaultEventTypes.forEach(defaultType => {
+      if (!names.has(defaultType.name.toLowerCase())) {
+        combinedTypes.push(defaultType);
+      }
+    });
+
+    return combinedTypes;
+  }, [eventTypes]);
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -67,16 +78,6 @@ export function EventTypeStep({ onSelect }: EventTypeStepProps) {
       {isLoading ? (
         <EventTypeSkeleton />
       ) : (
-        <>
-          {(!eventTypes || eventTypes.length === 0) && !error && (
-            <Alert className="mb-6 bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200">
-              <Info className="h-4 w-4 !text-blue-600 dark:!text-blue-300" />
-              <AlertTitle className="font-semibold">Information</AlertTitle>
-              <AlertDescription>
-                Ces catégories sont des exemples. L'administrateur peut les gérer depuis la section "Catalogue" du panneau d'administration.
-              </AlertDescription>
-            </Alert>
-          )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {displayTypes?.map((type) => (
               <SelectableCard
@@ -95,7 +96,6 @@ export function EventTypeStep({ onSelect }: EventTypeStepProps) {
               </SelectableCard>
             ))}
           </div>
-        </>
       )}
     </div>
   );

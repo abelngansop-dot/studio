@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { SelectableCard } from './SelectableCard';
 import { Button } from '@/components/ui/button';
 import type { BookingData } from './BookingFlow';
@@ -24,6 +25,18 @@ type ServiceStepProps = {
   onBack: () => void;
 };
 
+const defaultServices: Service[] = [
+    { id: 'photographe', name: 'Photographe', icon: 'Camera' },
+    { id: 'vidéaste', name: 'Vidéaste', icon: 'Video' },
+    { id: 'drone', name: 'Drone', icon: 'Navigation' },
+    { id: 'traiteur', name: 'Traiteur', icon: 'UtensilsCrossed' },
+    { id: 'boissons', name: 'Boissons', icon: 'Martini' },
+    { id: 'gâteau', name: 'Gâteau', icon: 'Cake' },
+    { id: 'sonorisation', name: 'Sonorisation', icon: 'Music' },
+    { id: 'décoration', name: 'Décoration', icon: 'PartyPopper' },
+    { id: 'autre', name: 'Autre', icon: 'PlusCircle' },
+];
+
 const ServiceSkeleton = () => (
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     {Array.from({length: 8}).map((_, i) => (
@@ -47,10 +60,29 @@ export function ServiceStep({
   const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
   const { data: services, isLoading } = useCollection<Service>(servicesQuery);
 
+  // Combine Firestore data with defaults, ensuring no duplicates.
+  const displayServices = useMemo(() => {
+    const firestoreServices = services || [];
+    const combinedServices = [...firestoreServices];
+    const names = new Set(firestoreServices.map(s => s.name.toLowerCase()));
+
+    defaultServices.forEach(defaultService => {
+        if (!names.has(defaultService.name.toLowerCase())) {
+            combinedServices.push(defaultService);
+        }
+    });
+
+    return combinedServices;
+  }, [services]);
+
   const handleSelectService = (serviceId: string) => {
-    const newServices = bookingData.services.includes(serviceId)
-      ? bookingData.services.filter((s) => s !== serviceId)
-      : [...bookingData.services, serviceId];
+    const service = displayServices.find(s => s.id === serviceId);
+    if (!service) return;
+    const serviceName = service.name.toLowerCase();
+
+    const newServices = bookingData.services.includes(serviceName)
+      ? bookingData.services.filter((s) => s !== serviceName)
+      : [...bookingData.services, serviceName];
     updateBookingData({ services: newServices });
   };
 
@@ -68,10 +100,10 @@ export function ServiceStep({
         <ServiceSkeleton />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {services?.map((service) => (
+          {displayServices.map((service) => (
             <SelectableCard
               key={service.id}
-              isSelected={bookingData.services.includes(service.id)}
+              isSelected={bookingData.services.includes(service.name.toLowerCase())}
               onSelect={() => handleSelectService(service.id)}
             >
               <Card className="h-full group-hover:-translate-y-1 transition-transform duration-300">
