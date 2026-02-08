@@ -16,6 +16,8 @@ export function ContactFooter() {
     const emergency = companyContacts.find(c => c.id === 'emergency');
     const complaints = companyContacts.find(c => c.id === 'complaints');
     const serviceContacts = companyContacts.filter(c => c.type === 'service');
+    const whatsappNumber = complaints?.phone?.replace(/\D/g, '');
+
 
     return (
         <footer id="contact" className="bg-secondary/50 text-secondary-foreground mt-16 border-t">
@@ -76,9 +78,25 @@ export function ContactFooter() {
                         <h3 className="text-xl font-bold font-headline">Restons Connectés</h3>
                         <p className="text-sm text-muted-foreground">Suivez-nous sur les réseaux sociaux pour ne rien manquer de nos actualités.</p>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="icon"><Icon name="Facebook" /></Button>
-                            <Button variant="outline" size="icon"><Icon name="Instagram" /></Button>
-                            <Button variant="outline" size="icon"><Icon name="Linkedin" /></Button>
+                            <Button variant="outline" size="icon" asChild>
+                                <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                    <Icon name="Facebook" />
+                                </a>
+                            </Button>
+                            {whatsappNumber && (
+                                <Button variant="outline" size="icon" asChild>
+                                    <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                                        <Icon name="MessageSquare" />
+                                    </a>
+                                </Button>
+                            )}
+                            {emergency?.email && (
+                                <Button variant="outline" size="icon" asChild>
+                                    <a href={`mailto:${emergency.email}`} aria-label="Email">
+                                        <Icon name="Mail" />
+                                    </a>
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
