@@ -9,9 +9,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
 import { useTranslation } from "@/hooks/use-translation";
+import { useEffect, useState } from "react";
 
 export function LanguageSwitcher() {
   const { setLocale, t } = useTranslation();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    // Render a placeholder that matches the final component's size to avoid layout shift.
+    // Using a disabled button preserves the space and prevents interaction before hydration.
+    return <Button variant="ghost" size="icon" disabled />;
+  }
 
   return (
     <DropdownMenu>
