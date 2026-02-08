@@ -35,48 +35,72 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
 
     try {
+      // Étape 1 : AUTHENTIFIER l'utilisateur via Firebase Auth.
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const authenticatedUser = userCredential.user;
+      const user = userCredential.user;
 
-      const userDocRef = doc(firestore, "users", authenticatedUser.uid);
+      // Étape 2 : IDENTIFIER le rôle en consultant Firestore.
+      const userDocRef = doc(firestore, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (!userDoc.exists()) {
-        if (authenticatedUser.email === SUPERADMIN_EMAIL) {
+      let userRole: string | null = null;
+      let isNewSuperAdmin = false;
+
+      if (userDoc.exists()) {
+          userRole = userDoc.data()?.role;
+      } else if (user.email === SUPERADMIN_EMAIL) {
+          // Étape 2.1 : Si le document n'existe pas et que l'email correspond, créez le superadmin.
           await setDoc(userDocRef, {
-              uid: authenticatedUser.uid,
-              email: authenticatedUser.email,
+              uid: user.uid,
+              email: user.email,
               displayName: 'Super Admin',
               role: 'superadmin',
+              active: true, // Tel que demandé
               createdAt: serverTimestamp()
           });
-          toast({ title: 'Compte Super Admin initialisé !', description: 'Redirection vers votre tableau de bord...' });
-        } else {
-          await signOut(auth);
-          toast({ variant: 'destructive', title: 'Accès non autorisé', description: "Ce compte n'est pas configuré pour l'accès administrateur." });
-          setIsSubmitting(false);
-          return;
-        }
+          userRole = 'superadmin';
+          isNewSuperAdmin = true;
       }
-      
-      toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
-      router.replace('/admin/dashboard');
+
+      // Étape 3 : AUTORISER en fonction du rôle.
+      if (userRole === 'admin' || userRole === 'superadmin') {
+          if(isNewSuperAdmin) {
+            toast({ title: 'Compte Super Admin initialisé !', description: 'Redirection vers votre tableau de bord...' });
+          } else {
+            toast({ title: 'Connexion réussie !', description: 'Redirection vers votre tableau de bord...' });
+          }
+          router.replace('/admin/dashboard');
+      } else {
+          // Si l'authentification a réussi mais que le rôle n'est pas suffisant, déconnectez et affichez un message clair.
+          await signOut(auth);
+          toast({
+              variant: 'destructive',
+              title: 'Accès non autorisé',
+              description: "Vous n'avez pas les permissions nécessaires pour accéder à cette section."
+          });
+      }
 
     } catch (error) {
-      console.error(error);
-      let description = 'Une erreur est survenue.';
-      if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-          case 'auth/invalid-credential':
-            description = 'Email ou mot de passe invalide. Accès refusé.';
-            break;
-          default:
-            description = "Une erreur inconnue est survenue. Veuillez réessayer.";
+        // Ce bloc ne gère QUE les erreurs d'authentification réelles ou les problèmes techniques.
+        let title = 'Échec de la connexion';
+        let description = 'Une erreur est survenue.';
+        
+        if (error instanceof FirebaseError) {
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    description = 'Email ou mot de passe invalide. Accès refusé.';
+                    break;
+                default:
+                    console.error("Erreur de connexion inattendue:", error);
+                    description = "Une erreur technique est survenue. Veuillez réessayer.";
+                    break;
+            }
+        } else {
+             console.error("Erreur non-Firebase:", error);
         }
-      }
-      toast({ variant: 'destructive', title: 'Échec de la connexion', description });
+        toast({ variant: 'destructive', title, description });
     } finally {
       setIsSubmitting(false);
     }
