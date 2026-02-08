@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { LanguageProvider } from '@/context/language-context';
 import { HtmlLangUpdater } from '@/components/HtmlLangUpdater';
+import { SwipeNavigationHandler } from '@/components/SwipeNavigationHandler';
 
 export const metadata: Metadata = {
   title: 'Inoubleven',
@@ -29,6 +30,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <LanguageProvider>
             <HtmlLangUpdater />
+            <SwipeNavigationHandler />
             {children}
             <Toaster />
           </LanguageProvider>
