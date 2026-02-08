@@ -16,10 +16,16 @@ import {
 } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
 import { Separator } from './ui/separator';
+import { useState, useEffect } from 'react';
 
 export function Header() {
   const { t } = useTranslation();
   const { user, isUserLoading } = useUser();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   return (
     <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-50 border-b">
@@ -69,91 +75,97 @@ export function Header() {
 
           {/* Mobile Menu */}
           <div className="md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Ouvrir le menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-full max-w-xs p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <Link
-                    href="/"
-                    className="text-2xl font-bold text-primary font-headline"
-                  >
-                    Inoublevents
-                  </Link>
-                  <SheetClose asChild>
-                    <Button variant="ghost" size="icon">
-                      <X className="h-6 w-6" />
-                      <span className="sr-only">Fermer</span>
-                    </Button>
-                  </SheetClose>
-                </div>
-
-                <nav className="flex flex-col gap-5">
-                  <SheetClose asChild>
+            {hasMounted ? (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Ouvrir le menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-full max-w-xs p-6">
+                  <div className="flex items-center justify-between mb-6">
                     <Link
-                      href="/#services"
-                      className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                      href="/"
+                      className="text-2xl font-bold text-primary font-headline"
                     >
-                      {t('header.services')}
+                      Inoublevents
                     </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link
-                      href="/#reviews"
-                      className="text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                      {t('header.reviews')}
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link
-                      href="/#contact"
-                      className="text-lg font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                      {t('header.contact')}
-                    </Link>
-                  </SheetClose>
-                </nav>
+                    <SheetClose asChild>
+                      <Button variant="ghost" size="icon">
+                        <X className="h-6 w-6" />
+                        <span className="sr-only">Fermer</span>
+                      </Button>
+                    </SheetClose>
+                  </div>
 
-                <Separator className="my-6" />
+                  <nav className="flex flex-col gap-5">
+                    <SheetClose asChild>
+                      <Link
+                        href="/#services"
+                        className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {t('header.services')}
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        href="/#reviews"
+                        className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {t('header.reviews')}
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        href="/#contact"
+                        className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {t('header.contact')}
+                      </Link>
+                    </SheetClose>
+                  </nav>
 
-                <div className="flex flex-col gap-4 sm:hidden">
-                  {isUserLoading ? (
-                    <Skeleton className="h-10 w-full" />
-                  ) : user ? (
-                    <>
-                      <SheetClose asChild>
-                        <Button asChild variant="outline">
-                          <Link href="/profil">Mon Profil</Link>
-                        </Button>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Button asChild>
-                          <Link href="/mes-reservations">Mes Réservations</Link>
-                        </Button>
-                      </SheetClose>
-                    </>
-                  ) : (
-                    <>
-                      <SheetClose asChild>
-                        <Button variant="outline" asChild>
-                          <Link href="/login">Se connecter</Link>
-                        </Button>
-                      </SheetClose>
-                      <BookingTrigger>
+                  <Separator className="my-6" />
+
+                  <div className="flex flex-col gap-4 sm:hidden">
+                    {isUserLoading ? (
+                      <Skeleton className="h-10 w-full" />
+                    ) : user ? (
+                      <>
                         <SheetClose asChild>
-                          <Button className="w-full">{t('header.book')}</Button>
+                          <Button asChild variant="outline">
+                            <Link href="/profil">Mon Profil</Link>
+                          </Button>
                         </SheetClose>
-                      </BookingTrigger>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+                        <SheetClose asChild>
+                          <Button asChild>
+                            <Link href="/mes-reservations">Mes Réservations</Link>
+                          </Button>
+                        </SheetClose>
+                      </>
+                    ) : (
+                      <>
+                        <SheetClose asChild>
+                          <Button variant="outline" asChild>
+                            <Link href="/login">Se connecter</Link>
+                          </Button>
+                        </SheetClose>
+                        <BookingTrigger>
+                          <SheetClose asChild>
+                            <Button className="w-full">{t('header.book')}</Button>
+                          </SheetClose>
+                        </BookingTrigger>
+                      </>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <Button variant="ghost" size="icon" disabled>
+                <Menu className="h-6 w-6" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
