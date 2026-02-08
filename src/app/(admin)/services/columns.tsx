@@ -1,1 +1,1 @@
-// This file is part of a legacy structure and is no longer in use.
+// This file is obsolete and has been intentionally left blank to prevent routing conflicts.
