@@ -35,7 +35,7 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
     </div>
 );
 
-const generateBookingSummaryText = (bookingData: any): string => {
+const generateBookingSummaryText = (bookingData: BookingData): string => {
   const summaryLines = [
     `Bonjour,`,
     `Je souhaite confirmer ma demande de réservation pour un événement Inoublevents.`,
@@ -47,6 +47,7 @@ const generateBookingSummaryText = (bookingData: any): string => {
     bookingData.requestDetails ? `Détails "Autre" : ${bookingData.requestDetails}` : null,
     `Date : ${bookingData.date ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr }) : 'Non précisée'}`,
     `Heure de début : ${bookingData.time || 'Non précisée'}`,
+    `Pays : ${bookingData.country || 'Non précisé'}`,
     `Ville : ${bookingData.city || 'Non précisée'}`,
     `Durée estimée : ${bookingData.duration || 'Non précisée'}`,
     ``,
@@ -270,6 +271,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                         )}
                         <SummaryItem icon={<Calendar className="h-5 w-5 text-primary" />} label="Date" value={selectedDateDisplay} />
                         <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure" value={bookingData.time || 'Non précisée'} />
+                        <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Pays" value={bookingData.country || 'Non précisé'} />
                         <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Ville" value={bookingData.city || 'Non précisée'} />
                         <SummaryItem icon={<Hourglass className="h-5 w-5 text-primary" />} label="Durée" value={bookingData.duration || 'Non précisée'} />
                     </CardContent>

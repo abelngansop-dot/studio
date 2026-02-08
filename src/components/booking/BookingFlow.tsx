@@ -17,6 +17,7 @@ import { useBookingProgress } from '@/hooks/use-booking-progress';
 export type BookingData = {
   eventType: string;
   services: string[];
+  country: string;
   city: string;
   date: Date | undefined;
   time: string;
@@ -29,6 +30,7 @@ export type BookingData = {
 const initialBookingData: BookingData = {
   eventType: '',
   services: [],
+  country: '',
   city: '',
   date: undefined,
   time: '',

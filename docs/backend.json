@@ -64,6 +64,10 @@
           "description": "A list of requested service IDs.",
           "items": { "type": "string" }
         },
+        "country": {
+          "type": "string",
+          "description": "The country of the event."
+        },
         "city": {
           "type": "string",
           "description": "The city of the event."
@@ -96,7 +100,7 @@
           "description": "Specific details for an 'other' type event request."
         }
       },
-      "required": ["userId", "eventType", "services", "city", "date", "status", "createdAt"]
+      "required": ["userId", "eventType", "services", "country", "city", "date", "status", "createdAt"]
     },
     "Service": {
       "$schema": "http://json-schema.org/draft-07/schema#",

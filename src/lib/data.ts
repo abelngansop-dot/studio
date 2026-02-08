@@ -83,15 +83,4 @@ export const services = [
   },
 ];
 
-export const cities = [
-  'Douala',
-  'Yaoundé',
-  'Bamenda',
-  'Bafoussam',
-  'Garoua',
-  'Buea',
-  'Kribi',
-  'Autre',
-];
-
 export const durations = ['2h', '4h', 'Journée', 'À discuter'];
