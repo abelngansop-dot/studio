@@ -53,9 +53,7 @@ export function Header() {
         <div className="flex items-center gap-1">
           {/* Auth/Booking Buttons for larger screens */}
           <div className="hidden sm:flex items-center gap-1">
-            {isUserLoading ? (
-              <Skeleton className="h-10 w-24 rounded-md" />
-            ) : user ? (
+            {user ? (
               <UserNav user={user} />
             ) : (
               <>
@@ -129,9 +127,7 @@ export function Header() {
                   <Separator className="my-6" />
 
                   <div className="flex flex-col gap-4 sm:hidden">
-                    {isUserLoading ? (
-                      <Skeleton className="h-10 w-full" />
-                    ) : user ? (
+                    {user ? (
                       <>
                         <SheetClose asChild>
                           <Button asChild variant="outline">
