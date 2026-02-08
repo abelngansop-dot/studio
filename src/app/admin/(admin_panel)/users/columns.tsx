@@ -32,6 +32,7 @@ export type User = {
   displayName: string | null;
   photoURL: string | null;
   role: 'client' | 'admin' | 'superadmin';
+  gender?: 'homme' | 'femme';
   createdAt: { seconds: number; nanoseconds: number };
 };
 
@@ -110,6 +111,11 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: 'role',
     header: 'Rôle',
     cell: ({ row }) => <RoleBadge role={row.getValue('role')} />,
+  },
+  {
+    accessorKey: 'gender',
+    header: 'Genre',
+    cell: ({ row }) => <div className="capitalize">{row.getValue('gender') || 'N/A'}</div>,
   },
   {
     accessorKey: 'createdAt',

@@ -16,11 +16,14 @@ import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useNavigationHistory } from '@/hooks/use-navigation-history';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [gender, setGender] = useState<'homme' | 'femme' | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const router = useRouter();
@@ -52,6 +55,12 @@ export default function LoginPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) return;
+
+    if (!gender) {
+      toast({ variant: 'destructive', title: 'Champ requis', description: 'Veuillez sélectionner votre genre.' });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -65,6 +74,7 @@ export default function LoginPage() {
           displayName: displayName || email.split('@')[0],
           photoURL: null,
           role: 'client',
+          gender,
           createdAt: serverTimestamp()
       }
       setDocumentNonBlocking(userDocRef, newUser, { merge: false });
@@ -160,6 +170,19 @@ export default function LoginPage() {
                 <div className="grid gap-2">
                   <Label htmlFor="signup-password">Mot de passe</Label>
                   <Input id="signup-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
+                </div>
+                <div className="grid gap-2">
+                    <Label>Genre</Label>
+                    <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'homme' | 'femme')} className="flex gap-4">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="homme" id="male" />
+                            <Label htmlFor="male">Homme</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="femme" id="female" />
+                            <Label htmlFor="female">Femme</Label>
+                        </div>
+                    </RadioGroup>
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
