@@ -7,6 +7,8 @@ import { DataTable } from '@/components/ui/data-table';
 import { columns, type Booking } from './columns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useMemo } from 'react';
+import { BookingDetailsDialog } from './details-dialog';
 
 type UserProfile = {
   role: 'client' | 'admin' | 'superadmin';
@@ -15,6 +17,7 @@ type UserProfile = {
 export default function BookingsPage() {
   const firestore = useFirestore();
   const { user, isUserLoading: isAuthLoading } = useUser();
+  const [detailsBooking, setDetailsBooking] = useState<Booking | null>(null);
   
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -36,6 +39,10 @@ export default function BookingsPage() {
 
   // Pass the authorized query to useCollection. It will be null for non-admins.
   const { data: bookings, isLoading: isBookingsLoading } = useCollection<Booking>(bookingsQuery);
+
+  const memoizedColumns = useMemo(() => columns(
+    (booking) => setDetailsBooking(booking)
+  ), []);
 
   // The overall loading state depends on auth, profile, and then bookings if authorized.
   const isLoading = isAuthLoading || isProfileLoading || (isAuthorizedAdmin && isBookingsLoading);
@@ -59,14 +66,23 @@ export default function BookingsPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Réservations</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* If the user is not an admin, bookings will be null, and the table will show "Aucun résultat." */}
-        <DataTable columns={columns} data={bookings || []} />
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Réservations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* If the user is not an admin, bookings will be null, and the table will show "Aucun résultat." */}
+          <DataTable columns={memoizedColumns} data={bookings || []} />
+        </CardContent>
+      </Card>
+       {detailsBooking && (
+        <BookingDetailsDialog 
+            booking={detailsBooking} 
+            isOpen={!!detailsBooking} 
+            onOpenChange={() => setDetailsBooking(null)}
+        />
+    )}
+    </>
   );
 }

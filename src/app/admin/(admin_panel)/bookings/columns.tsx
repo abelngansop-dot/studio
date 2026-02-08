@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUpDown, Mail, MessageSquare, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -67,7 +67,7 @@ const StatusSelector = ({ booking }: { booking: Booking }) => {
     )
 }
 
-export const columns: ColumnDef<Booking>[] = [
+export const columns = (onViewDetails: (booking: Booking) => void): ColumnDef<Booking>[] => [
   {
     accessorKey: 'status',
     header: 'Statut',
@@ -126,6 +126,8 @@ export const columns: ColumnDef<Booking>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const booking = row.original;
+      const hasEmail = !!booking.contactInfo?.email;
+      const hasPhone = !!booking.contactInfo?.phone;
 
       return (
         <DropdownMenu>
@@ -144,8 +146,38 @@ export const columns: ColumnDef<Booking>[] = [
             </DropdownMenuItem>
              <StatusSelector booking={booking} />
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Voir les détails</DropdownMenuItem>
-            <DropdownMenuItem>Contacter le client</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewDetails(booking)}>
+                <Eye className="mr-2 h-4 w-4" />
+                Voir les détails
+            </DropdownMenuItem>
+             <DropdownMenuSub>
+                <DropdownMenuSubTrigger disabled={!hasEmail && !hasPhone}>Contacter le client</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                         {hasEmail && (
+                            <DropdownMenuItem onClick={() => {
+                                if (booking.contactInfo?.email) {
+                                    window.location.href = `mailto:${booking.contactInfo.email}`;
+                                }
+                            }}>
+                                <Mail className="mr-2 h-4 w-4" />
+                                <span>Par Email</span>
+                            </DropdownMenuItem>
+                        )}
+                        {hasPhone && (
+                            <DropdownMenuItem onClick={() => {
+                                if (booking.contactInfo?.phone) {
+                                    const whatsappNumber = booking.contactInfo.phone.replace(/\D/g, '');
+                                    window.open(`https://wa.me/${whatsappNumber}`, '_blank');
+                                }
+                            }}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                <span>Par WhatsApp</span>
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+            </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
       );
