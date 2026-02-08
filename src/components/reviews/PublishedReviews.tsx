@@ -10,16 +10,16 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Star } from 'lucide-react';
+import { AlertCircle, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export type Review = {
     id: string;
     userId: string;
     displayName: string;
-    photoURL: string | null;
     rating: number;
     comment: string;
     status: 'pending' | 'approved' | 'rejected';
@@ -81,12 +81,24 @@ export function PublishedReviews() {
     );
   }, [firestore]);
 
-  const { data: reviews, isLoading } = useCollection<Review>(reviewsQuery);
+  const { data: reviews, isLoading, error } = useCollection<Review>(reviewsQuery);
   
   if (isLoading) {
       return <ReviewSkeleton />;
   }
   
+  if (error) {
+    return (
+        <Alert variant="destructive" className="max-w-md mx-auto">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur de chargement</AlertTitle>
+            <AlertDescription>
+                Impossible de charger les avis pour le moment. Veuillez réessayer plus tard.
+            </AlertDescription>
+        </Alert>
+    )
+  }
+
   if (!reviews || reviews.length === 0) {
       return <p className="text-center text-muted-foreground">Aucun avis pour le moment. Soyez le premier !</p>
   }
@@ -110,7 +122,6 @@ export function PublishedReviews() {
                 </CardContent>
                 <CardFooter className="bg-secondary/30 p-4 flex items-center gap-4">
                     <Avatar>
-                      {review.photoURL && <AvatarImage src={review.photoURL} alt={review.displayName} />}
                       <AvatarFallback>{review.displayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                   <div>

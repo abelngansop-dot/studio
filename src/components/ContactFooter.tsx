@@ -23,7 +23,7 @@ export function ContactFooter() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
                     {/* Column 1: About & Management */}
                     <div className="space-y-4">
-                        <h3 className="text-xl font-bold font-headline text-primary">Inoubleven</h3>
+                        <h3 className="text-xl font-bold font-headline text-primary">Inoublevents</h3>
                         <p className="text-sm text-muted-foreground">Organisez votre événement en toute tranquillité. Notre équipe d'experts est à votre écoute pour donner vie à vos projets.</p>
                         <div className="space-y-4 pt-2">
                            {ceo && <ContactPerson contact={ceo} />}
@@ -86,7 +86,7 @@ export function ContactFooter() {
                 <Separator className="my-8" />
 
                 <div className="text-center text-sm text-muted-foreground">
-                    <p>&copy; <CurrentYear /> Inoubleven. Tous droits réservés.</p>
+                    <p>&copy; <CurrentYear /> Inoublevents. Tous droits réservés.</p>
                 </div>
             </div>
         </footer>

@@ -7,7 +7,7 @@ import { HtmlLangUpdater } from '@/components/HtmlLangUpdater';
 import { SwipeNavigationHandler } from '@/components/SwipeNavigationHandler';
 
 export const metadata: Metadata = {
-  title: 'Inoubleven',
+  title: 'Inoublevents',
   description: 'Organisez votre événement en toute tranquillité, choisissez, on vous rappelle.',
 };
 

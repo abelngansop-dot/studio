@@ -20,7 +20,7 @@ export function Header() {
           href="/"
           className="text-2xl font-bold text-primary font-headline transition-transform transform hover:scale-105"
         >
-          Inoubleven
+          Inoublevents
         </Link>
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex gap-1">

@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -67,7 +67,7 @@ export default function AdminLayout({
     router.push('/admin');
   };
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => pathname.startsWith(path);
 
   // Show a full-screen loader while checking auth state or profile.
   if (isUserLoading || isProfileLoading || isAuthorized === null) {
@@ -123,6 +123,14 @@ export default function AdminLayout({
                    <Link href="/admin/bookings">
                     <ShoppingCart />
                     Réservations
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/admin/reviews')}>
+                   <Link href="/admin/reviews">
+                    <MessageSquare />
+                    Avis
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

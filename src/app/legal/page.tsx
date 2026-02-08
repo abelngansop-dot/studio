@@ -19,10 +19,10 @@ export default function LegalPage() {
                         </CardHeader>
                         <CardContent className="space-y-4 prose max-w-none">
                             <h2>1. Introduction</h2>
-                            <p>Bienvenue sur Inoubleven. En accédant ou en utilisant notre plateforme, vous acceptez de vous conformer aux présentes Conditions Générales d’Utilisation. Si vous n’acceptez pas ces conditions, veuillez ne pas utiliser l’application.</p>
+                            <p>Bienvenue sur Inoublevents. En accédant ou en utilisant notre plateforme, vous acceptez de vous conformer aux présentes Conditions Générales d’Utilisation. Si vous n’acceptez pas ces conditions, veuillez ne pas utiliser l’application.</p>
 
                             <h2>2. Description du Service</h2>
-                            <p>Inoubleven fournit une plateforme permettant aux utilisateurs de consulter des services, faire des réservations, et entrer en contact avec les prestataires. L’application peut collecter certaines informations personnelles pour faciliter ces services.</p>
+                            <p>Inoublevents fournit une plateforme permettant aux utilisateurs de consulter des services, faire des réservations, et entrer en contact avec les prestataires. L’application peut collecter certaines informations personnelles pour faciliter ces services.</p>
 
                             <h2>3. Accès et Compte Utilisateur</h2>
                             <p>Chaque utilisateur est responsable de la confidentialité de ses identifiants (email, mot de passe).</p>
@@ -36,10 +36,10 @@ export default function LegalPage() {
                             <p>Respecter les autres utilisateurs et le contenu publié.</p>
 
                             <h2>5. Propriété Intellectuelle</h2>
-                            <p>Tout le contenu, images, vidéos, textes, et logos présents sur l’application sont la propriété de Inoubleven et sont protégés par les lois internationales et locales sur la propriété intellectuelle. Toute reproduction non autorisée est interdite.</p>
+                            <p>Tout le contenu, images, vidéos, textes, et logos présents sur l’application sont la propriété de Inoublevents et sont protégés par les lois internationales et locales sur la propriété intellectuelle. Toute reproduction non autorisée est interdite.</p>
 
                             <h2>6. Limitation de Responsabilité</h2>
-                            <p>Inoubleven ne pourra être tenue responsable des pertes ou dommages résultant de l’utilisation de la plateforme, y compris les erreurs de réservation, interruptions de service ou pertes de données.</p>
+                            <p>Inoublevents ne pourra être tenue responsable des pertes ou dommages résultant de l’utilisation de la plateforme, y compris les erreurs de réservation, interruptions de service ou pertes de données.</p>
 
                             <h2>7. Modifications des Conditions</h2>
                             <p>Nous nous réservons le droit de modifier ces CGU à tout moment. Les utilisateurs seront informés des changements et l’utilisation continue de l’application constitue l’acceptation des nouvelles conditions.</p>
@@ -92,7 +92,7 @@ export default function LegalPage() {
 
                              <h2>7. Contact</h2>
                             <p>Pour toute question concernant la confidentialité ou les CGU :</p>
-                            <p>Email : inoubleven@gmail.com</p>
+                            <p>Email : inoublevents@gmail.com</p>
                             <p>Téléphone/WhatsApp : +237699264201</p>
                         </CardContent>
                     </Card>

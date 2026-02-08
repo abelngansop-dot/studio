@@ -84,7 +84,7 @@ export function LeaveReviewDialog({ isOpen, setIsOpen }: LeaveReviewDialogProps)
       displayName: user.displayName || user.email,
       rating,
       comment,
-      status: 'approved', // for moderation
+      status: 'pending', // Set to pending for moderation
       createdAt: serverTimestamp(),
     };
 

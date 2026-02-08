@@ -15,9 +15,6 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      // Log the full error for developers in the console
-      console.error("Caught Firestore Permission Error:", error);
-      
       // Show a non-crashing, user-friendly toast notification
       toast({
         variant: "destructive",
