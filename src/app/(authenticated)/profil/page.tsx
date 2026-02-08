@@ -34,13 +34,11 @@ type UserProfileData = {
   displayName: string;
   email: string;
   phone?: string | null;
-  gender?: 'homme' | 'femme';
 };
 
 const profileSchema = z.object({
   displayName: z.string().min(1, 'Le nom ne peut pas être vide.'),
   phone: z.string().optional(),
-  gender: z.enum(['homme', 'femme']).optional(),
 });
 
 function ProfileSkeleton() {
@@ -86,7 +84,6 @@ export default function ProfilPage() {
     values: {
       displayName: userProfile?.displayName || '',
       phone: userProfile?.phone || '',
-      gender: userProfile?.gender || undefined,
     },
     resetOptions: {
       keepDirtyValues: true,
@@ -100,7 +97,6 @@ export default function ProfilPage() {
       const updateData = {
           displayName: data.displayName,
           phone: data.phone || null,
-          gender: data.gender || null
       }
       await updateDoc(userDocRef, updateData);
       toast({ title: 'Profil mis à jour avec succès !' });
@@ -198,25 +194,6 @@ export default function ProfilPage() {
                       />
                       {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
                   </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="gender">Genre</Label>
-                      <Controller
-                          name="gender"
-                          control={control}
-                          render={({ field }) => (
-                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4 pt-2">
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="homme" id="male" />
-                                    <Label htmlFor="male">Homme</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="femme" id="female" />
-                                    <Label htmlFor="female">Femme</Label>
-                                </div>
-                            </RadioGroup>
-                          )}
-                      />
-                  </div>
               </div>
             </CardContent>
             <CardFooter>
@@ -228,17 +205,10 @@ export default function ProfilPage() {
           </Card>
         </form>
 
-        <div className="mt-12 pt-8 border-t border-destructive/20">
-          <h3 className="text-lg font-semibold text-destructive flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5" />
-              Zone de Danger
-          </h3>
-          <p className="text-sm text-destructive/90 my-2">
-              La suppression de votre compte est une action irréversible. Toutes vos données, y compris vos réservations, seront définitivement effacées.
-          </p>
+        <div className="mt-12 pt-8 border-t border-border">
            <AlertDialog>
               <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
+                  <Button variant="outline">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Supprimer mon compte
                   </Button>
@@ -247,7 +217,7 @@ export default function ProfilPage() {
                   <AlertDialogHeader>
                       <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
                       <AlertDialogDescription>
-                         Cette action est irréversible et supprimera définitivement votre compte et vos données.
+                         La suppression de votre compte est une action irréversible. Toutes vos données, y compris vos réservations, seront définitivement effacées.
                          {isReauthRequired && (
                              <div className="mt-4 space-y-2">
                                  <Label htmlFor="password">Veuillez entrer votre mot de passe pour confirmer</Label>

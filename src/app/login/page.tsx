@@ -72,7 +72,6 @@ export default function LoginPage() {
           uid: user.uid,
           email: user.email,
           displayName: displayName || email.split('@')[0],
-          photoURL: null,
           role: 'client',
           gender,
           createdAt: serverTimestamp()
@@ -173,7 +172,7 @@ export default function LoginPage() {
                 </div>
                 <div className="grid gap-2">
                     <Label>Genre</Label>
-                    <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'homme' | 'femme')} className="flex gap-4">
+                    <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'homme' | 'femme')} className="flex gap-4 pt-2">
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="homme" id="male" />
                             <Label htmlFor="male">Homme</Label>
