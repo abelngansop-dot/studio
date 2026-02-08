@@ -3,10 +3,8 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
-import { useUser } from '@/firebase/provider';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
 
 type HeroSectionProps = {
@@ -15,7 +13,6 @@ type HeroSectionProps = {
 
 export function HeroSection({ heroImage }: HeroSectionProps) {
     const { t } = useTranslation();
-    const { isUserLoading } = useUser();
     const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
 
     return (
@@ -43,21 +40,14 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
                                 {t('hero.subtitle')}
                             </p>
                             <div className="mt-8">
-                                {isUserLoading ? (
-                                    <Button size="lg" className={ctaButtonClass} disabled>
-                                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                                        Chargement...
+                                <BookingTrigger>
+                                    <Button
+                                        size="lg"
+                                        className={ctaButtonClass}
+                                    >
+                                        {t('hero.cta')}
                                     </Button>
-                                ) : (
-                                    <BookingTrigger>
-                                        <Button
-                                            size="lg"
-                                            className={ctaButtonClass}
-                                        >
-                                            {t('hero.cta')}
-                                        </Button>
-                                    </BookingTrigger>
-                                )}
+                                </BookingTrigger>
                             </div>
                         </CardContent>
                     </Card>
