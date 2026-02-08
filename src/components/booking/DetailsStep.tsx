@@ -62,6 +62,7 @@ export function DetailsStep({
     city?: string;
     email?: string;
     phone?: string;
+    requestDetails?: string;
   }>({});
   const [timeInput, setTimeInput] = useState(bookingData.time);
   const [timeInputError, setTimeInputError] = useState<string | undefined>();
@@ -196,6 +197,13 @@ export function DetailsStep({
     if (!bookingData.email) newErrors.email = "L'adresse e-mail est obligatoire.";
     else if (!/^\S+@\S+\.\S+$/.test(bookingData.email)) newErrors.email = 'Veuillez entrer un email valide.';
     
+    if (
+      (bookingData.eventType === 'autre' || bookingData.services.includes('autre')) &&
+      !bookingData.requestDetails?.trim()
+    ) {
+      newErrors.requestDetails = "Veuillez préciser la nature de votre demande 'Autre'.";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -215,6 +223,8 @@ export function DetailsStep({
       default: return <Sparkles className="h-6 w-6 text-primary" />;
     }
   };
+
+  const shouldShowOtherDetails = bookingData.eventType === 'autre' || bookingData.services.includes('autre');
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -291,19 +301,24 @@ export function DetailsStep({
             </CardContent>
           </Card>
 
-          {bookingData.services.includes('autre') && (
+          {shouldShowOtherDetails && (
             <Card className="shadow-md animate-in fade-in duration-300">
                 <CardHeader className="flex-row items-center gap-4 space-y-0">
                     <div className="p-3 bg-primary/10 rounded-lg"><MessageSquare className="h-6 w-6 text-primary" /></div>
-                    <CardTitle className="text-xl font-headline">Précisez votre demande "Autre"</CardTitle>
+                    <CardTitle className="text-xl font-headline">Précisez votre demande</CardTitle>
                 </CardHeader>
                 <CardContent>
+                    <Label htmlFor="request-details" className={cn("font-medium mb-2 block", errors.requestDetails && 'text-destructive')}>
+                        Description de la demande
+                    </Label>
                     <Textarea
-                        placeholder="Décrivez le service ou le besoin spécifique que vous recherchez..."
+                        id="request-details"
+                        placeholder="Décrivez votre besoin spécifique (événement, service, etc.)..."
                         value={bookingData.requestDetails || ''}
                         onChange={(e) => updateBookingData({ requestDetails: e.target.value })}
-                        className="min-h-[100px]"
+                        className={cn("min-h-[100px]", errors.requestDetails && "border-destructive focus-visible:ring-destructive")}
                     />
+                    {errors.requestDetails && <p className="text-sm text-destructive flex items-center gap-1 pt-2"><AlertCircle className="h-4 w-4" />{errors.requestDetails}</p>}
                 </CardContent>
             </Card>
           )}
@@ -422,7 +437,7 @@ export function DetailsStep({
               </div>
             </CardContent>
           </Card>
-          {(errors.date || errors.time || errors.country || errors.city || errors.phone || errors.email) && (
+          {(errors.date || errors.time || errors.country || errors.city || errors.phone || errors.email || errors.requestDetails) && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Champs manquants ou invalides</AlertTitle>
