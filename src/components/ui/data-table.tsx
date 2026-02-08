@@ -52,7 +52,7 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  const filterableColumnIds = ["displayName", "name", "contactInfo.email"];
+  const filterableColumnIds = ["displayName", "name", "contactInfo.email", "description"];
   const allColumnIds = table.getAllColumns().map(c => c.id);
   const availableFilterColumnId = filterableColumnIds.find(id => allColumnIds.includes(id));
 
