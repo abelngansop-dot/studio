@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, MessageSquare } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, MessageSquare, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -139,6 +139,14 @@ export default function AdminLayout({
                    <Link href="/admin/services">
                     <Package />
                     Catalogue
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/admin/gallery')}>
+                   <Link href="/admin/gallery">
+                    <ImageIcon />
+                    Galerie
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

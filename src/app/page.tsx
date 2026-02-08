@@ -20,6 +20,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Service } from './admin/(admin_panel)/services/columns';
+import type { GalleryImage } from './admin/(admin_panel)/gallery/page';
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
   const roundedRating = Math.round(rating);
@@ -63,14 +64,17 @@ const ServiceSkeleton = () => (
   </div>
 );
 
-const galleryImages = [
-  'gallery-1',
-  'gallery-2',
-  'gallery-3',
-  'gallery-4',
-  'gallery-5',
-  'gallery-6',
-];
+const GallerySkeleton = () => (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+        <Skeleton className="md:col-span-2 md:row-span-2 aspect-square md:aspect-auto" />
+        <Skeleton className="aspect-square" />
+        <Skeleton className="aspect-square" />
+        <Skeleton className="aspect-square" />
+        <Skeleton className="aspect-square" />
+        <Skeleton className="aspect-square" />
+    </div>
+);
+
 
 export default function Home() {
   const { t } = useTranslation();
@@ -79,6 +83,9 @@ export default function Home() {
 
   const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
   const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
+
+  const galleryQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'gallery'), orderBy('createdAt', 'desc')), [firestore]);
+  const { data: galleryImages, isLoading: galleryLoading } = useCollection<GalleryImage>(galleryQuery);
 
   const heroImage = PlaceHolderImages.find((p) => p.id === 'hero-background');
   const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
@@ -201,32 +208,33 @@ export default function Home() {
               {t('gallery.subtitle')}
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
-            {galleryImages.map((id, index) => {
-              const image = PlaceHolderImages.find((p) => p.id === id);
-              if (!image) return null;
-              return (
-                <SelectableCard
-                  key={id}
-                  isSelected={selectedImages.includes(id)}
-                  onSelect={() => handleImageSelect(id)}
-                  className={cn(
-                    'aspect-square',
-                    index === 0 && 'md:col-span-2 md:row-span-2 md:aspect-auto'
-                  )}
-                >
-                  <Image
-                    src={image.imageUrl}
-                    alt={image.description}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    data-ai-hint={image.imageHint}
-                  />
-                </SelectableCard>
-              );
-            })}
-          </div>
+          {galleryLoading ? <GallerySkeleton /> : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+                {galleryImages?.map((image, index) => {
+                if (!image) return null;
+                return (
+                    <SelectableCard
+                    key={image.id}
+                    isSelected={selectedImages.includes(image.id)}
+                    onSelect={() => handleImageSelect(image.id)}
+                    className={cn(
+                        'aspect-square',
+                        index === 0 && 'md:col-span-2 md:row-span-2 md:aspect-auto'
+                    )}
+                    >
+                    <Image
+                        src={image.imageUrl}
+                        alt={image.description}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        data-ai-hint={image.imageHint}
+                    />
+                    </SelectableCard>
+                );
+                })}
+            </div>
+          )}
           <div className="text-center mt-12">
               <Button size="lg" disabled={selectedImages.length === 0}>
                   <Heart className="mr-2 h-5 w-5" />

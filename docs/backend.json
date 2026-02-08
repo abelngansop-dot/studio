@@ -152,6 +152,20 @@
             "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "displayName", "rating", "comment", "status", "createdAt"]
+    },
+    "GalleryImage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Gallery Image",
+      "type": "object",
+      "description": "Represents an image in the public gallery of past events.",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri", "description": "URL of the image." },
+        "description": { "type": "string", "description": "A short description of the image or event." },
+        "imageHint": { "type": "string", "description": "AI hint for image search (max 2 words)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The date and time the image was added." }
+      },
+      "required": ["imageUrl", "description", "createdAt"]
     }
   },
   "auth": {
@@ -197,6 +211,14 @@
             "entityName": "Review",
             "schema": { "$ref": "#/entities/Review" },
             "description": "Stores user reviews for moderation and display."
+        }
+      },
+      {
+        "path": "/gallery/{galleryImageId}",
+        "definition": {
+          "entityName": "GalleryImage",
+          "schema": { "$ref": "#/entities/GalleryImage" },
+          "description": "Stores images for the public gallery."
         }
       }
     ]

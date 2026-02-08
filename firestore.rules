@@ -107,5 +107,12 @@ service cloud.firestore {
       // UPDATE, DELETE: Only Admins and Super Admins can update (e.g., approve) or delete reviews.
       allow update, delete: if isAdmin() || isSuperAdmin();
     }
+
+    // GALLERY
+    // Publicly readable. Writable only by Admins/SuperAdmins.
+    match /gallery/{galleryImageId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
   }
 }
