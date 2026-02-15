@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -44,7 +44,6 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -56,7 +55,6 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
-    listenerHasFailed.current = false;
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
@@ -71,7 +69,6 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        listenerHasFailed.current = true;
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -80,11 +77,14 @@ export function useDoc<T = any>(
 
     return () => {
       try {
-        if (!listenerHasFailed.current) {
-          unsubscribe();
-        }
+        // Attempt to unsubscribe. If this throws an error (e.g., because the
+        // listener has already been terminated due to a permission error),
+        // the catch block will prevent the app from crashing.
+        unsubscribe();
       } catch (e) {
-        console.warn("Ignoring a Firestore listener cleanup error.", e);
+        // This warning is helpful for debugging but is expected behavior in many cases
+        // (like permission errors), so it's not a critical application error.
+        console.warn("Ignoring a Firestore listener cleanup error (this is often expected).", e);
       }
     };
   }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
