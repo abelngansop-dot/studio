@@ -116,7 +116,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
     try {
       const bookingsCol = collection(firestore, 'bookings');
       await addDocumentNonBlocking(bookingsCol, bookingPayload);
-
+      
       clearBookingProgress();
       setIsSubmitted(true);
 
@@ -245,40 +245,38 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
         </div>
 
         {/* Summary Section */}
-        <div>
-            <Card className="border-primary/20 shadow-xl">
-                <CardHeader className="bg-primary/5">
-                    <CardTitle className="text-2xl font-headline text-primary">Proforma de votre demande</CardTitle>
-                </CardHeader>
-                <CardContent className="divide-y divide-border pt-4">
-                    <SummaryItem icon={getEventIcon()} label="Événement" value={bookingData.eventType} />
-                    <SummaryItem icon={<ListChecks className="h-5 w-5 text-primary" />} label="Services" value={bookingData.services.join(', ') || 'Non précisés'} />
-                    {bookingData.requestDetails && (
-                        <SummaryItem icon={<MessageSquare className="h-5 w-5 text-primary" />} label="Détails 'Autre'" value={<p className="text-sm font-normal normal-case whitespace-pre-wrap">{bookingData.requestDetails}</p>} />
-                    )}
-                    <SummaryItem icon={<Calendar className="h-5 w-5 text-primary" />} label="Date" value={selectedDateDisplay} />
-                    <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure de début" value={bookingData.time || 'Non précisée'} />
-                    <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Pays" value={bookingData.country || 'Non précisé'} />
-                    <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Ville" value={bookingData.city || 'Non précisée'} />
-                    <SummaryItem icon={<Hourglass className="h-5 w-5 text-primary" />} label="Durée" value={bookingData.duration || 'Non précisée'} />
-                </CardContent>
-                <CardFooter className="flex-col gap-4 pt-6 bg-secondary/30">
-                    <p className="text-xs text-center text-muted-foreground px-4">En confirmant, notre équipe vous contactera pour établir le devis final.</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                        <Button size="lg" disabled={!isPhoneFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('whatsapp')} className="bg-green-600 hover:bg-green-700 text-white">
-                          {submittingMethod === 'whatsapp' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                          <MessageSquare className="mr-2 h-5 w-5" />
-                          Confirmer par WhatsApp
-                        </Button>
-                        <Button size="lg" disabled={!isEmailFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
-                          {submittingMethod === 'email' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                          <Mail className="mr-2 h-5 w-5" />
-                          Confirmer par Email
-                        </Button>
-                    </div>
-                </CardFooter>
-            </Card>
-        </div>
+        <Card className="border-primary/20 shadow-xl">
+            <CardHeader className="bg-primary/5">
+                <CardTitle className="text-2xl font-headline text-primary">Proforma de votre demande</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y divide-border pt-4">
+                <SummaryItem icon={getEventIcon()} label="Événement" value={bookingData.eventType} />
+                <SummaryItem icon={<ListChecks className="h-5 w-5 text-primary" />} label="Services" value={bookingData.services.join(', ') || 'Non précisés'} />
+                {bookingData.requestDetails && (
+                    <SummaryItem icon={<MessageSquare className="h-5 w-5 text-primary" />} label="Détails 'Autre'" value={<p className="text-sm font-normal normal-case whitespace-pre-wrap">{bookingData.requestDetails}</p>} />
+                )}
+                <SummaryItem icon={<Calendar className="h-5 w-5 text-primary" />} label="Date" value={selectedDateDisplay} />
+                <SummaryItem icon={<Clock className="h-5 w-5 text-primary" />} label="Heure de début" value={bookingData.time || 'Non précisée'} />
+                <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Pays" value={bookingData.country || 'Non précisé'} />
+                <SummaryItem icon={<MapPin className="h-5 w-5 text-primary" />} label="Ville" value={bookingData.city || 'Non précisée'} />
+                <SummaryItem icon={<Hourglass className="h-5 w-5 text-primary" />} label="Durée" value={bookingData.duration || 'Non précisée'} />
+            </CardContent>
+            <CardFooter className="flex-col gap-4 pt-6 bg-secondary/30">
+                <p className="text-xs text-center text-muted-foreground px-4">En confirmant, notre équipe vous contactera pour établir le devis final.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <Button size="lg" disabled={!isPhoneFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('whatsapp')} className="bg-green-600 hover:bg-green-700 text-white">
+                      {submittingMethod === 'whatsapp' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                      <MessageSquare className="mr-2 h-5 w-5" />
+                      Confirmer par WhatsApp
+                    </Button>
+                    <Button size="lg" disabled={!isEmailFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
+                      {submittingMethod === 'email' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                      <Mail className="mr-2 h-5 w-5" />
+                      Confirmer par Email
+                    </Button>
+                </div>
+            </CardFooter>
+        </Card>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 mt-8 border-t">
