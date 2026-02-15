@@ -2,8 +2,8 @@
 
 import { useShop } from '@/hooks/use-shop-admin';
 import { usePathname } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Image as ImageIcon, Settings, LogOut, Loader2 } from 'lucide-react';
+import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarSeparator } from '@/components/ui/sidebar';
+import { Home, Package, ShoppingCart, Image as ImageIcon, Settings, LogOut, Loader2, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/firebase/provider';
@@ -55,6 +55,15 @@ export default function ShopAdminDashboardLayout({
                 </div>
             </SidebarHeader>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/">
+                    <Undo2 />
+                    Retour au site
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarSeparator />
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive('/dashboard')}>
                   <Link href="/dashboard">

@@ -8,27 +8,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase/provider';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { FirebaseError } from 'firebase/app';
-import { Loader2, Mail, Phone as PhoneIcon } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Phone as PhoneIcon } from 'lucide-react';
 import { useNavigationHistory } from '@/hooks/use-navigation-history';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Header } from '@/components/Header';
 import { ContactFooter } from '@/components/ContactFooter';
 import { allCountries } from '@/lib/locations';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 48 48" {...props}>
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+        <path fill="none" d="M0 0h48v48H0z" />
+    </svg>
+);
+
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [gender, setGender] = useState<'homme' | 'femme' | ''>('');
-  const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('+237'); // Default to Cameroon
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const router = useRouter();
@@ -36,61 +38,11 @@ export default function LoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const { popLastRoute } = useNavigationHistory();
+  const [countryCode, setCountryCode] = useState('+237');
 
   const handleSuccess = () => {
     const lastRoute = popLastRoute();
     router.push(lastRoute || '/mes-reservations');
-  };
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!auth) return;
-    setIsSubmitting(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: 'Connexion réussie !' });
-      handleSuccess();
-    } catch (error) {
-      handleAuthError(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!auth || !firestore) return;
-
-    if (!gender) {
-      toast({ variant: 'destructive', title: 'Champ requis', description: 'Veuillez sélectionner votre genre.' });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const newUser = {
-          uid: user.uid,
-          email: user.email,
-          displayName: displayName || email.split('@')[0],
-          role: 'client',
-          gender,
-          phone: phone ? `${countryCode}${phone.replace(/\D/g, '')}` : null,
-          createdAt: serverTimestamp()
-      }
-      setDocumentNonBlocking(userDocRef, newUser, { merge: false });
-
-      toast({ title: 'Compte créé avec succès !' });
-      handleSuccess();
-
-    } catch (error) {
-      handleAuthError(error);
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleAuthError = (error: any) => {
@@ -108,6 +60,9 @@ export default function LoginPage() {
         case 'auth/weak-password':
             description = 'Le mot de passe doit contenir au moins 6 caractères.';
             break;
+        case 'auth/popup-closed-by-user':
+            description = 'La fenêtre de connexion a été fermée.';
+            return; // Don't show a toast for this
         default:
           description = "Une erreur inconnue est survenue.";
       }
@@ -115,154 +70,108 @@ export default function LoginPage() {
     toast({ variant: 'destructive', title: 'Échec', description });
   }
 
+  const handleGoogleSignIn = async () => {
+    if (!auth || !firestore) {
+        toast({ variant: 'destructive', title: 'Erreur', description: "Les services Firebase ne sont pas disponibles." });
+        return;
+    }
+    setIsSubmitting(true);
+    const provider = new GoogleAuthProvider();
+
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            const newUserProfile = {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                role: 'client',
+                createdAt: serverTimestamp()
+            };
+            await setDoc(userDocRef, newUserProfile, { merge: false });
+            toast({ title: 'Bienvenue ! Votre compte a été créé.' });
+        } else {
+            toast({ title: 'Connexion réussie !' });
+        }
+        
+        handleSuccess();
+
+    } catch (error) {
+        handleAuthError(error);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen bg-secondary/30">
       <Header />
       <main className="flex-grow flex items-center justify-center py-12 px-4">
-        <Tabs defaultValue="login" className="w-full max-w-md">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Se connecter</TabsTrigger>
-            <TabsTrigger value="signup">S'inscrire</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Bon retour !</CardTitle>
+        <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Accédez à votre espace</CardTitle>
                 <CardDescription>
-                  Accédez à votre espace pour gérer vos réservations.
+                Connectez-vous ou créez un compte pour gérer vos réservations.
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
-                 <Tabs defaultValue="email" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="email"><Mail className="mr-2 h-4 w-4"/>Email</TabsTrigger>
-                        <TabsTrigger value="phone"><PhoneIcon className="mr-2 h-4 w-4"/>Téléphone</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="email" className="pt-4">
-                        <form onSubmit={handleSignIn} className="grid gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="login-email">Email</Label>
-                                <Input id="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting}/>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="login-password">Mot de passe</Label>
-                                <Input id="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
-                            </div>
-                            <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Se connecter
-                            </Button>
-                        </form>
-                    </TabsContent>
-                    <TabsContent value="phone" className="pt-4">
-                        <div className="grid gap-4 text-center">
-                            <div className="grid gap-2 text-left">
-                                <Label>Téléphone</Label>
-                                <div className="flex gap-2">
-                                    <Select defaultValue={countryCode} onValueChange={setCountryCode}>
-                                        <SelectTrigger className="w-[140px]">
-                                            <SelectValue placeholder="Code pays" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {allCountries.map((c) => <SelectItem key={c.code} value={c.phoneCode}>{c.name} ({c.phoneCode})</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <Input type="tel" placeholder="Numéro de téléphone"/>
-                                </div>
-                            </div>
-                            <Button 
-                                type="button" 
-                                className="w-full"
-                                onClick={() => toast({ title: 'Bientôt disponible', description: "La connexion par téléphone arrive prochainement !"})}
-                            >
-                              Recevoir un code
-                            </Button>
-                            <p className="px-2 text-center text-xs text-muted-foreground">
-                                La connexion par téléphone n'est pas encore disponible. Elle le sera très bientôt.
-                            </p>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <Button variant="outline" className="h-12 text-base" onClick={handleGoogleSignIn} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                        <GoogleIcon className="mr-3 h-5 w-5" />
+                    )}
+                    Continuer avec Google
+                </Button>
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">
+                        Ou
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid gap-4 text-center">
+                    <div className="grid gap-2 text-left">
+                        <Label>Se connecter par téléphone (bientôt disponible)</Label>
+                        <div className="flex gap-2">
+                            <Select defaultValue={countryCode} onValueChange={setCountryCode}>
+                                <SelectTrigger className="w-[140px]">
+                                    <SelectValue placeholder="Code pays" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {allCountries.map((c) => <SelectItem key={c.code} value={c.phoneCode}>{c.name} ({c.phoneCode})</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Input type="tel" placeholder="Numéro de téléphone" disabled/>
                         </div>
-                    </TabsContent>
-                 </Tabs>
-                <div className="mt-4 text-center text-sm">
+                    </div>
+                    <Button 
+                        type="button" 
+                        className="w-full"
+                        onClick={() => toast({ title: 'Bientôt disponible', description: "La connexion par téléphone arrive prochainement !"})}
+                        disabled
+                    >
+                      Recevoir un code
+                    </Button>
+                </div>
+                 <div className="mt-4 text-center text-sm">
                   <Button variant="link" asChild className="text-muted-foreground">
                       <Link href="/">Retour à l'accueil</Link>
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Créer un compte</CardTitle>
-                <CardDescription>
-                  Créez un compte pour sauvegarder et suivre vos demandes.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignUp} className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-name">Nom (optionnel)</Label>
-                    <Input id="signup-name" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isSubmitting}/>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting}/>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-password">Mot de passe</Label>
-                    <Input id="signup-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
-                  </div>
-                   <div className="grid gap-2">
-                      <Label>Téléphone (optionnel)</Label>
-                      <div className="flex gap-2">
-                          <Select defaultValue={countryCode} onValueChange={setCountryCode}>
-                              <SelectTrigger className="w-[140px]">
-                                  <SelectValue placeholder="Code pays" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {allCountries.map((c) => <SelectItem key={c.code} value={c.phoneCode}>{c.name} ({c.phoneCode})</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                          <Input 
-                              id="signup-phone" 
-                              type="tel" 
-                              value={phone} 
-                              onChange={(e) => setPhone(e.target.value)} 
-                              disabled={isSubmitting} 
-                              placeholder="Numéro sans l'indicatif"
-                          />
-                      </div>
-                  </div>
-                  <div className="grid gap-2">
-                      <Label>Genre</Label>
-                      <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'homme' | 'femme')} className="flex gap-4 pt-2">
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="homme" id="male" />
-                              <Label htmlFor="male">Homme</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="femme" id="female" />
-                              <Label htmlFor="female">Femme</Label>
-                          </div>
-                      </RadioGroup>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Créer mon compte
-                  </Button>
-                </form>
-                <div className="mt-4 text-center text-sm">
-                  <Button variant="link" asChild className="text-muted-foreground">
-                      <Link href="/">Retour à l'accueil</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </CardContent>
+        </Card>
       </main>
       <ContactFooter />
     </div>
