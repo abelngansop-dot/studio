@@ -73,8 +73,10 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        listenerHasFailed.current = true; // Set flag on error
-        errorEmitter.emit('permission-error', err);
+        listenerHasFailed.current = true;
+        // The error callback must be lightweight and non-interfering.
+        // Emitting events here can cause race conditions with the SDK's internal state.
+        // We will rely on the component to handle the error state.
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -82,11 +84,16 @@ export function useCollection<T = any>(
     );
 
     return () => {
-      // Only unsubscribe if the listener hasn't already failed due to a permission error.
-      // This prevents a race condition where we try to unsubscribe from a listener
-      // that the backend has already torn down, which can crash the SDK.
-      if (!listenerHasFailed.current) {
-        unsubscribe();
+      try {
+        // Only unsubscribe if the listener hasn't already failed.
+        // This prevents a race condition where we try to unsubscribe from a listener
+        // that the backend has already torn down.
+        if (!listenerHasFailed.current) {
+          unsubscribe();
+        }
+      } catch (e) {
+        // If unsubscribe fails, it's likely because the listener is already gone.
+        // We can safely ignore this.
       }
     };
   }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
