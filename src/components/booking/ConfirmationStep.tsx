@@ -182,7 +182,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
         <p className="text-muted-foreground mt-2 text-lg">Vérifiez les détails et confirmez vos informations pour finaliser.</p>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto flex flex-col gap-8">
         {/* Form Section */}
         <div className="space-y-6">
             <Card className="shadow-md">
