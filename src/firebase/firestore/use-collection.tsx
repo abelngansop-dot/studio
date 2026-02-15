@@ -9,6 +9,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -73,6 +74,7 @@ export function useCollection<T = any>(
       },
       (err: FirestoreError) => {
         listenerHasFailed.current = true; // Set flag on error
+        errorEmitter.emit('permission-error', err);
         setError(err);
         setData(null);
         setIsLoading(false);

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
+import { type FirestoreError } from 'firebase/firestore';
 
 /**
  * An invisible component that listens for globally emitted 'permission-error' events.
@@ -14,7 +15,7 @@ export function FirebaseErrorListener() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const handleError = (error: FirestorePermissionError) => {
+    const handleError = (error: FirestorePermissionError | FirestoreError) => {
       // Show a non-crashing, user-friendly toast notification
       toast({
         variant: "destructive",
