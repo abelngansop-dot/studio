@@ -24,8 +24,6 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
             return <Skeleton className="h-[68px] w-64 rounded-full" />;
         }
         
-        // This button now consistently triggers the booking flow for all users.
-        // The "Manage my bookings" link is available in the UserNav in the header for logged-in users.
         return (
             <BookingTrigger>
                 <Button
