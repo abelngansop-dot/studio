@@ -81,9 +81,9 @@ export default function CreateShopPage() {
                 <Card>
                     <CardHeader className="text-center">
                         <Store className="mx-auto h-12 w-12 text-primary mb-4" />
-                        <CardTitle className="text-3xl font-bold font-headline">Devenez vendeur</CardTitle>
+                        <CardTitle className="text-3xl font-bold font-headline">Proposez vos services</CardTitle>
                         <CardDescription className="text-lg text-muted-foreground pt-2">
-                            Créez votre propre boutique sur Inoublevents et commencez à proposer vos services.
+                            Créez votre propre boutique sur Inoublevents pour commencer à proposer vos services.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -100,7 +100,7 @@ export default function CreateShopPage() {
                                     className="h-12 text-base"
                                 />
                             </div>
-                            <Button type="submit" className="w-full h-12 text-lg" disabled={isSubmitting}>
+                            <Button type="submit" className="w-full h-12 text-base sm:text-lg" disabled={isSubmitting}>
                                 {isSubmitting ? (
                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                 ) : (

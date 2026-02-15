@@ -55,7 +55,7 @@ export function Header() {
         <Button variant="outline" asChild>
           <Link href="/creer-boutique">
             <Store className="mr-2 h-4 w-4" />
-            Devenir vendeur
+            Proposer un service
           </Link>
         </Button>
       );
@@ -83,7 +83,7 @@ export function Header() {
           >
             <Link href="/creer-boutique">
               <Store className="mr-2 h-4 w-4" />
-              Devenir vendeur
+              Proposer un service
             </Link>
           </Button>
         </SheetClose>

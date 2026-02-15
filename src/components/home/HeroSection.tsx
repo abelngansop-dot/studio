@@ -59,7 +59,7 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
                  <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base">
                     <Link href="/creer-boutique">
                         <Store className="mr-2 h-5 w-5" />
-                        Devenir vendeur
+                        Proposer un service
                     </Link>
                 </Button>
             )
