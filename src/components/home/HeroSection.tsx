@@ -6,9 +6,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { useUser } from '@/firebase/provider';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Store } from 'lucide-react';
+
+type UserProfile = {
+  role: 'client' | 'shop_admin' | 'admin' | 'superadmin';
+  shopId?: string;
+};
 
 type HeroSectionProps = {
     heroImage: ImagePlaceholder | undefined;
@@ -16,14 +24,21 @@ type HeroSectionProps = {
 
 export function HeroSection({ heroImage }: HeroSectionProps) {
     const { t } = useTranslation();
-    const { isUserLoading } = useUser();
+    const { user, isUserLoading: isAuthLoading } = useUser();
+    const firestore = useFirestore();
     const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
 
+    const userDocRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
+    const isUserLoading = isAuthLoading || isProfileLoading;
+
+
     const CtaButton = () => {
-        if (isUserLoading) {
-            return <Skeleton className="h-[68px] w-64 rounded-full" />;
-        }
-        
         return (
             <BookingTrigger>
                 <Button
@@ -35,6 +50,35 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
             </BookingTrigger>
         );
     }
+    
+    const VendorCta = () => {
+        if (isUserLoading) return <Skeleton className="h-[52px] w-52 rounded-full" />;
+
+        if (user && userProfile?.role === 'client') {
+            return (
+                 <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base">
+                    <Link href="/creer-boutique">
+                        <Store className="mr-2 h-5 w-5" />
+                        Devenir vendeur
+                    </Link>
+                </Button>
+            )
+        }
+
+        if (user && userProfile?.role === 'shop_admin') {
+            return (
+                 <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base">
+                    <Link href="/dashboard">
+                        <Store className="mr-2 h-5 w-5" />
+                        Accéder à mon tableau de bord
+                    </Link>
+                </Button>
+            )
+        }
+        
+        return null;
+    }
+
 
     return (
         <section className="relative w-full h-[calc(100vh-4rem)] flex items-center justify-center">
@@ -60,8 +104,9 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
                             <p className="mt-4 max-w-xl mx-auto text-foreground/80 md:text-xl">
                                 {t('hero.subtitle')}
                             </p>
-                            <div className="mt-8">
+                            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <CtaButton />
+                                <VendorCta />
                             </div>
                         </CardContent>
                     </Card>
