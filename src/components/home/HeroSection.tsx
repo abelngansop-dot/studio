@@ -16,20 +16,16 @@ type HeroSectionProps = {
 
 export function HeroSection({ heroImage }: HeroSectionProps) {
     const { t } = useTranslation();
-    const { user, isUserLoading } = useUser();
+    const { isUserLoading } = useUser();
     const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
 
     const CtaButton = () => {
         if (isUserLoading) {
             return <Skeleton className="h-[68px] w-64 rounded-full" />;
         }
-        if (user) {
-            return (
-                <Button asChild size="lg" className={ctaButtonClass}>
-                    <Link href="/mes-reservations">{t('hero.manage_bookings')}</Link>
-                </Button>
-            )
-        }
+        
+        // This button now consistently triggers the booking flow for all users.
+        // The "Manage my bookings" link is available in the UserNav in the header for logged-in users.
         return (
             <BookingTrigger>
                 <Button
@@ -39,7 +35,7 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
                     {t('hero.cta')}
                 </Button>
             </BookingTrigger>
-        )
+        );
     }
 
     return (
