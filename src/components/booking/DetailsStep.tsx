@@ -264,8 +264,7 @@ export function DetailsStep({
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
           <Card className="overflow-hidden shadow-lg border-primary/20">
             <CardHeader className="flex-row items-center gap-4 space-y-0 bg-primary/5">
               <div className="p-3 bg-primary/10 rounded-lg">
@@ -510,49 +509,8 @@ export function DetailsStep({
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        <div className="space-y-8">
-          <Card className="shadow-md sticky top-24">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">
-                Récapitulatif
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">Événement</span>
-                <span className="font-medium capitalize text-right">
-                  {bookingData.eventType}
-                </span>
-              </div>
-              <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">Services</span>
-                <span className="font-medium text-right">
-                  {bookingData.services.join(', ')}
-                </span>
-              </div>
-              <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">Date</span>
-                <span className="font-medium capitalize text-right">
-                  {selectedDateDisplay}
-                </span>
-              </div>
-              <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">Heure</span>
-                <span className="font-medium">{bookingData.time || '...'}</span>
-              </div>
-              <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">Lieu</span>
-                <span className="font-medium capitalize text-right">
-                  {bookingData.city ? `${bookingData.city}, ` : ''}
-                  {bookingData.country || 'Non précisé'}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md">
+          
+           <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="font-headline text-xl">
                 Vos Coordonnées
@@ -614,6 +572,46 @@ export function DetailsStep({
               </div>
             </CardContent>
           </Card>
+
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="font-headline text-xl">
+                Récapitulatif
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground">Événement</span>
+                <span className="font-medium capitalize text-right">
+                  {bookingData.eventType}
+                </span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground">Services</span>
+                <span className="font-medium text-right">
+                  {bookingData.services.join(', ')}
+                </span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground">Date</span>
+                <span className="font-medium capitalize text-right">
+                  {selectedDateDisplay}
+                </span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground">Heure de début</span>
+                <span className="font-medium">{bookingData.time || '...'}</span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground">Lieu</span>
+                <span className="font-medium capitalize text-right">
+                  {bookingData.city ? `${bookingData.city}, ` : ''}
+                  {bookingData.country || 'Non précisé'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {(errors.date ||
             errors.time ||
             errors.country ||
@@ -630,7 +628,6 @@ export function DetailsStep({
               </AlertDescription>
             </Alert>
           )}
-        </div>
       </div>
 
       <div className="mt-12 flex justify-between">
