@@ -12,6 +12,7 @@ service cloud.firestore {
     }
 
     // This function performs a document read and CANNOT be used in rules for 'list' queries.
+    // IT IS THE SOURCE OF THE CRASH WHEN USED IN LIST RULES.
     function getUserData(userId) {
       return get(/databases/$(database)/documents/users/$(userId)).data;
     }
@@ -41,8 +42,10 @@ service cloud.firestore {
       // READ: Users can read their own profile. Admins/SuperAdmins can read any profile.
       allow get: if isOwner(userId) || isAdmin();
       
-      // LIST: Only Admins/SuperAdmins can list users.
-      allow list: if isAdmin();
+      // LIST: Listing all users is not scalable/secure with document-based roles.
+      // Using `get()` in list rules is disallowed and was causing crashes.
+      // This feature requires custom claims to be implemented correctly.
+      allow list: if false;
 
       // CREATE:
       // - Any user can create their own 'client' profile.
@@ -121,9 +124,9 @@ service cloud.firestore {
 
         // LIST: 
         // - Shop admins can list all bookings for their shop (client must query by shopId).
-        // - Platform admins can list all bookings.
-        // - Clients can list bookings where their userId matches.
-        allow list: if isShopAdmin(shopId) || isAdmin() || (isSignedIn() && request.query.userId == request.auth.uid);
+        // - Platform admins cannot list bookings across all shops using document-based roles (this was causing a crash). This requires custom claims.
+        // - Clients can list their own bookings.
+        allow list: if isShopAdmin(shopId) || (isSignedIn() && request.query.userId == request.auth.uid);
 
         // UPDATE/DELETE: Only shop admin or platform admin can manage bookings.
         allow update, delete: if isShopAdmin(shopId) || isAdmin();
