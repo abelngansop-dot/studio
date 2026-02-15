@@ -9,9 +9,7 @@ export function CurrentYear() {
     setYear(new Date().getFullYear());
   }, []);
 
-  if (!year) {
-    return null;
-  }
-
-  return <>{year}</>;
+  // By always rendering the span, we ensure the DOM structure is the same
+  // on the server and the initial client render. The content is filled in after hydration.
+  return <span>{year}</span>;
 }
