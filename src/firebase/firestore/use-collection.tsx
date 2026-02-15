@@ -9,8 +9,6 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -73,16 +71,9 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      async (err: FirestoreError) => {
+      (err: FirestoreError) => {
         listenerHasFailed.current = true;
         
-        const path = 'path' in memoizedTargetRefOrQuery ? memoizedTargetRefOrQuery.path : '[Collection Group Query]';
-        const permissionError = new FirestorePermissionError({
-            path: path,
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -95,10 +86,6 @@ export function useCollection<T = any>(
           unsubscribe();
         }
       } catch (e) {
-        // This is a defensive catch. In some race conditions, the SDK might
-        // throw an internal error during cleanup if the listener has already
-        // been terminated by the backend due to a permission error.
-        // We can safely ignore this, as the listener is already dead.
         console.warn("Ignoring a Firestore listener cleanup error.", e);
       }
     };

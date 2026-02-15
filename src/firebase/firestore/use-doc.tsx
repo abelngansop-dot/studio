@@ -8,8 +8,6 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -73,14 +71,8 @@ export function useDoc<T = any>(
         setError(null); // Clear any previous error on successful snapshot (even if doc doesn't exist)
         setIsLoading(false);
       },
-      async (err: FirestoreError) => {
+      (err: FirestoreError) => {
         listenerHasFailed.current = true;
-        
-        const permissionError = new FirestorePermissionError({
-            path: memoizedDocRef.path,
-            operation: 'get',
-        });
-        errorEmitter.emit('permission-error', permissionError);
 
         setError(err);
         setData(null);
@@ -94,10 +86,6 @@ export function useDoc<T = any>(
           unsubscribe();
         }
       } catch (e) {
-        // This is a defensive catch. In some race conditions, the SDK might
-        // throw an internal error during cleanup if the listener has already
-        // been terminated by the backend due to a permission error.
-        // We can safely ignore this, as the listener is already dead.
         console.warn("Ignoring a Firestore listener cleanup error.", e);
       }
     };
