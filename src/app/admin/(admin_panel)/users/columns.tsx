@@ -31,7 +31,8 @@ export type User = {
   email: string;
   displayName: string | null;
   photoURL: string | null;
-  role: 'client' | 'admin' | 'superadmin';
+  role: 'client' | 'shop_admin' | 'admin' | 'superadmin';
+  shopId?: string;
   gender?: 'homme' | 'femme';
   createdAt: { seconds: number; nanoseconds: number };
 };
@@ -40,8 +41,9 @@ const RoleBadge = ({ role }: { role: User['role'] }) => {
   let variant: 'default' | 'secondary' | 'outline' = 'secondary';
   if (role === 'admin') variant = 'default';
   if (role === 'superadmin') variant = 'outline';
+  if (role === 'shop_admin') variant = 'default';
   
-  return <Badge variant={variant} className="capitalize">{role}</Badge>;
+  return <Badge variant={variant} className="capitalize">{role.replace('_', ' ')}</Badge>;
 }
 
 const UserCell = ({ row }: { row: any }) => {
@@ -64,11 +66,12 @@ const UserCell = ({ row }: { row: any }) => {
 
 const RoleSelector = ({ user, isSelf }: { user: User; isSelf: boolean }) => {
     const firestore = useFirestore();
-    const roles: User['role'][] = ['client', 'admin', 'superadmin'];
+    const roles: User['role'][] = ['client', 'shop_admin', 'admin', 'superadmin'];
 
     const handleRoleChange = (role: string) => {
         if (!firestore) return;
         const userRef = doc(firestore, 'users', user.uid);
+        // When making someone a shop_admin, we assume the shopId is set elsewhere
         updateDocumentNonBlocking(userRef, { role });
     }
 
@@ -80,7 +83,7 @@ const RoleSelector = ({ user, isSelf }: { user: User; isSelf: boolean }) => {
                     <DropdownMenuRadioGroup value={user.role} onValueChange={handleRoleChange}>
                         {roles.map(role => (
                             <DropdownMenuRadioItem key={role} value={role} className="capitalize">
-                                {role}
+                                {role.replace('_', ' ')}
                             </DropdownMenuRadioItem>
                         ))}
                     </DropdownMenuRadioGroup>

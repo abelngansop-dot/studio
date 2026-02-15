@@ -1,159 +1,129 @@
 {
   "entities": {
+    "Shop": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Shop",
+      "type": "object",
+      "description": "Represents a single vendor's shop on the marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Shop."
+        },
+        "name": {
+          "type": "string",
+          "description": "The public name of the shop."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns the shop."
+        },
+        "subscriptionPlan": {
+          "type": "string",
+          "description": "The current subscription plan for the shop.",
+          "enum": ["basic", "premium", "pro", "none"]
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the shop.",
+          "enum": ["active", "suspended", "pending_setup"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time the shop was created."
+        }
+      },
+      "required": ["name", "ownerId", "subscriptionPlan", "status", "createdAt"]
+    },
     "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
       "description": "Represents a user of the Inoublevents application.",
       "properties": {
-        "uid": {
-          "type": "string",
-          "description": "Unique identifier from Firebase Auth."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the user.",
-          "format": "email"
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The display name of the user."
-        },
-        "phone": {
-          "type": "string",
-          "description": "The user's phone number."
-        },
-        "gender": {
-          "type": "string",
-          "description": "The gender of the user.",
-          "enum": ["homme", "femme"]
-        },
-        "role": {
-          "type": "string",
-          "description": "The role of the user (e.g., client, admin, superadmin).",
-          "enum": ["client", "admin", "superadmin"]
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time the user was created.",
-          "format": "date-time"
-        }
+        "uid": { "type": "string", "description": "Unique identifier from Firebase Auth." },
+        "email": { "type": "string", "description": "The email address of the user.", "format": "email" },
+        "displayName": { "type": "string", "description": "The display name of the user." },
+        "phone": { "type": "string", "description": "The user's phone number." },
+        "gender": { "type": "string", "description": "The gender of the user.", "enum": ["homme", "femme"] },
+        "role": { "type": "string", "description": "The role of the user.", "enum": ["client", "shop_admin", "admin", "superadmin"] },
+        "shopId": { "type": "string", "description": "The ID of the shop this user owns or manages. Only applicable for shop_admin role." },
+        "createdAt": { "type": "string", "description": "The date and time the user was created.", "format": "date-time" }
       },
       "required": ["uid", "email", "role", "createdAt"]
+    },
+    "ShopAdmin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Shop Admin",
+      "type": "object",
+      "description": "Represents a user's admin rights over a shop.",
+       "properties": {
+        "userId": { "type": "string", "description": "The UID of the admin user." },
+        "addedAt": { "type": "string", "format": "date-time", "description": "The date the user was made an admin." }
+      },
+      "required": ["userId", "addedAt"]
     },
     "Booking": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Booking",
       "type": "object",
-      "description": "Represents a booking request made by a user for event services.",
+      "description": "Represents a booking request made by a user for event services from a specific shop.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Booking entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User who made the booking."
-        },
-        "eventType": {
-          "type": "string",
-          "description": "The type of event."
-        },
-        "services": {
-          "type": "array",
-          "description": "A list of requested service IDs.",
-          "items": { "type": "string" }
-        },
-        "country": {
-          "type": "string",
-          "description": "The country of the event."
-        },
-        "city": {
-          "type": "string",
-          "description": "The city of the event."
-        },
-        "date": {
-          "type": "string",
-          "description": "The date of the event.",
-          "format": "date-time"
-        },
-        "contactInfo": {
-          "type": "object",
-          "properties": {
-            "email": { "type": "string" },
-            "phone": { "type": "string" }
-          },
-          "required": ["email", "phone"]
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the booking (e.g., pending, confirmed, cancelled).",
-          "enum": ["pending", "confirmed", "cancelled"]
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time the booking was created.",
-          "format": "date-time"
-        },
-        "requestDetails": {
-          "type": "string",
-          "description": "Specific details for an 'other' type event request."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Booking entity." },
+        "shopId": { "type": "string", "description": "The ID of the shop providing the service." },
+        "userId": { "type": "string", "description": "Reference to the User who made the booking." },
+        "eventType": { "type": "string", "description": "The type of event." },
+        "services": { "type": "array", "description": "A list of requested service names.", "items": { "type": "string" } },
+        "country": { "type": "string", "description": "The country of the event." },
+        "city": { "type": "string", "description": "The city of the event." },
+        "date": { "type": "string", "description": "The date of the event.", "format": "date-time" },
+        "contactInfo": { "type": "object", "properties": { "email": { "type": "string" }, "phone": { "type": "string" } }, "required": ["phone"] },
+        "status": { "type": "string", "description": "The status of the booking (e.g., pending, confirmed, cancelled).", "enum": ["pending", "confirmed", "cancelled"] },
+        "createdAt": { "type": "string", "description": "The date and time the booking was created.", "format": "date-time" },
+        "requestDetails": { "type": "string", "description": "Specific details for an 'other' type event request." }
       },
-      "required": ["userId", "eventType", "services", "country", "city", "date", "status", "createdAt"]
+      "required": ["shopId", "userId", "eventType", "services", "country", "city", "date", "status", "createdAt", "contactInfo"]
     },
     "Service": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Service",
       "type": "object",
-      "description": "Represents a service offered for events, such as photography or catering.",
+      "description": "Represents a service offered for events by a specific shop.",
       "properties": {
         "id": { "type": "string" },
+        "shopId": { "type": "string", "description": "The ID of the shop providing the service." },
         "name": { "type": "string" },
         "description": { "type": "string" },
         "icon": { "type": "string" },
         "rating": { "type": "number" },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL for an image representing the service.",
-          "format": "uri"
-        },
-        "videoUrl": {
-          "type": "string",
-          "description": "URL for a short video representing the service.",
-          "format": "uri"
-        }
+        "imageUrl": { "type": "string", "format": "uri" },
+        "videoUrl": { "type": "string", "format": "uri" }
       },
-      "required": ["name", "description", "icon"]
+      "required": ["shopId", "name", "description", "icon"]
     },
     "EventType": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "EventType",
       "type": "object",
-      "description": "Represents a type of event that can be booked.",
+      "description": "Represents a type of event that can be booked within a shop.",
       "properties": {
         "id": { "type": "string" },
+        "shopId": { "type": "string", "description": "The ID of the shop this event type belongs to." },
         "name": { "type": "string" },
         "icon": { "type": "string" },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL for an image representing the event type.",
-          "format": "uri"
-        },
-        "videoUrl": {
-          "type": "string",
-          "description": "URL for a short video representing the event type.",
-          "format": "uri"
-        }
+        "imageUrl": { "type": "string", "format": "uri" },
+        "videoUrl": { "type": "string", "format": "uri" }
       },
-      "required": ["name", "icon"]
+      "required": ["shopId", "name", "icon"]
     },
     "Review": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "Review",
         "type": "object",
-        "description": "Represents a review submitted by a user.",
+        "description": "Represents a review for a specific shop.",
         "properties": {
+            "shopId": { "type": "string", "description": "The ID of the shop being reviewed." },
             "userId": { "type": "string" },
             "displayName": { "type": "string" },
             "rating": { "type": "number" },
@@ -161,21 +131,39 @@
             "status": { "enum": ["pending", "approved", "rejected"] },
             "createdAt": { "type": "string", "format": "date-time" }
         },
-        "required": ["userId", "displayName", "rating", "comment", "status", "createdAt"]
+        "required": ["shopId", "userId", "displayName", "rating", "comment", "status", "createdAt"]
     },
     "GalleryImage": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Gallery Image",
       "type": "object",
-      "description": "Represents an image in the public gallery of past events.",
+      "description": "Represents an image in a shop's gallery.",
       "properties": {
         "id": { "type": "string" },
-        "imageUrl": { "type": "string", "format": "uri", "description": "URL of the image." },
-        "description": { "type": "string", "description": "A short description of the image or event." },
-        "imageHint": { "type": "string", "description": "AI hint for image search (max 2 words)." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "The date and time the image was added." }
+        "shopId": { "type": "string", "description": "The ID of the shop this image belongs to." },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "description": { "type": "string" },
+        "imageHint": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["imageUrl", "description", "createdAt"]
+      "required": ["shopId", "imageUrl", "description", "createdAt"]
+    },
+    "Subscription": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subscription",
+      "type": "object",
+      "description": "Represents a subscription for a shop.",
+      "properties": {
+        "id": { "type": "string" },
+        "shopId": { "type": "string" },
+        "plan": { "enum": ["basic", "premium", "pro"] },
+        "status": { "enum": ["active", "cancelled", "past_due"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "renewsAt": { "type": "string", "format": "date-time" },
+        "stripeSubscriptionId": { "type": "string" }
+      },
+      "required": ["shopId", "plan", "status", "startDate"]
     }
   },
   "auth": {
@@ -186,49 +174,64 @@
       {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "User",
           "schema": { "$ref": "#/entities/User" },
-          "description": "Stores user profiles and roles."
+          "description": "Stores global user profiles and roles."
         }
       },
       {
-        "path": "/bookings/{bookingId}",
+        "path": "/shops/{shopId}",
         "definition": {
-          "entityName": "Booking",
-          "schema": { "$ref": "#/entities/Booking" },
-          "description": "Stores all booking requests."
+          "schema": { "$ref": "#/entities/Shop" },
+          "description": "Stores all shops in the marketplace."
         }
       },
       {
-        "path": "/services/{serviceId}",
+        "path": "/shops/{shopId}/services/{serviceId}",
         "definition": {
-          "entityName": "Service",
           "schema": { "$ref": "#/entities/Service" },
-          "description": "Stores all available services and their details."
+          "description": "Services offered by this shop."
         }
       },
       {
-        "path": "/eventTypes/{eventTypeId}",
+        "path": "/shops/{shopId}/bookings/{bookingId}",
         "definition": {
-          "entityName": "EventType",
+          "schema": { "$ref": "#/entities/Booking" },
+          "description": "Bookings made for this shop's services."
+        }
+      },
+      {
+        "path": "/shops/{shopId}/eventTypes/{eventTypeId}",
+        "definition": {
           "schema": { "$ref": "#/entities/EventType" },
-          "description": "Stores all available event types."
+          "description": "Event types managed by this shop."
         }
       },
       {
-        "path": "/reviews/{reviewId}",
+        "path": "/shops/{shopId}/reviews/{reviewId}",
         "definition": {
-            "entityName": "Review",
-            "schema": { "$ref": "#/entities/Review" },
-            "description": "Stores user reviews for moderation and display."
+          "schema": { "$ref": "#/entities/Review" },
+          "description": "Reviews for this shop."
         }
       },
       {
-        "path": "/gallery/{galleryImageId}",
+        "path": "/shops/{shopId}/gallery/{galleryImageId}",
         "definition": {
-          "entityName": "GalleryImage",
           "schema": { "$ref": "#/entities/GalleryImage" },
-          "description": "Stores images for the public gallery."
+          "description": "Gallery images for this shop."
+        }
+      },
+      {
+        "path": "/shops/{shopId}/subscriptions/{subscriptionId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Subscription" },
+          "description": "Subscription history for this shop."
+        }
+      },
+      {
+        "path": "/shops/{shopId}/admins/{userId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/ShopAdmin" },
+          "description": "A list of users with admin permissions for this shop."
         }
       }
     ]
