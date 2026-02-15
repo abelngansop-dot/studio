@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -44,7 +44,6 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -56,7 +55,6 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
-    listenerHasFailed.current = false; // Reset on new query
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
@@ -71,8 +69,6 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        listenerHasFailed.current = true;
-        // The error callback must be lightweight and non-interfering.
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -80,11 +76,14 @@ export function useDoc<T = any>(
     );
 
     return () => {
-      // Only unsubscribe if the listener hasn't already failed.
-      // This prevents a race condition where we try to unsubscribe from a listener
-      // that the backend has already torn down.
-      if (!listenerHasFailed.current) {
-          unsubscribe();
+      // The most robust way to prevent race conditions on unmount.
+      // If the listener has already been torn down by a permission error,
+      // this call might throw. We can safely ignore this error.
+      try {
+        unsubscribe();
+      } catch (e) {
+        // This is expected if the listener is already closed, e.g. due to a permission error.
+        // We can safely ignore it.
       }
     };
   }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
