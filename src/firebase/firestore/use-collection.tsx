@@ -73,7 +73,6 @@ export function useCollection<T = any>(
       },
       (err: FirestoreError) => {
         listenerHasFailed.current = true;
-        
         setError(err);
         setData(null);
         setIsLoading(false);

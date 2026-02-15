@@ -57,7 +57,6 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
     listenerHasFailed.current = false;
-    // Optional: setData(null); // Clear previous data instantly
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
@@ -73,7 +72,6 @@ export function useDoc<T = any>(
       },
       (err: FirestoreError) => {
         listenerHasFailed.current = true;
-
         setError(err);
         setData(null);
         setIsLoading(false);
