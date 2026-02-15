@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Query,
   onSnapshot,
@@ -60,6 +60,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -71,8 +72,8 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
+    listenerHasFailed.current = false;
 
-    // Directly use memoizedTargetRefOrQuery as it's assumed to be the final query
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
@@ -85,6 +86,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
+        listenerHasFailed.current = true;
         // This logic robustly extracts the path from a ref or provides a placeholder for a query.
         const path: string =
           memoizedTargetRefOrQuery.type === 'collection'
@@ -105,7 +107,11 @@ export function useCollection<T = any>(
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      if (!listenerHasFailed.current) {
+        unsubscribe();
+      }
+    };
   }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
