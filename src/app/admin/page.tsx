@@ -12,6 +12,7 @@ import { useAuth, useFirestore } from '@/firebase/provider';
 import { FirebaseError } from 'firebase/app';
 import { Loader2 } from 'lucide-react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import Link from 'next/link';
 
 // The designated email for the superadmin to bootstrap the application.
 const SUPERADMIN_EMAIL = 'abelnono1994@gmail.com';
@@ -152,6 +153,11 @@ export default function AdminLoginPage() {
               Se connecter
             </Button>
           </form>
+           <div className="mt-4 text-center text-sm">
+            <Button variant="link" asChild className="text-muted-foreground">
+                <Link href="/">Retour à l'accueil</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
