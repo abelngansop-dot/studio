@@ -79,7 +79,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
   };
   
   const handleBookingComplete = () => {
-    clearBookingProgress();
+    // Progress is now cleared in the confirmation step itself.
     closeModal();
     toast({
       title: "Votre demande a été envoyée !",
@@ -94,6 +94,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
         updateBookingData={updateBookingData}
         onBack={handleBackFromConfirmation}
         onBookingComplete={handleBookingComplete}
+        clearBookingProgress={clearBookingProgress}
       />
     );
   }
