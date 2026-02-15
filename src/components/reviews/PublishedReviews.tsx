@@ -16,17 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-
-export type Review = {
-    id: string;
-    shopId: string;
-    userId: string;
-    displayName: string;
-    rating: number;
-    comment: string;
-    status: 'pending' | 'approved' | 'rejected';
-    createdAt: { seconds: number; nanoseconds: number };
-};
+import type { Review } from '@/types/review';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {

@@ -7,7 +7,7 @@ import { useDoc } from '@/firebase/firestore/use-doc';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Review } from '@/components/reviews/PublishedReviews';
+import type { Review } from '@/types/review';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type UserProfile = {

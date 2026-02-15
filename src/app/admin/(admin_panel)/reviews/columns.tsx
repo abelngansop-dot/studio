@@ -14,14 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import type { Review } from '@/components/reviews/PublishedReviews';
+import type { Review } from '@/types/review';
 
 const StatusBadge = ({ status }: { status: Review['status'] }) => {
   let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary';
   if (status === 'approved') variant = 'default';
   if (status === 'rejected') variant = 'destructive';
   
-  return <Badge variant={variant} className="capitalize">{status}</Badge>;
+  return <Badge variant={variant} className="capitalize">{status || 'N/A'}</Badge>;
 }
 
 const StarRating = ({ rating }: { rating: number }) => (
@@ -38,9 +38,10 @@ const StarRating = ({ rating }: { rating: number }) => (
 const ActionsCell = ({ row }: { row: any }) => {
     const review = row.original as Review;
     const firestore = useFirestore();
+    const canModerate = !!(firestore && review.shopId && review.id);
 
     const handleStatusChange = (newStatus: 'approved' | 'rejected') => {
-        if (!firestore) return;
+        if (!canModerate) return;
         const reviewRef = doc(firestore, 'shops', review.shopId, 'reviews', review.id);
         updateDocumentNonBlocking(reviewRef, { status: newStatus });
     }
@@ -56,12 +57,12 @@ const ActionsCell = ({ row }: { row: any }) => {
             <DropdownMenuContent align="end">
             <DropdownMenuLabel>Modération</DropdownMenuLabel>
             {review.status !== 'approved' && (
-                <DropdownMenuItem onClick={() => handleStatusChange('approved')}>
+                <DropdownMenuItem onClick={() => handleStatusChange('approved')} disabled={!canModerate}>
                     Approuver
                 </DropdownMenuItem>
             )}
             {review.status !== 'rejected' && (
-                 <DropdownMenuItem onClick={() => handleStatusChange('rejected')} className="text-destructive">
+                 <DropdownMenuItem onClick={() => handleStatusChange('rejected')} className="text-destructive" disabled={!canModerate}>
                     Rejeter
                 </DropdownMenuItem>
             )}
