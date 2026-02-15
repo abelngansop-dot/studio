@@ -13,17 +13,22 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { FirebaseError } from 'firebase/app';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Phone as PhoneIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigationHistory } from '@/hooks/use-navigation-history';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { cn } from '@/lib/utils';
+import { Header } from '@/components/Header';
+import { ContactFooter } from '@/components/ContactFooter';
+import { allCountries } from '@/lib/locations';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [gender, setGender] = useState<'homme' | 'femme' | ''>('');
+  const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+237'); // Default to Cameroon
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const router = useRouter();
@@ -66,7 +71,6 @@ export default function LoginPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Create user document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
       const newUser = {
           uid: user.uid,
@@ -74,6 +78,7 @@ export default function LoginPage() {
           displayName: displayName || email.split('@')[0],
           role: 'client',
           gender,
+          phone: phone ? `${countryCode}${phone.replace(/\D/g, '')}` : null,
           createdAt: serverTimestamp()
       }
       setDocumentNonBlocking(userDocRef, newUser, { merge: false });
@@ -95,7 +100,7 @@ export default function LoginPage() {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-          description = 'Email ou mot de passe invalide.';
+          description = 'Identifiants invalides.';
           break;
         case 'auth/email-already-in-use':
             description = 'Cette adresse e-mail est déjà utilisée.';
@@ -111,92 +116,155 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Tabs defaultValue="login" className="w-full max-w-md">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Se connecter</TabsTrigger>
-          <TabsTrigger value="signup">S'inscrire</TabsTrigger>
-        </TabsList>
-        <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Connexion</CardTitle>
-              <CardDescription>
-                Accédez à votre espace pour gérer vos réservations.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSignIn} className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input id="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting}/>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="login-password">Mot de passe</Label>
-                  <Input id="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Se connecter
-                </Button>
-              </form>
-               <div className="mt-4 text-center text-sm">
-                <Button variant="link" asChild className="text-muted-foreground">
-                    <Link href="/">Retour à l'accueil</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="signup">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Créer un compte</CardTitle>
-              <CardDescription>
-                Créez un compte pour sauvegarder et suivre vos demandes.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSignUp} className="grid gap-4">
-                 <div className="grid gap-2">
-                  <Label htmlFor="signup-name">Nom (optionnel)</Label>
-                  <Input id="signup-name" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isSubmitting}/>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting}/>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <Input id="signup-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
-                </div>
-                <div className="grid gap-2">
-                    <Label>Genre</Label>
-                    <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'homme' | 'femme')} className="flex gap-4 pt-2">
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="homme" id="male" />
-                            <Label htmlFor="male">Homme</Label>
+    <div className="flex flex-col min-h-screen bg-secondary/30">
+      <Header />
+      <main className="flex-grow flex items-center justify-center py-12 px-4">
+        <Tabs defaultValue="login" className="w-full max-w-md">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Se connecter</TabsTrigger>
+            <TabsTrigger value="signup">S'inscrire</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">Bon retour !</CardTitle>
+                <CardDescription>
+                  Accédez à votre espace pour gérer vos réservations.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                 <Tabs defaultValue="email" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="email"><Mail className="mr-2 h-4 w-4"/>Email</TabsTrigger>
+                        <TabsTrigger value="phone"><PhoneIcon className="mr-2 h-4 w-4"/>Téléphone</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="email" className="pt-4">
+                        <form onSubmit={handleSignIn} className="grid gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="login-email">Email</Label>
+                                <Input id="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting}/>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="login-password">Mot de passe</Label>
+                                <Input id="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
+                            </div>
+                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Se connecter
+                            </Button>
+                        </form>
+                    </TabsContent>
+                    <TabsContent value="phone" className="pt-4">
+                        <div className="grid gap-4 text-center">
+                            <div className="grid gap-2 text-left">
+                                <Label>Téléphone</Label>
+                                <div className="flex gap-2">
+                                    <Select defaultValue={countryCode} onValueChange={setCountryCode}>
+                                        <SelectTrigger className="w-[140px]">
+                                            <SelectValue placeholder="Code pays" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {allCountries.map((c) => <SelectItem key={c.code} value={c.phoneCode}>{c.name} ({c.phoneCode})</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Input type="tel" placeholder="Numéro de téléphone"/>
+                                </div>
+                            </div>
+                            <Button 
+                                type="button" 
+                                className="w-full"
+                                onClick={() => toast({ title: 'Bientôt disponible', description: "La connexion par téléphone arrive prochainement !"})}
+                            >
+                              Recevoir un code
+                            </Button>
+                            <p className="px-2 text-center text-xs text-muted-foreground">
+                                La connexion par téléphone n'est pas encore disponible. Elle le sera très bientôt.
+                            </p>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="femme" id="female" />
-                            <Label htmlFor="female">Femme</Label>
-                        </div>
-                    </RadioGroup>
+                    </TabsContent>
+                 </Tabs>
+                <div className="mt-4 text-center text-sm">
+                  <Button variant="link" asChild className="text-muted-foreground">
+                      <Link href="/">Retour à l'accueil</Link>
+                  </Button>
                 </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Créer mon compte
-                </Button>
-              </form>
-              <div className="mt-4 text-center text-sm">
-                <Button variant="link" asChild className="text-muted-foreground">
-                    <Link href="/">Retour à l'accueil</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="signup">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">Créer un compte</CardTitle>
+                <CardDescription>
+                  Créez un compte pour sauvegarder et suivre vos demandes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignUp} className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-name">Nom (optionnel)</Label>
+                    <Input id="signup-name" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isSubmitting}/>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input id="signup-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting}/>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-password">Mot de passe</Label>
+                    <Input id="signup-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting}/>
+                  </div>
+                   <div className="grid gap-2">
+                      <Label>Téléphone (optionnel)</Label>
+                      <div className="flex gap-2">
+                          <Select defaultValue={countryCode} onValueChange={setCountryCode}>
+                              <SelectTrigger className="w-[140px]">
+                                  <SelectValue placeholder="Code pays" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {allCountries.map((c) => <SelectItem key={c.code} value={c.phoneCode}>{c.name} ({c.phoneCode})</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                          <Input 
+                              id="signup-phone" 
+                              type="tel" 
+                              value={phone} 
+                              onChange={(e) => setPhone(e.target.value)} 
+                              disabled={isSubmitting} 
+                              placeholder="Numéro sans l'indicatif"
+                          />
+                      </div>
+                  </div>
+                  <div className="grid gap-2">
+                      <Label>Genre</Label>
+                      <RadioGroup value={gender} onValueChange={(value) => setGender(value as 'homme' | 'femme')} className="flex gap-4 pt-2">
+                          <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="homme" id="male" />
+                              <Label htmlFor="male">Homme</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="femme" id="female" />
+                              <Label htmlFor="female">Femme</Label>
+                          </div>
+                      </RadioGroup>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Créer mon compte
+                  </Button>
+                </form>
+                <div className="mt-4 text-center text-sm">
+                  <Button variant="link" asChild className="text-muted-foreground">
+                      <Link href="/">Retour à l'accueil</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+      <ContactFooter />
     </div>
   );
 }

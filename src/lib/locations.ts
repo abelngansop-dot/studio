@@ -2,6 +2,7 @@ export type Country = {
   name: string;
   code: string;
   continent: 'Africa' | 'Europe';
+  phoneCode: string;
 };
 
 export type City = {
@@ -10,23 +11,23 @@ export type City = {
 };
 
 export const europeanCountries: Country[] = [
-  { name: 'France', code: 'FR', continent: 'Europe' },
-  { name: 'Allemagne', code: 'DE', continent: 'Europe' },
-  { name: 'Italie', code: 'IT', continent: 'Europe' },
-  { name: 'Espagne', code: 'ES', continent: 'Europe' },
-  { name: 'Belgique', code: 'BE', continent: 'Europe' },
-  { name: 'Suisse', code: 'CH', continent: 'Europe' },
-  { name: 'Royaume-Uni', code: 'GB', continent: 'Europe' },
+  { name: 'France', code: 'FR', continent: 'Europe', phoneCode: '+33' },
+  { name: 'Allemagne', code: 'DE', continent: 'Europe', phoneCode: '+49' },
+  { name: 'Italie', code: 'IT', continent: 'Europe', phoneCode: '+39' },
+  { name: 'Espagne', code: 'ES', continent: 'Europe', phoneCode: '+34' },
+  { name: 'Belgique', code: 'BE', continent: 'Europe', phoneCode: '+32' },
+  { name: 'Suisse', code: 'CH', continent: 'Europe', phoneCode: '+41' },
+  { name: 'Royaume-Uni', code: 'GB', continent: 'Europe', phoneCode: '+44' },
 ];
 
 export const africanCountries: Country[] = [
-  { name: 'Cameroun', code: 'CM', continent: 'Africa' },
-  { name: 'Nigéria', code: 'NG', continent: 'Africa' },
-  { name: "Côte d'Ivoire", code: 'CI', continent: 'Africa' },
-  { name: 'Sénégal', code: 'SN', continent: 'Africa' },
-  { name: 'Ghana', code: 'GH', continent: 'Africa' },
-  { name: 'Afrique du Sud', code: 'ZA', continent: 'Africa' },
-  { name: 'Gabon', code: 'GA', continent: 'Africa' },
+  { name: 'Cameroun', code: 'CM', continent: 'Africa', phoneCode: '+237' },
+  { name: 'Nigéria', code: 'NG', continent: 'Africa', phoneCode: '+234' },
+  { name: "Côte d'Ivoire", code: 'CI', continent: 'Africa', phoneCode: '+225' },
+  { name: 'Sénégal', code: 'SN', continent: 'Africa', phoneCode: '+221' },
+  { name: 'Ghana', code: 'GH', continent: 'Africa', phoneCode: '+233' },
+  { name: 'Afrique du Sud', code: 'ZA', continent: 'Africa', phoneCode: '+27' },
+  { name: 'Gabon', code: 'GA', continent: 'Africa', phoneCode: '+241' },
 ];
 
 export const allCountries: Country[] = [...africanCountries, ...europeanCountries].sort((a, b) => a.name.localeCompare(b.name));
