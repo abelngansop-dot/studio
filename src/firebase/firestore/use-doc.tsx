@@ -8,7 +8,6 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -74,8 +73,6 @@ export function useDoc<T = any>(
       (err: FirestoreError) => {
         listenerHasFailed.current = true;
         // The error callback must be lightweight and non-interfering.
-        // Emitting events here can cause race conditions with the SDK's internal state.
-        // We will rely on the component to handle the error state.
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -83,16 +80,11 @@ export function useDoc<T = any>(
     );
 
     return () => {
-      try {
-        // Only unsubscribe if the listener hasn't already failed.
-        // This prevents a race condition where we try to unsubscribe from a listener
-        // that the backend has already torn down.
-        if (!listenerHasFailed.current) {
+      // Only unsubscribe if the listener hasn't already failed.
+      // This prevents a race condition where we try to unsubscribe from a listener
+      // that the backend has already torn down.
+      if (!listenerHasFailed.current) {
           unsubscribe();
-        }
-      } catch (e) {
-        // If unsubscribe fails, it's likely because the listener is already gone.
-        // We can safely ignore this.
       }
     };
   }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
