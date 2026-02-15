@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Query,
   onSnapshot,
@@ -46,7 +46,6 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -58,12 +57,12 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
-    listenerHasFailed.current = false;
+    let isUnsubscribed = false;
 
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        if (listenerHasFailed.current) return;
+        if (isUnsubscribed) return;
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
           results.push({ ...(doc.data() as T), id: doc.id });
@@ -73,7 +72,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        listenerHasFailed.current = true;
+        isUnsubscribed = true; // Listener is automatically torn down on error.
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -81,17 +80,11 @@ export function useCollection<T = any>(
     );
 
     return () => {
-      // If the listener has failed, Firestore has already torn it down.
-      // Calling unsubscribe() again can cause an internal assertion failure.
-      if (listenerHasFailed.current) {
-        return;
-      }
-      
-      // For normal unmounts, we still need to clean up.
-      try {
+      // This cleanup function is called when the component unmounts or deps change.
+      // If an error occurred, the listener is already dead, and calling unsubscribe()
+      // again can cause a fatal internal assertion failure. We prevent this.
+      if (!isUnsubscribed) {
         unsubscribe();
-      } catch (e) {
-        // This is a failsafe. It's expected if the listener is already closed for other reasons.
       }
     };
   }, [memoizedTargetRefOrQuery]);

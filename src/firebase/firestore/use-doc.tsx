@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -44,7 +44,6 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -56,12 +55,12 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
-    listenerHasFailed.current = false;
+    let isUnsubscribed = false;
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (listenerHasFailed.current) return;
+        if (isUnsubscribed) return;
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
@@ -72,7 +71,7 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        listenerHasFailed.current = true;
+        isUnsubscribed = true; // Listener is automatically torn down on error.
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -80,17 +79,11 @@ export function useDoc<T = any>(
     );
 
     return () => {
-      // If the listener has failed, Firestore has already torn it down.
-      // Calling unsubscribe() again can cause an internal assertion failure.
-      if (listenerHasFailed.current) {
-        return;
-      }
-
-      // For normal unmounts, we still need to clean up.
-      try {
-        unsubscribe();
-      } catch (e) {
-        // This is a failsafe. It's expected if the listener is already closed for other reasons.
+      // This cleanup function is called when the component unmounts or deps change.
+      // If an error occurred, the listener is already dead, and calling unsubscribe()
+      // again can cause a fatal internal assertion failure. We prevent this.
+      if (!isUnsubscribed) {
+          unsubscribe();
       }
     };
   }, [memoizedDocRef]);
