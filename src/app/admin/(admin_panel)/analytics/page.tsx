@@ -25,9 +25,6 @@ import type { Booking } from '../bookings/columns';
 import { format, getMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Service } from '../services/columns';
-
-type EventType = { id: string; name: string; };
 
 const chartColors = [
   'hsl(var(--chart-1))',
@@ -67,20 +64,18 @@ const LoadingState = () => (
     </div>
 );
 
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function AnalyticsPage() {
   const firestore = useFirestore();
 
   const bookingsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'bookings')), [firestore]);
-  const servicesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'services')), [firestore]);
-  const eventTypesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'eventTypes')), [firestore]);
+  const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
 
-  const { data: bookings, isLoading: bookingsLoading } = useCollection<Booking>(bookingsQuery);
-  const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
-  const { data: eventTypes, isLoading: eventTypesLoading } = useCollection<EventType>(eventTypesQuery);
-
-  const { bookingsByMonth, servicesDistribution, eventTypesDistribution } = useMemo(() => {
-    if (!bookings || !services || !eventTypes) return { bookingsByMonth: [], servicesDistribution: [], eventTypesDistribution: [] };
+  const { bookingsByMonth, servicesDistribution, eventTypesDistribution, chartConfig } = useMemo(() => {
+    if (!bookings) {
+      return { bookingsByMonth: [], servicesDistribution: [], eventTypesDistribution: [], chartConfig: {} };
+    }
 
     const monthlyCounts: { [key: number]: number } = {};
     bookings.forEach(booking => {
@@ -102,44 +97,40 @@ export default function AnalyticsPage() {
       });
     });
 
-    const servicesDistribution = Object.entries(serviceCounts).map(([id, count], index) => ({
-      name: services.find(s => s.id === id)?.name || id,
+    const servicesDistribution = Object.entries(serviceCounts).map(([name, count]) => ({
+      name: capitalize(name),
+      key: name, // The key is already a clean string (e.g., 'photographe')
       count,
-      fill: chartColors[index % chartColors.length]
     })).sort((a, b) => b.count - a.count);
 
     const eventTypeCounts: { [key: string]: number } = {};
     bookings.forEach(booking => {
-        eventTypeCounts[booking.eventType] = (eventTypeCounts[booking.eventType] || 0) + 1;
+      eventTypeCounts[booking.eventType] = (eventTypeCounts[booking.eventType] || 0) + 1;
     });
 
-    const eventTypesDistribution = Object.entries(eventTypeCounts).map(([id, count], index) => ({
-      name: eventTypes.find(e => e.id === id)?.name || id,
+    const eventTypesDistribution = Object.entries(eventTypeCounts).map(([name, count]) => ({
+      name: capitalize(name),
+      key: name, // The key is already a clean string (e.g., 'mariage')
       count,
-      fill: chartColors[index % chartColors.length]
     })).sort((a, b) => b.count - a.count);
 
+    const config: any = {
+      total: { label: 'Réservations', color: 'hsl(var(--primary))' },
+    };
 
-    return { bookingsByMonth, servicesDistribution, eventTypesDistribution };
-  }, [bookings, services, eventTypes]);
+    eventTypesDistribution.forEach((item, index) => {
+      config[item.key] = { label: item.name, color: chartColors[index % chartColors.length] };
+    });
+    
+    servicesDistribution.forEach((item, index) => {
+        config[item.key] = { label: item.name, color: chartColors[index % chartColors.length] };
+    });
 
-  const chartConfig = useMemo(() => {
-      const config: any = {
-          total: { label: 'Réservations', color: 'hsl(var(--primary))' },
-      };
-      servicesDistribution.forEach(item => {
-          config[item.name] = { label: item.name, color: item.fill };
-      });
-      eventTypesDistribution.forEach(item => {
-          config[item.name] = { label: item.name, color: item.fill };
-      });
-      return config;
-  }, [servicesDistribution, eventTypesDistribution]);
-  
-  const isLoading = bookingsLoading || servicesLoading || eventTypesLoading;
+    return { bookingsByMonth, servicesDistribution, eventTypesDistribution, chartConfig: config };
+  }, [bookings]);
 
   if (isLoading) {
-      return <LoadingState />;
+    return <LoadingState />;
   }
 
   return (
@@ -192,11 +183,11 @@ export default function AnalyticsPage() {
                   <PieChart>
                     <ChartTooltip
                       cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
+                      content={<ChartTooltipContent hideLabel nameKey="name" />}
                     />
                     <Pie data={eventTypesDistribution} dataKey="count" nameKey="name" innerRadius={60} strokeWidth={5}>
                        {eventTypesDistribution.map((entry) => (
-                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                        <Cell key={`cell-${entry.key}`} fill={`var(--color-${entry.key})`} />
                       ))}
                     </Pie>
                     <ChartLegend
