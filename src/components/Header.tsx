@@ -14,6 +14,8 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetHeader,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import { Menu, X, LayoutGrid, Store, UserCheck } from 'lucide-react';
 import { Separator } from './ui/separator';
@@ -177,20 +179,21 @@ export function Header() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-full max-w-xs p-6">
-                  <div className="flex items-center justify-between mb-6">
+                  <SheetHeader className="flex flex-row items-center justify-between mb-6 text-left space-y-0">
                     <Link
                       href="/"
                       className="text-2xl font-bold text-primary font-headline"
                     >
                       Inoublevents
                     </Link>
+                    <SheetTitle className="sr-only">Menu principal</SheetTitle>
                     <SheetClose asChild>
                       <Button variant="ghost" size="icon">
                         <X className="h-6 w-6" />
                         <span className="sr-only">Fermer</span>
                       </Button>
                     </SheetClose>
-                  </div>
+                  </SheetHeader>
 
                   <nav className="flex flex-col gap-5">
                     <SheetClose asChild>
