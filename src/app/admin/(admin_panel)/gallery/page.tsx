@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { collectionGroup, query, orderBy, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +26,7 @@ import { columns } from './columns';
 
 export type GalleryImage = {
   id: string;
+  shopId: string;
   imageUrl: string;
   description: string;
   imageHint: string;
@@ -50,7 +51,7 @@ export default function GalleryPage() {
   const [imageToDelete, setImageToDelete] = useState<GalleryImage | null>(null);
 
   const galleryQuery = useMemoFirebase(
-    () => firestore && query(collection(firestore, 'gallery'), orderBy('createdAt', 'desc')),
+    () => firestore && query(collectionGroup(firestore, 'gallery'), orderBy('createdAt', 'desc')),
     [firestore]
   );
   const { data: images, isLoading } = useCollection<GalleryImage>(galleryQuery);
@@ -73,7 +74,7 @@ export default function GalleryPage() {
 
   const handleDeleteConfirm = () => {
     if (!firestore || !imageToDelete) return;
-    const imageRef = doc(firestore, 'gallery', imageToDelete.id);
+    const imageRef = doc(firestore, 'shops', imageToDelete.shopId, 'gallery', imageToDelete.id);
     deleteDocumentNonBlocking(imageRef);
     toast({ title: "Image supprimée", description: "L'image a été retirée de la galerie." });
     setImageToDelete(null);
@@ -92,10 +93,12 @@ export default function GalleryPage() {
                       Gérez les images de votre portfolio public.
                     </p>
                 </div>
+                {/* 
                 <Button onClick={() => { setSelectedImage(null); setIsDialogOpen(true); }}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Ajouter une image
                 </Button>
+                */}
                 </div>
                 
                 <Card>

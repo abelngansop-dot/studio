@@ -11,7 +11,7 @@ import type { icons } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { Service } from '@/app/admin/(admin_panel)/services/columns';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
@@ -138,7 +138,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
 export function ServicesSection() {
     const { t } = useTranslation();
     const firestore = useFirestore();
-    const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
+    const servicesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
     const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
 
     return (

@@ -26,6 +26,7 @@ import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export type Booking = {
   id: string;
+  shopId: string;
   userId: string;
   eventType: string;
   services?: string[];
@@ -45,7 +46,7 @@ const StatusSelector = ({ booking }: { booking: Booking }) => {
 
     const handleStatusChange = (status: string) => {
         if (!firestore) return;
-        const bookingRef = doc(firestore, 'bookings', booking.id);
+        const bookingRef = doc(firestore, 'shops', booking.shopId, 'bookings', booking.id);
         updateDocumentNonBlocking(bookingRef, { status });
     }
 

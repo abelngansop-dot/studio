@@ -1,7 +1,7 @@
 'use client';
 
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { collectionGroup, query, orderBy, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase, useUser } from '@/firebase/provider';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { DataTable } from '@/components/ui/data-table';
@@ -29,7 +29,7 @@ export default function ReviewsPage() {
 
   const reviewsQuery = useMemoFirebase(() => {
       if(!isAuthorizedAdmin || !firestore) return null;
-      return query(collection(firestore, 'reviews'), orderBy('createdAt', 'desc'))
+      return query(collectionGroup(firestore, 'reviews'), orderBy('createdAt', 'desc'))
     }, [firestore, isAuthorizedAdmin]);
 
   const { data: reviews, isLoading: isReviewsLoading } = useCollection<Review>(reviewsQuery);

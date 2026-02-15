@@ -41,7 +41,7 @@ const ActionsCell = ({ row }: { row: any }) => {
 
     const handleStatusChange = (newStatus: 'approved' | 'rejected') => {
         if (!firestore) return;
-        const reviewRef = doc(firestore, 'reviews', review.id);
+        const reviewRef = doc(firestore, 'shops', review.shopId, 'reviews', review.id);
         updateDocumentNonBlocking(reviewRef, { status: newStatus });
     }
 

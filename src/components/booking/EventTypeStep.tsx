@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/Icon';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 
 type EventType = {
@@ -47,7 +47,7 @@ const EventTypeSkeleton = () => (
 
 export function EventTypeStep({ onSelect }: EventTypeStepProps) {
   const firestore = useFirestore();
-  const eventTypesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'eventTypes'), orderBy('name', 'asc')), [firestore]);
+  const eventTypesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'eventTypes'), orderBy('name', 'asc')), [firestore]);
   const { data: eventTypes, isLoading } = useCollection<EventType>(eventTypesQuery);
 
   // Combine Firestore data with defaults, ensuring no duplicates.

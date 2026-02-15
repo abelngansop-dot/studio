@@ -15,6 +15,7 @@ import { useBookingProgress } from '@/hooks/use-booking-progress';
 
 export type BookingData = {
   eventType: string;
+  shopId: string | null;
   services: string[];
   country: string;
   city: string;
@@ -28,6 +29,7 @@ export type BookingData = {
 
 const initialBookingData: BookingData = {
   eventType: '',
+  shopId: null,
   services: [],
   country: '',
   city: '',
@@ -73,7 +75,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
     // If the event type is being changed (and it's not the initial selection),
     // reset the services to provide a clean slate for the new event context.
     if (bookingData.eventType && bookingData.eventType !== newEventType) {
-        updateBookingData({ eventType: newEventType, services: [] });
+        updateBookingData({ eventType: newEventType, services: [], shopId: null });
     } else {
         updateBookingData({ eventType: newEventType });
     }

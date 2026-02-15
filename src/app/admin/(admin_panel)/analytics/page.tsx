@@ -20,7 +20,7 @@ import { useMemo } from 'react';
 import { TrendingUp, PartyPopper } from 'lucide-react';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query } from 'firebase/firestore';
+import { collectionGroup, query } from 'firebase/firestore';
 import type { Booking } from '../bookings/columns';
 import { format, getMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -71,9 +71,9 @@ const LoadingState = () => (
 export default function AnalyticsPage() {
   const firestore = useFirestore();
 
-  const bookingsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'bookings')), [firestore]);
-  const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services')), [firestore]);
-  const eventTypesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'eventTypes')), [firestore]);
+  const bookingsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'bookings')), [firestore]);
+  const servicesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'services')), [firestore]);
+  const eventTypesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'eventTypes')), [firestore]);
 
   const { data: bookings, isLoading: bookingsLoading } = useCollection<Booking>(bookingsQuery);
   const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);

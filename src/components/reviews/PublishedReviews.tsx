@@ -2,7 +2,7 @@
 
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where } from 'firebase/firestore';
+import { collectionGroup, query, where } from 'firebase/firestore';
 import {
   Carousel,
   CarouselContent,
@@ -19,6 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export type Review = {
     id: string;
+    shopId: string;
     userId: string;
     displayName: string;
     rating: number;
@@ -76,7 +77,7 @@ export function PublishedReviews() {
   const reviewsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
-      collection(firestore, 'reviews'),
+      collectionGroup(firestore, 'reviews'),
       where('status', '==', 'approved')
     );
   }, [firestore]);

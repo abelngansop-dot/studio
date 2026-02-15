@@ -76,7 +76,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const isEmailFormatValid = useMemo(() => (email ? /^\S+@\S+\.\S+$/.test(email) : false), [email]);
+  const isEmailFormatValid = useMemo(() => (email ? /^\S+@\S+\.\S+$/.test(email) : true), [email]);
   const isPhoneFormatValid = useMemo(() => (phone ? /^\+?[0-9\s-()]{8,}$/.test(phone) : false), [phone]);
 
   useEffect(() => {
@@ -100,7 +100,10 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
         return;
     }
     
-    if (!firestore) return;
+    if (!firestore || !bookingData.shopId) {
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de déterminer la boutique. Veuillez recommencer.' });
+        return;
+    }
     setSubmittingMethod(method);
 
     const bookingPayload = {
@@ -115,7 +118,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
     };
     
     try {
-      addDocumentNonBlocking(collection(firestore, 'bookings'), bookingPayload);
+      addDocumentNonBlocking(collection(firestore, 'shops', bookingData.shopId, 'bookings'), bookingPayload);
       
       clearBookingProgress();
       setIsSubmitted(true);
@@ -269,7 +272,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                       <MessageSquare className="mr-2 h-5 w-5" />
                       Confirmer par WhatsApp
                     </Button>
-                    <Button size="lg" disabled={!email || !isEmailFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
+                    <Button size="lg" disabled={!email || !isEmailFormatValid || !isPhoneFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
                       {submittingMethod === 'email' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                       <Mail className="mr-2 h-5 w-5" />
                       Confirmer par Email

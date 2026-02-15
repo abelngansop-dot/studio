@@ -15,6 +15,7 @@ import { icons } from 'lucide-react';
 
 export type EventType = {
   id: string;
+  shopId: string;
   name: string;
   icon: keyof typeof icons;
   imageUrl?: string;

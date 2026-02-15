@@ -15,6 +15,7 @@ import { icons } from 'lucide-react';
 
 export type Service = {
   id: string;
+  shopId: string;
   name: string;
   description: string;
   icon: keyof typeof icons;

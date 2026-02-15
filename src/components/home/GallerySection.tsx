@@ -8,7 +8,7 @@ import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { GalleryImage } from '@/app/admin/(admin_panel)/gallery/page';
 import { SelectableCard } from '@/components/booking/SelectableCard';
 import { useTranslation } from '@/hooks/use-translation';
@@ -27,7 +27,7 @@ const GallerySkeleton = () => (
 export function GallerySection() {
     const { t } = useTranslation();
     const firestore = useFirestore();
-    const galleryQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'gallery'), orderBy('createdAt', 'desc')), [firestore]);
+    const galleryQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'gallery'), orderBy('createdAt', 'desc')), [firestore]);
     const { data: galleryImages, isLoading: galleryLoading } = useCollection<GalleryImage>(galleryQuery);
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
 

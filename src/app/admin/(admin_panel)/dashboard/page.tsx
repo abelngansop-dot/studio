@@ -2,7 +2,7 @@
 
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, collectionGroup, query, orderBy, limit, where } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -63,11 +63,11 @@ export default function Dashboard() {
   const firestore = useFirestore();
 
   // Queries for stats
-  const bookingsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'bookings')), [firestore]);
+  const bookingsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'bookings')), [firestore]);
   const usersQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'users')), [firestore]);
-  const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services')), [firestore]);
-  const pendingReviewsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'reviews'), where('status', '==', 'pending')), [firestore]);
-  const recentBookingsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(5)), [firestore]);
+  const servicesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'services')), [firestore]);
+  const pendingReviewsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'reviews'), where('status', '==', 'pending')), [firestore]);
+  const recentBookingsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(5)), [firestore]);
 
   const { data: bookings, isLoading: bookingsLoading } = useCollection<Booking>(bookingsQuery);
   const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);

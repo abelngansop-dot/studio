@@ -1,7 +1,7 @@
 'use client';
 
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { collectionGroup, query, orderBy, doc } from 'firebase/firestore';
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { DataTable } from '@/components/ui/data-table';
@@ -49,10 +49,10 @@ export default function CataloguePage() {
   const [eventTypeToDelete, setEventTypeToDelete] = useState<EventType | null>(null);
 
   // Data fetching
-  const servicesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
+  const servicesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'services'), orderBy('name', 'asc')), [firestore]);
   const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
   
-  const eventTypesQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'eventTypes'), orderBy('name', 'asc')), [firestore]);
+  const eventTypesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'eventTypes'), orderBy('name', 'asc')), [firestore]);
   const { data: eventTypes, isLoading: eventTypesLoading } = useCollection<EventType>(eventTypesQuery);
 
   // Handlers for Services
@@ -74,7 +74,7 @@ export default function CataloguePage() {
 
   const handleDeleteServiceConfirm = () => {
     if (!firestore || !serviceToDelete) return;
-    const serviceRef = doc(firestore, 'services', serviceToDelete.id);
+    const serviceRef = doc(firestore, 'shops', serviceToDelete.shopId, 'services', serviceToDelete.id);
     deleteDocumentNonBlocking(serviceRef);
     toast({ title: "Service supprimé", description: `Le service "${serviceToDelete.name}" a été supprimé.`});
     setServiceToDelete(null);
@@ -99,7 +99,7 @@ export default function CataloguePage() {
 
   const handleDeleteEventTypeConfirm = () => {
     if (!firestore || !eventTypeToDelete) return;
-    const eventTypeRef = doc(firestore, 'eventTypes', eventTypeToDelete.id);
+    const eventTypeRef = doc(firestore, 'shops', eventTypeToDelete.shopId, 'eventTypes', eventTypeToDelete.id);
     deleteDocumentNonBlocking(eventTypeRef);
     toast({ title: "Type d'événement supprimé", description: `Le type "${eventTypeToDelete.name}" a été supprimé.`});
     setEventTypeToDelete(null);
@@ -117,9 +117,10 @@ export default function CataloguePage() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Catalogue</h2>
             <p className="text-muted-foreground">
-              Gérez les services et types d'événements proposés par Inoublevents.
+              Gérez les services et types d'événements proposés sur la plateforme.
             </p>
           </div>
+           {/* 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button>
@@ -137,6 +138,7 @@ export default function CataloguePage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          */}
         </div>
         <Tabs defaultValue="services">
           <TabsList>
