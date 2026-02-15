@@ -65,7 +65,7 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
     try {
       if (eventType) {
         // Update existing
-        const eventTypeRef = doc(firestore, 'eventTypes', eventType.id);
+        const eventTypeRef = doc(firestore, 'shops', eventType.shopId, 'eventTypes', eventType.id);
         setDocumentNonBlocking(eventTypeRef, eventTypeData, { merge: true });
         toast({ title: 'Type d\'événement mis à jour !' });
       } else {

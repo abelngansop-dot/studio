@@ -73,7 +73,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
     try {
       if (service) {
         // Update existing service
-        const serviceRef = doc(firestore, 'services', service.id);
+        const serviceRef = doc(firestore, 'shops', service.shopId, 'services', service.id);
         setDocumentNonBlocking(serviceRef, serviceData, { merge: true });
         toast({ title: 'Service mis à jour !' });
       } else {

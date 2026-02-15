@@ -65,19 +65,18 @@ export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) 
       imageUrl, 
       description, 
       imageHint, 
-      createdAt: image?.createdAt ? image.createdAt : serverTimestamp()
     };
 
     try {
       if (image) {
         // Update existing
-        const imageRef = doc(firestore, 'gallery', image.id);
+        const imageRef = doc(firestore, 'shops', image.shopId, 'gallery', image.id);
         await setDocumentNonBlocking(imageRef, imageData, { merge: true });
         toast({ title: 'Image mise à jour !' });
       } else {
         // Add new
         const collectionRef = collection(firestore, 'gallery');
-        await addDocumentNonBlocking(collectionRef, imageData);
+        await addDocumentNonBlocking(collectionRef, {...imageData, createdAt: serverTimestamp()});
         toast({ title: 'Image ajoutée à la galerie !' });
       }
       setIsOpen(false);
