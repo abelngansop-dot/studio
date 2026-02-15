@@ -1,31 +1,123 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore } from '@/firebase/provider';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc, collection, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Store } from 'lucide-react';
+import { Loader2, Store, Info, MapPin, ListChecks, Phone } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { allCountries, cameroonCities, allCities } from '@/lib/locations';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
+import type { icons } from 'lucide-react';
+
+const shopSchema = z.object({
+  name: z.string().min(3, { message: 'Le nom doit contenir au moins 3 caractères.' }),
+  services: z.array(z.string()).min(1, { message: 'Veuillez sélectionner au moins un service.' }),
+  country: z.string({ required_error: 'Veuillez sélectionner un pays.' }),
+  city: z.string().min(2, { message: 'Veuillez préciser la ville.' }),
+  phone: z.string().optional(),
+});
+
+type UserProfileData = {
+  phone?: string | null;
+  country?: string;
+  city?: string;
+};
+
+type Service = {
+  id: string;
+  name: string;
+  icon: keyof typeof icons;
+}
+
+const defaultServices: Service[] = [
+    { id: 'photographe', name: 'Photographe', icon: 'Camera' },
+    { id: 'vidéaste', name: 'Vidéaste', icon: 'Video' },
+    { id: 'drone', name: 'Drone', icon: 'Navigation' },
+    { id: 'traiteur', name: 'Traiteur', icon: 'UtensilsCrossed' },
+    { id: 'boissons', name: 'Boissons', icon: 'Martini' },
+    { id: 'gâteau', name: 'Gâteau', icon: 'Cake' },
+    { id: 'sonorisation', name: 'Sonorisation', icon: 'Music' },
+    { id: 'décoration', name: 'Décoration', icon: 'PartyPopper' },
+    { id: 'autre', name: 'Autre', icon: 'PlusCircle' },
+];
 
 export default function CreateShopPage() {
-    const [shopName, setShopName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user || !firestore || !shopName.trim()) {
+    const userDocRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+
+    const { data: userProfile } = useDoc<UserProfileData>(userDocRef);
+
+    const form = useForm<z.infer<typeof shopSchema>>({
+        resolver: zodResolver(shopSchema),
+        defaultValues: {
+            name: '',
+            services: [],
+            country: '',
+            city: '',
+            phone: '',
+        },
+    });
+    
+    const [availableCities, setAvailableCities] = useState<string[]>([]);
+    const [showCustomCityInput, setShowCustomCityInput] = useState(false);
+    const selectedCountry = form.watch('country');
+
+    useEffect(() => {
+        if (userProfile) {
+            form.reset({
+                name: '',
+                services: [],
+                country: userProfile.country || '',
+                city: userProfile.city || '',
+                phone: userProfile.phone || '',
+            });
+        }
+    }, [userProfile, form]);
+
+     useEffect(() => {
+        if (selectedCountry) {
+            const countryData = allCountries.find(c => c.name === selectedCountry);
+            if (countryData) {
+                if (countryData.code === 'CM') {
+                    setAvailableCities(cameroonCities.map(c => c.name));
+                } else {
+                    const capital = allCities.find(c => c.countryCode === countryData.code);
+                    setAvailableCities(capital ? [capital.name] : []);
+                }
+            }
+             setShowCustomCityInput(false);
+        } else {
+            setAvailableCities([]);
+        }
+    }, [selectedCountry]);
+
+    const onSubmit = async (values: z.infer<typeof shopSchema>) => {
+        if (!user || !firestore) {
             toast({
                 variant: 'destructive',
                 title: 'Erreur',
-                description: 'Le nom de la boutique est obligatoire.'
+                description: 'Utilisateur non authentifié.'
             });
             return;
         }
@@ -35,26 +127,27 @@ export default function CreateShopPage() {
         try {
             const batch = writeBatch(firestore);
 
-            // 1. Create the new shop document
             const newShopRef = doc(collection(firestore, 'shops'));
             const newShopData = {
                 id: newShopRef.id,
-                name: shopName.trim(),
+                name: values.name.trim(),
                 ownerId: user.uid,
+                services: values.services,
+                country: values.country,
+                city: values.city,
+                phone: values.phone || null,
                 status: 'pending_setup',
                 subscriptionPlan: 'none',
                 createdAt: serverTimestamp()
             };
             batch.set(newShopRef, newShopData);
 
-            // 2. Update the user's profile
             const userRef = doc(firestore, 'users', user.uid);
             batch.update(userRef, {
                 role: 'shop_admin',
                 shopId: newShopRef.id
             });
 
-            // 3. Commit the batch
             await batch.commit();
             
             toast({
@@ -64,12 +157,12 @@ export default function CreateShopPage() {
 
             router.push('/dashboard');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating shop: ", error);
             toast({
                 variant: 'destructive',
                 title: 'Erreur inattendue',
-                description: 'Une erreur est survenue lors de la création de votre boutique. Veuillez réessayer.'
+                description: error.message || 'Une erreur est survenue lors de la création de votre boutique. Veuillez réessayer.'
             });
             setIsSubmitting(false);
         }
@@ -77,37 +170,157 @@ export default function CreateShopPage() {
 
     return (
         <div className="container mx-auto py-12">
-            <div className="max-w-2xl mx-auto">
-                <Card>
+            <div className="max-w-4xl mx-auto">
+                 <Card className="bg-card/80 backdrop-blur-sm">
                     <CardHeader className="text-center">
                         <Store className="mx-auto h-12 w-12 text-primary mb-4" />
                         <CardTitle className="text-3xl font-bold font-headline">Proposez vos services</CardTitle>
                         <CardDescription className="text-lg text-muted-foreground pt-2">
-                            Créez votre propre boutique sur Inoublevents pour commencer à proposer vos services.
+                            Créez votre boutique sur Inoublevents et commencez à recevoir des demandes de clients.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="shop-name" className="text-base">Nom de votre boutique</Label>
-                                <Input
-                                    id="shop-name"
-                                    placeholder="Ex: Les Merveilles de Sophie"
-                                    value={shopName}
-                                    onChange={(e) => setShopName(e.target.value)}
-                                    disabled={isSubmitting}
-                                    required
-                                    className="h-12 text-base"
-                                />
-                            </div>
-                            <Button type="submit" className="w-full h-12 text-base sm:text-lg" disabled={isSubmitting}>
-                                {isSubmitting ? (
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                ) : (
-                                    "Créer ma boutique"
-                                )}
-                            </Button>
-                        </form>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 font-headline"><Info className="h-5 w-5" /> Informations Générales</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Nom de votre boutique</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Ex: Les Merveilles de Sophie" {...field} />
+                                                    </FormControl>
+                                                    <FormDescription>Le nom public qui sera visible par les clients.</FormDescription>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </CardContent>
+                                </Card>
+                                
+                                <Card>
+                                     <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 font-headline"><ListChecks className="h-5 w-5" /> Services Proposés</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <FormField
+                                            control={form.control}
+                                            name="services"
+                                            render={() => (
+                                                <FormItem>
+                                                    <div className="mb-4">
+                                                        <FormLabel className="text-base">Quels services proposez-vous ?</FormLabel>
+                                                        <FormDescription>Sélectionnez tous les services applicables.</FormDescription>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                                        {defaultServices.map((item) => (
+                                                            <FormField
+                                                                key={item.id}
+                                                                control={form.control}
+                                                                name="services"
+                                                                render={({ field }) => (
+                                                                    <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                                                        <FormControl>
+                                                                            <Checkbox
+                                                                                checked={field.value?.includes(item.id)}
+                                                                                onCheckedChange={(checked) => {
+                                                                                    return checked
+                                                                                        ? field.onChange([...(field.value || []), item.id])
+                                                                                        : field.onChange(field.value?.filter((value) => value !== item.id));
+                                                                                }}
+                                                                            />
+                                                                        </FormControl>
+                                                                        <FormLabel className="font-normal capitalize">{item.name}</FormLabel>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </CardContent>
+                                </Card>
+
+                               <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 font-headline"><MapPin className="h-5 w-5" /> Localisation & Contact</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="country"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Pays</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger><SelectValue placeholder="Choisir un pays" /></SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {allCountries.map(c => <SelectItem key={c.code} value={c.name}>{c.name}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="city"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Ville</FormLabel>
+                                                        <FormControl>
+                                                             <Input placeholder="Ex: Douala" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                         <FormField
+                                            control={form.control}
+                                            name="phone"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Numéro de téléphone de la boutique</FormLabel>
+                                                     <FormControl>
+                                                        <Input type="tel" placeholder="+237 6 XX XX XX XX" {...field} />
+                                                    </FormControl>
+                                                    <FormDescription>Ce numéro pourra être affiché sur la page de votre boutique.</FormDescription>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </CardContent>
+                               </Card>
+                                
+                                <Alert>
+                                    <Info className="h-4 w-4" />
+                                    <AlertTitle>Conditions</AlertTitle>
+                                    <AlertDescription>
+                                       En créant une boutique, vous acceptez nos <Button variant="link" className="p-0 h-auto"><a href="/legal" target="_blank">Conditions Générales d'Utilisation</a></Button> en tant que prestataire.
+                                    </AlertDescription>
+                                </Alert>
+
+                                <Button type="submit" className="w-full h-12 text-lg" disabled={isSubmitting}>
+                                    {isSubmitting ? (
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    ) : (
+                                        "Créer ma boutique"
+                                    )}
+                                </Button>
+                            </form>
+                        </Form>
                     </CardContent>
                 </Card>
             </div>

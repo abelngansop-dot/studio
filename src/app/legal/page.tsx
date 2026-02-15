@@ -19,29 +19,35 @@ export default function LegalPage() {
                         </CardHeader>
                         <CardContent className="space-y-4 prose max-w-none">
                             <h2>1. Introduction</h2>
-                            <p>Bienvenue sur Inoublevents. En accédant ou en utilisant notre plateforme, vous acceptez de vous conformer aux présentes Conditions Générales d’Utilisation. Si vous n’acceptez pas ces conditions, veuillez ne pas utiliser l’application.</p>
+                            <p>Bienvenue sur Inoublevents. En accédant ou en utilisant notre plateforme, vous acceptez de vous conformer aux présentes Conditions Générales d’Utilisation (CGU). Si vous n’acceptez pas ces conditions, veuillez ne pas utiliser l’application.</p>
 
                             <h2>2. Description du Service</h2>
-                            <p>Inoublevents fournit une plateforme permettant aux utilisateurs de consulter des services, faire des réservations, et entrer en contact avec les prestataires. L’application peut collecter certaines informations personnelles pour faciliter ces services.</p>
+                            <p>Inoublevents est une plateforme de mise en relation (marketplace) qui permet à des utilisateurs (ci-après "Clients") de consulter et réserver des services événementiels proposés par des prestataires indépendants (ci-après "Prestataires" ou "Boutiques"). Inoublevents agit en tant qu'intermédiaire et ne fait pas partie du contrat de service entre le Client et le Prestataire.</p>
 
                             <h2>3. Accès et Compte Utilisateur</h2>
-                            <p>Chaque utilisateur est responsable de la confidentialité de ses identifiants (email, mot de passe).</p>
-                            <p>Vous devez fournir des informations exactes et à jour pour l’inscription.</p>
-                            <p>Les utilisateurs peuvent accéder à leur historique, modifier leurs réservations et gérer leurs préférences personnelles.</p>
-                            <p>Les comptes administrateurs sont strictement réservés aux utilisateurs autorisés. Tout accès non autorisé est interdit et peut faire l’objet de poursuites.</p>
+                            <p>L'inscription est requise pour accéder à certaines fonctionnalités. Chaque utilisateur est responsable de la confidentialité de ses identifiants.</p>
+                            <p>En créant une boutique, un utilisateur accepte de changer son rôle de "Client" à "Shop Admin" (Administrateur de Boutique) et se voit confier la gestion de sa boutique sur la plateforme.</p>
+                            <p>Les comptes administrateurs de la plateforme (`admin`, `superadmin`) sont strictement réservés aux utilisateurs autorisés par Inoublevents.</p>
 
-                            <h2>4. Obligations de l’Utilisateur</h2>
-                            <p>Ne pas utiliser l’application à des fins illégales.</p>
-                            <p>Ne pas tenter de contourner les mesures de sécurité.</p>
-                            <p>Respecter les autres utilisateurs et le contenu publié.</p>
+                            <h2>4. Obligations des Utilisateurs (Clients)</h2>
+                            <p>Le Client s'engage à fournir des informations exactes lors de la réservation et à respecter les conditions établies par le Prestataire. Toute annulation ou modification doit suivre les procédures indiquées.</p>
+                            
+                            <h2>5. Obligations des Prestataires (Propriétaires de Boutiques)</h2>
+                            <p>En créant une boutique, le Prestataire s'engage à :</p>
+                            <ul>
+                                <li>Fournir des informations exactes et complètes sur sa boutique et ses services.</li>
+                                <li>Honorer les réservations confirmées par les Clients.</li>
+                                <li>Gérer sa boutique de manière professionnelle et réactive.</li>
+                                <li>Être seul responsable du contenu publié sur sa page (textes, images, tarifs).</li>
+                            </ul>
 
-                            <h2>5. Propriété Intellectuelle</h2>
-                            <p>Tout le contenu, images, vidéos, textes, et logos présents sur l’application sont la propriété de Inoublevents et sont protégés par les lois internationales et locales sur la propriété intellectuelle. Toute reproduction non autorisée est interdite.</p>
+                            <h2>6. Propriété Intellectuelle</h2>
+                            <p>Tout le contenu de la plateforme Inoublevents (logo, design, textes) est notre propriété exclusive. Le contenu fourni par les Prestataires (photos de services, descriptions) reste leur propriété, mais ils nous accordent une licence d'utilisation non-exclusive pour l'afficher sur la plateforme.</p>
 
-                            <h2>6. Limitation de Responsabilité</h2>
-                            <p>Inoublevents ne pourra être tenue responsable des pertes ou dommages résultant de l’utilisation de la plateforme, y compris les erreurs de réservation, interruptions de service ou pertes de données.</p>
+                            <h2>7. Limitation de Responsabilité</h2>
+                            <p>Inoublevents, en tant qu'intermédiaire, ne pourra être tenue responsable des litiges entre un Client et un Prestataire, de la qualité des services fournis, ou de tout dommage résultant de la prestation. Notre responsabilité se limite à la fourniture et à la maintenance de la plateforme.</p>
 
-                            <h2>7. Modifications des Conditions</h2>
+                            <h2>8. Modifications des Conditions</h2>
                             <p>Nous nous réservons le droit de modifier ces CGU à tout moment. Les utilisateurs seront informés des changements et l’utilisation continue de l’application constitue l’acceptation des nouvelles conditions.</p>
                         </CardContent>
                     </Card>
@@ -53,41 +59,43 @@ export default function LegalPage() {
                         </CardHeader>
                         <CardContent className="space-y-4 prose max-w-none">
                             <h2>1. Collecte des Informations</h2>
-                            <p>Nous collectons :</p>
+                            <p>Nous collectons les informations suivantes :</p>
                             <ul>
-                                <li>Informations personnelles : nom, email, numéro de téléphone, adresse.</li>
-                                <li>Informations liées aux réservations : services choisis, date et heure.</li>
-                                <li>Informations techniques : appareil utilisé, IP, comportement dans l’application.</li>
+                                <li>**Informations des Clients :** nom, email, numéro de téléphone, et détails des réservations (type d'événement, services, date, lieu).</li>
+                                <li>**Informations des Prestataires :** nom du propriétaire, nom de la boutique, services proposés, localisation, et numéro de téléphone de la boutique.</li>
+                                <li>**Informations techniques :** appareil utilisé, adresse IP, et comportement de navigation sur la plateforme.</li>
                             </ul>
                             
                              <h2>2. Utilisation des Données</h2>
                              <p>Les informations collectées sont utilisées pour :</p>
                             <ul>
-                                <li>Traiter vos réservations et demandes.</li>
-                                <li>Communiquer avec vous via email ou WhatsApp pour confirmations.</li>
+                                <li>Permettre la création et la gestion des comptes Client et Prestataire.</li>
+                                <li>Traiter les demandes de réservation et mettre en relation Clients et Prestataires.</li>
+                                <li>Communiquer avec vous via email ou WhatsApp pour les confirmations et le suivi.</li>
                                 <li>Améliorer l’expérience utilisateur et la sécurité de l’application.</li>
                                 <li>Produire des analyses internes anonymisées pour améliorer nos services.</li>
                             </ul>
                             
-                             <h2>3. Partage et Transmission</h2>
-                            <p>Nous ne partageons pas vos données personnelles avec des tiers sauf :</p>
+                             <h2>3. Partage et Transmission des Données</h2>
+                            <p>Nous partageons certaines de vos données dans les cas suivants :</p>
                             <ul>
-                                <li>Pour traiter une réservation ou paiement.</li>
-                                <li>Pour se conformer à la loi applicable au Cameroun ou internationalement.</li>
+                                <li>**Lors d'une réservation :** Les informations de contact et les détails de la demande du Client (nom, email, téléphone, détails de l'événement) sont transmis au Prestataire concerné pour qu'il puisse exécuter le service.</li>
+                                <li>**Informations Publiques :** Les informations de la boutique d'un Prestataire (nom, services, localisation, téléphone de la boutique) sont publiques et visibles par tous les visiteurs de la plateforme.</li>
+                                <li>**Obligations légales :** Nous pouvons être amenés à transmettre vos données pour nous conformer à la loi applicable (au Cameroun ou internationalement).</li>
                             </ul>
                             
                              <h2>4. Conservation des Données</h2>
-                            <p>Les données sont conservées uniquement le temps nécessaire à l’utilisation du service et conformément aux obligations légales. Les utilisateurs peuvent demander la suppression de leurs informations.</p>
+                            <p>Les données sont conservées uniquement le temps nécessaire à l’utilisation du service et conformément aux obligations légales. Les utilisateurs peuvent demander la suppression de leurs informations, sous réserve des contraintes légales.</p>
                              
                              <h2>5. Sécurité des Données</h2>
-                            <p>Nous mettons en place des mesures techniques et organisationnelles pour protéger vos données contre la perte, l’accès non autorisé ou toute modification.</p>
+                            <p>Nous mettons en place des mesures techniques et organisationnelles (comme les règles de sécurité Firestore) pour protéger vos données contre la perte, l'accès non autorisé ou toute modification.</p>
 
                             <h2>6. Droits de l’Utilisateur</h2>
-                            <p>Conformément à la législation camerounaise et internationale, l’utilisateur peut :</p>
+                            <p>Conformément à la législation en vigueur, vous pouvez :</p>
                             <ul>
-                                <li>Accéder à ses données personnelles.</li>
-                                <li>Demander la correction ou suppression de ses données.</li>
-                                <li>Retirer son consentement à tout moment pour le traitement de ses données.</li>
+                                <li>Accéder à vos données personnelles via votre page de profil.</li>
+                                <li>Demander la correction ou la suppression de vos données.</li>
+                                <li>Retirer votre consentement à tout moment pour le traitement de vos données (ce qui peut limiter l'accès à certains services).</li>
                             </ul>
 
                              <h2>7. Contact</h2>

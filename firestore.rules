@@ -55,11 +55,16 @@ service cloud.firestore {
 
       // UPDATE:
       // - Users can update their own non-critical info.
-      // - Users cannot change their own role or shopId.
+      // - Users can upgrade their role from 'client' to 'shop_admin' when creating a shop.
+      // - Users cannot change their own role or shopId otherwise.
       // - Platform Admins can update any profile.
       allow update: if (isOwner(userId) && 
-                       request.resource.data.role == resource.data.role && 
-                       request.resource.data.shopId == resource.data.shopId) 
+                        // Case 1: Normal profile update where role/shopId are not changed by the user.
+                       (request.resource.data.role == resource.data.role && 
+                        request.resource.data.shopId == resource.data.shopId) ||
+                        // Case 2: A client is becoming a shop_admin by creating a shop.
+                       (resource.data.role == 'client' && request.resource.data.role == 'shop_admin')
+                      )
                     || isAdmin();
 
       // DELETE: Users can delete their own accounts. Super Admins can delete any user.

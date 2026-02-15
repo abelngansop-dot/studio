@@ -18,6 +18,23 @@
           "type": "string",
           "description": "The UID of the user who owns the shop."
         },
+        "services": {
+          "type": "array",
+          "description": "The types of services offered by the shop.",
+          "items": { "type": "string" }
+        },
+        "country": {
+          "type": "string",
+          "description": "The country where the shop is located."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the shop is located."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The contact phone number for the shop."
+        },
         "subscriptionPlan": {
           "type": "string",
           "description": "The current subscription plan for the shop.",
@@ -34,7 +51,7 @@
           "description": "The date and time the shop was created."
         }
       },
-      "required": ["name", "ownerId", "subscriptionPlan", "status", "createdAt"]
+      "required": ["name", "ownerId", "subscriptionPlan", "status", "createdAt", "services", "country", "city"]
     },
     "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
