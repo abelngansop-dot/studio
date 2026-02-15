@@ -90,8 +90,16 @@ export function useDoc<T = any>(
     );
 
     return () => {
-      if (!listenerHasFailed.current) {
-        unsubscribe();
+      try {
+        if (!listenerHasFailed.current) {
+          unsubscribe();
+        }
+      } catch (e) {
+        // This is a defensive catch. In some race conditions, the SDK might
+        // throw an internal error during cleanup if the listener has already
+        // been terminated by the backend due to a permission error.
+        // We can safely ignore this, as the listener is already dead.
+        console.warn("Ignoring a Firestore listener cleanup error.", e);
       }
     };
   }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.

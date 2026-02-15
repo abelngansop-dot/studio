@@ -108,8 +108,16 @@ export function useCollection<T = any>(
     );
 
     return () => {
-      if (!listenerHasFailed.current) {
-        unsubscribe();
+      try {
+        if (!listenerHasFailed.current) {
+          unsubscribe();
+        }
+      } catch (e) {
+        // This is a defensive catch. In some race conditions, the SDK might
+        // throw an internal error during cleanup if the listener has already
+        // been terminated by the backend due to a permission error.
+        // We can safely ignore this, as the listener is already dead.
+        console.warn("Ignoring a Firestore listener cleanup error.", e);
       }
     };
   }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
