@@ -87,11 +87,16 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
     // This will catch errors if the Firebase app is not yet initialized.
     // In this case, we'll proceed without auth information.
   }
+  
+  const finalPath = context.path === '[Collection Group Query]'
+    ? `/databases/(default)/documents`
+    : `/databases/(default)/documents/${context.path}`;
+
 
   return {
     auth: authObject,
     method: context.operation,
-    path: `/databases/(default)/documents/${context.path}`,
+    path: finalPath,
     resource: context.requestResourceData ? { data: context.requestResourceData } : undefined,
   };
 }
