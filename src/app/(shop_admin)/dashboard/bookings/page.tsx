@@ -20,12 +20,12 @@ export default function ShopBookingsPage() {
   const [detailsBooking, setDetailsBooking] = useState<Booking | null>(null);
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !shop) return null;
+    if (!firestore || !shop?.id) return null;
     return query(
         collection(firestore, 'shops', shop.id, 'bookings'), 
         orderBy('createdAt', 'desc')
     );
-  }, [firestore, shop]);
+  }, [firestore, shop?.id]);
 
   const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
 
