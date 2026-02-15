@@ -15,10 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useFirestore } from '@/firebase/provider';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Service } from './columns';
-import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -77,10 +77,12 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
         setDocumentNonBlocking(serviceRef, serviceData, { merge: true });
         toast({ title: 'Service mis à jour !' });
       } else {
-        // Add new service
-        const collectionRef = collection(firestore, 'services');
-        await addDocumentNonBlocking(collectionRef, serviceData);
-        toast({ title: 'Service ajouté !' });
+        // This action is disabled for global admins. It should be done from a shop-specific dashboard.
+        toast({
+          variant: 'destructive',
+          title: 'Action non supportée',
+          description: "La création de services n'est possible que depuis le tableau de bord d'une boutique.",
+        });
       }
       setIsOpen(false);
     } catch (error) {

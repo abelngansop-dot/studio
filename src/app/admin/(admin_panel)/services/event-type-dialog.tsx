@@ -14,10 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore } from '@/firebase/provider';
-import { doc, addDoc, collection } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { EventType } from './event-types-columns';
-import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,10 +69,12 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
         setDocumentNonBlocking(eventTypeRef, eventTypeData, { merge: true });
         toast({ title: 'Type d\'événement mis à jour !' });
       } else {
-        // Add new
-        const collectionRef = collection(firestore, 'eventTypes');
-        await addDocumentNonBlocking(collectionRef, eventTypeData);
-        toast({ title: 'Type d\'événement ajouté !' });
+        // This action is disabled for global admins.
+         toast({
+          variant: 'destructive',
+          title: 'Action non supportée',
+          description: "La création de types d'événement n'est possible que depuis le tableau de bord d'une boutique.",
+        });
       }
       setIsOpen(false);
     } catch (error) {

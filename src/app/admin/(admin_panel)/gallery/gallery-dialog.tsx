@@ -14,12 +14,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore } from '@/firebase/provider';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
 import { GalleryImage } from './page';
-import { collection } from 'firebase/firestore';
 
 type GalleryDialogProps = {
   isOpen: boolean;
@@ -74,10 +73,12 @@ export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) 
         await setDocumentNonBlocking(imageRef, imageData, { merge: true });
         toast({ title: 'Image mise à jour !' });
       } else {
-        // Add new
-        const collectionRef = collection(firestore, 'gallery');
-        await addDocumentNonBlocking(collectionRef, {...imageData, createdAt: serverTimestamp()});
-        toast({ title: 'Image ajoutée à la galerie !' });
+        // This action is disabled for global admins.
+        toast({
+          variant: 'destructive',
+          title: 'Action non supportée',
+          description: "L'ajout d'images n'est possible que depuis le tableau de bord d'une boutique.",
+        });
       }
       setIsOpen(false);
     } catch (error) {
