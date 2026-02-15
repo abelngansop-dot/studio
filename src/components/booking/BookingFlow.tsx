@@ -69,8 +69,14 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
     }
   };
 
-  const handleEventTypeSelect = (eventType: string) => {
-    updateBookingData({ eventType });
+  const handleEventTypeSelect = (newEventType: string) => {
+    // If the event type is being changed (and it's not the initial selection),
+    // reset the services to provide a clean slate for the new event context.
+    if (bookingData.eventType && bookingData.eventType !== newEventType) {
+        updateBookingData({ eventType: newEventType, services: [] });
+    } else {
+        updateBookingData({ eventType: newEventType });
+    }
     nextStep();
   };
 
@@ -79,7 +85,6 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
   };
   
   const handleBookingComplete = () => {
-    // Progress is now cleared in the confirmation step itself.
     closeModal();
     toast({
       title: "Votre demande a été envoyée !",
