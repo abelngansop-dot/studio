@@ -206,12 +206,13 @@ export function DetailsStep({
     if (!bookingData.country)
       newErrors.country = 'Veuillez sélectionner un pays.';
     if (!bookingData.city.trim()) newErrors.city = 'Veuillez préciser la ville.';
+    
     if (!bookingData.phone)
       newErrors.phone = 'Le numéro de téléphone est obligatoire.';
     else if (!/^\+?[0-9\s-()]{8,}$/.test(bookingData.phone))
       newErrors.phone = 'Veuillez entrer un numéro de téléphone valide.';
-    if (!bookingData.email) newErrors.email = "L'adresse e-mail est obligatoire.";
-    else if (!/^\S+@\S+\.\S+$/.test(bookingData.email))
+    
+    if (bookingData.email && !/^\S+@\S+\.\S+$/.test(bookingData.email))
       newErrors.email = 'Veuillez entrer un email valide.';
 
     if (shouldShowOtherDetails && !bookingData.requestDetails?.trim()) {
@@ -516,7 +517,7 @@ export function DetailsStep({
                 Vos Coordonnées
               </CardTitle>
               <p className="text-sm text-muted-foreground pt-1">
-                Ces champs sont obligatoires pour continuer.
+                Le numéro de téléphone est obligatoire pour continuer.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -550,7 +551,7 @@ export function DetailsStep({
                   htmlFor="email"
                   className={cn(errors.email && 'text-destructive')}
                 >
-                  Email <span className="text-destructive">*</span>
+                  Email (optionnel)
                 </Label>
                 <Input
                   id="email"

@@ -53,7 +53,7 @@ const generateBookingSummaryText = (bookingData: BookingData): string => {
     `Durée estimée : ${bookingData.duration || 'Non précisée'}`,
     ``,
     `--- MES COORDONNÉES ---`,
-    `Email : ${bookingData.email}`,
+    bookingData.email ? `Email : ${bookingData.email}` : null,
     `Téléphone : ${bookingData.phone}`,
     ``,
     `Merci de me recontacter pour finaliser le devis.`,
@@ -85,7 +85,8 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
   }, [email, isEmailFormatValid]);
 
   useEffect(() => {
-    if (phone && !isPhoneFormatValid) setPhoneError('Téléphone invalide.');
+    if (!phone) setPhoneError('Le numéro de téléphone est obligatoire.');
+    else if (!isPhoneFormatValid) setPhoneError('Téléphone invalide.');
     else setPhoneError(undefined);
   }, [phone, isPhoneFormatValid]);
 
@@ -114,8 +115,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
     };
     
     try {
-      const bookingsCol = collection(firestore, 'bookings');
-      await addDocumentNonBlocking(bookingsCol, bookingPayload);
+      addDocumentNonBlocking(collection(firestore, 'bookings'), bookingPayload);
       
       clearBookingProgress();
       setIsSubmitted(true);
@@ -188,28 +188,12 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
             <Card className="shadow-md">
                 <CardHeader>
                     <CardTitle className="text-xl font-headline">Vos informations de contact</CardTitle>
-                    <CardDescription>Remplissez ces champs pour que notre équipe puisse vous recontacter.</CardDescription>
+                    <CardDescription>Veuillez confirmer votre numéro pour être recontacté.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className={cn("font-semibold", emailError && "text-destructive")}>Email</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="vous@exemple.com"
-                              value={email}
-                              onChange={(e) => {
-                                const newValue = e.target.value;
-                                setEmail(newValue);
-                                updateBookingData({ email: newValue });
-                              }}
-                              className={cn(emailError && 'border-destructive focus-visible:ring-destructive')}
-                            />
-                            {emailError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{emailError}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone" className={cn("font-semibold", phoneError && "text-destructive")}>Téléphone</Label>
+                            <Label htmlFor="phone" className={cn("font-semibold", phoneError && "text-destructive")}>Téléphone <span className="text-destructive">*</span></Label>
                             <Input
                               id="phone"
                               type="tel"
@@ -223,6 +207,22 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                               className={cn(phoneError && 'border-destructive focus-visible:ring-destructive')}
                             />
                             {phoneError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{phoneError}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className={cn("font-semibold", emailError && "text-destructive")}>Email (optionnel)</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="vous@exemple.com"
+                              value={email}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                setEmail(newValue);
+                                updateBookingData({ email: newValue });
+                              }}
+                              className={cn(emailError && 'border-destructive focus-visible:ring-destructive')}
+                            />
+                            {emailError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{emailError}</p>}
                         </div>
                     </div>
                     <div className="items-top flex space-x-3 pt-2">
@@ -269,7 +269,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                       <MessageSquare className="mr-2 h-5 w-5" />
                       Confirmer par WhatsApp
                     </Button>
-                    <Button size="lg" disabled={!isEmailFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
+                    <Button size="lg" disabled={!email || !isEmailFormatValid || !consent || !!submittingMethod} onClick={() => handleConfirm('email')}>
                       {submittingMethod === 'email' && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                       <Mail className="mr-2 h-5 w-5" />
                       Confirmer par Email
