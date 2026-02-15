@@ -85,25 +85,12 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
+      (err: FirestoreError) => {
         listenerHasFailed.current = true;
-        // This logic robustly extracts the path from a ref or provides a placeholder for a query.
-        const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : '[Collection Group Query]'; // Use a safe placeholder for complex queries.
-
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path,
-        });
-
-        setError(contextualError);
+        console.error(`Firestore 'useCollection' Error: ${err.message}`);
+        setError(err);
         setData(null);
         setIsLoading(false);
-
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
       }
     );
 
