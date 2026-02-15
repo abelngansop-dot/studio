@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -44,6 +44,7 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -55,10 +56,12 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
+    listenerHasFailed.current = false;
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
+        if (listenerHasFailed.current) return;
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
@@ -69,6 +72,7 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
+        listenerHasFailed.current = true;
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -76,17 +80,20 @@ export function useDoc<T = any>(
     );
 
     return () => {
-      // The most robust way to prevent race conditions on unmount.
-      // If the listener has already been torn down by a permission error,
-      // this call might throw. We can safely ignore this error.
+      // If the listener has failed, Firestore has already torn it down.
+      // Calling unsubscribe() again can cause an internal assertion failure.
+      if (listenerHasFailed.current) {
+        return;
+      }
+
+      // For normal unmounts, we still need to clean up.
       try {
         unsubscribe();
       } catch (e) {
-        // This is expected if the listener is already closed, e.g. due to a permission error.
-        // We can safely ignore it.
+        // This is a failsafe. It's expected if the listener is already closed for other reasons.
       }
     };
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+  }, [memoizedDocRef]);
 
   return { data, isLoading, error };
 }
