@@ -55,7 +55,7 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
-    let isUnsubscribed = false;
+    let isUnsubscribed = false; // Flag to track if listener is dead
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
@@ -71,17 +71,17 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        isUnsubscribed = true; // Listener is automatically torn down on error.
+        isUnsubscribed = true; // Set flag: listener is torn down by SDK
         setError(err);
         setData(null);
         setIsLoading(false);
       }
     );
 
+    // Return cleanup function
     return () => {
-      // This cleanup function is called when the component unmounts or deps change.
-      // If an error occurred, the listener is already dead, and calling unsubscribe()
-      // again can cause a fatal internal assertion failure. We prevent this.
+      // Only call unsubscribe if the listener has not been torn down by an error.
+      // This prevents the race condition that causes the internal assertion failure.
       if (!isUnsubscribed) {
           unsubscribe();
       }
