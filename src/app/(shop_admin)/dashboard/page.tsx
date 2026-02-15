@@ -50,18 +50,17 @@ export default function ShopDashboardPage() {
   const firestore = useFirestore();
   const { shop } = useShop();
 
-  const now = new Date();
-  const firstDayOfMonth = startOfMonth(now);
-  const lastDayOfMonth = endOfMonth(now);
-
   const bookingsThisMonthQuery = useMemoFirebase(() => {
     if (!firestore || !shop) return null;
+    const now = new Date();
+    const firstDayOfMonth = startOfMonth(now);
+    const lastDayOfMonth = endOfMonth(now);
     return query(
       collection(firestore, 'shops', shop.id, 'bookings'),
       where('createdAt', '>=', firstDayOfMonth),
       where('createdAt', '<=', lastDayOfMonth)
     );
-  }, [firestore, shop, firstDayOfMonth, lastDayOfMonth]);
+  }, [firestore, shop]);
 
   const servicesQuery = useMemoFirebase(() => {
     if (!firestore || !shop) return null;
