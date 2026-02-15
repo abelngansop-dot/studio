@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Query,
   onSnapshot,
@@ -25,7 +25,7 @@ export interface UseCollectionResult<T> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries.
+ * Handles nullable references.
  * 
  *
  * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
@@ -46,6 +46,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const listenerHasFailed = useRef(false);
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
@@ -57,6 +58,7 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
+    listenerHasFailed.current = false; // Reset on new query
 
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
@@ -70,6 +72,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
+        listenerHasFailed.current = true; // Set flag on error
         setError(err);
         setData(null);
         setIsLoading(false);
@@ -77,18 +80,15 @@ export function useCollection<T = any>(
     );
 
     return () => {
-      try {
-        // Attempt to unsubscribe. If this throws an error (e.g., because the
-        // listener has already been terminated due to a permission error),
-        // the catch block will prevent the app from crashing.
+      // Only unsubscribe if the listener hasn't already failed due to a permission error.
+      // This prevents a race condition where we try to unsubscribe from a listener
+      // that the backend has already torn down, which can crash the SDK.
+      if (!listenerHasFailed.current) {
         unsubscribe();
-      } catch (e) {
-        // This warning is helpful for debugging but is expected behavior in many cases
-        // (like permission errors), so it's not a critical application error.
-        console.warn("Ignoring a Firestore listener cleanup error (this is often expected).", e);
       }
     };
   }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
+  
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
   }
