@@ -73,9 +73,15 @@ export function useDoc<T = any>(
         setError(null); // Clear any previous error on successful snapshot (even if doc doesn't exist)
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
+      async (err: FirestoreError) => {
         listenerHasFailed.current = true;
-        console.error(`Firestore 'useDoc' Error: ${err.message}`);
+        
+        const permissionError = new FirestorePermissionError({
+            path: memoizedDocRef.path,
+            operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
         setError(err);
         setData(null);
         setIsLoading(false);

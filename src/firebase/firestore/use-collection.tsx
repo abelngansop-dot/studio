@@ -25,18 +25,6 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
-/* Internal implementation of Query:
-  https://github.com/firebase/firebase-js-sdk/blob/c5f08a9bc5da0d2b0207802c972d53724ccef055/packages/firestore/src/lite-api/reference.ts#L143
-*/
-export interface InternalQuery extends Query<DocumentData> {
-  _query: {
-    path: {
-      canonicalString(): string;
-      toString(): string;
-    }
-  }
-}
-
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
@@ -85,9 +73,16 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
+      async (err: FirestoreError) => {
         listenerHasFailed.current = true;
-        console.error(`Firestore 'useCollection' Error: ${err.message}`);
+        
+        const path = 'path' in memoizedTargetRefOrQuery ? memoizedTargetRefOrQuery.path : '[Collection Group Query]';
+        const permissionError = new FirestorePermissionError({
+            path: path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
         setError(err);
         setData(null);
         setIsLoading(false);
