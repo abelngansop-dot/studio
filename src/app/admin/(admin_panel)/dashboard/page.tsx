@@ -6,7 +6,7 @@ import { collection, collectionGroup, query, orderBy, limit, where } from 'fireb
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Activity, BookOpen, Users, Star, Package, Clock } from 'lucide-react';
+import { Activity, BookOpen, Users, Star, Package, Clock, Store } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -19,6 +19,7 @@ type Booking = { id: string; eventType: string; status: string; date?: { seconds
 type User = { uid: string };
 type Service = { id: string };
 type Review = { id: string };
+type Shop = { id: string };
 
 function StatCard({ title, value, icon, description, isLoading }: { title: string, value: string | number, icon: React.ReactNode, description: string, isLoading: boolean }) {
   if (isLoading) {
@@ -68,23 +69,32 @@ export default function Dashboard() {
   const servicesQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'services')), [firestore]);
   const pendingReviewsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'reviews'), where('status', '==', 'pending')), [firestore]);
   const recentBookingsQuery = useMemoFirebase(() => firestore && query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(5)), [firestore]);
+  const shopsQuery = useMemoFirebase(() => firestore && query(collection(firestore, 'shops')), [firestore]);
 
   const { data: bookings, isLoading: bookingsLoading } = useCollection<Booking>(bookingsQuery);
   const { data: users, isLoading: usersLoading } = useCollection<User>(usersQuery);
   const { data: services, isLoading: servicesLoading } = useCollection<Service>(servicesQuery);
   const { data: pendingReviews, isLoading: reviewsLoading } = useCollection<Review>(pendingReviewsQuery);
   const { data: recentBookings, isLoading: recentBookingsLoading } = useCollection<Booking>(recentBookingsQuery);
+  const { data: shops, isLoading: shopsLoading } = useCollection<Shop>(shopsQuery);
 
-  const isLoading = bookingsLoading || usersLoading || servicesLoading || reviewsLoading;
+  const isLoading = bookingsLoading || usersLoading || servicesLoading || reviewsLoading || shopsLoading;
 
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">Tableau de bord</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-headline">Tableau de bord Global</h1>
         <p className="text-muted-foreground">Une vue d'ensemble de l'activité de votre plateforme.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total des Boutiques"
+          value={shops?.length ?? 0}
+          icon={<Store className="h-4 w-4" />}
+          description="Boutiques créées sur la plateforme"
+          isLoading={isLoading}
+        />
         <StatCard
           title="Total des Réservations"
           value={bookings?.length ?? 0}
@@ -106,13 +116,7 @@ export default function Dashboard() {
           description="Avis à modérer"
           isLoading={isLoading}
         />
-        <StatCard
-          title="Services Proposés"
-          value={services?.length ?? 0}
-          icon={<Package className="h-4 w-4" />}
-          description="Nombre de services actifs"
-          isLoading={isLoading}
-        />
+        
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -121,7 +125,7 @@ export default function Dashboard() {
             <div className="grid gap-2">
               <CardTitle>Réservations Récentes</CardTitle>
               <CardDescription>
-                Les 5 dernières demandes reçues.
+                Les 5 dernières demandes reçues sur la plateforme.
               </CardDescription>
             </div>
             <Button asChild size="sm" className="ml-auto gap-1">

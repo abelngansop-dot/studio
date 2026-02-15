@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { doc } from 'firebase/firestore';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, MessageSquare, Image as ImageIcon, Store } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
@@ -105,7 +105,7 @@ export default function AdminLayout({
           <SidebarContent>
             <SidebarHeader className="flex items-center justify-between">
               <Link href="/admin/dashboard" className="text-xl font-bold text-primary font-headline">
-                Admin
+                Super Admin
               </Link>
               <SidebarTrigger className="md:hidden" />
             </SidebarHeader>
@@ -115,6 +115,14 @@ export default function AdminLayout({
                   <Link href="/admin/dashboard">
                     <Home />
                     Tableau de bord
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/admin/shops')}>
+                   <Link href="/admin/shops">
+                    <Store />
+                    Boutiques
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -138,7 +146,7 @@ export default function AdminLayout({
                 <SidebarMenuButton asChild isActive={isActive('/admin/services')}>
                    <Link href="/admin/services">
                     <Package />
-                    Catalogue
+                    Catalogue Global
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -146,7 +154,7 @@ export default function AdminLayout({
                 <SidebarMenuButton asChild isActive={isActive('/admin/gallery')}>
                    <Link href="/admin/gallery">
                     <ImageIcon />
-                    Galerie
+                    Galerie Globale
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
