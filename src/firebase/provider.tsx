@@ -28,15 +28,20 @@ type BottomNavItemProps = {
 
 const BottomNavItem = ({ href, icon, label }: BottomNavItemProps) => {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  // A more robust active check:
+  // 1. Exact match for the href.
+  // 2. Or, if not the home page, check if the current path starts with the href. This handles nested routes like /dashboard/bookings.
+  // This prevents the "Home" icon from being active on every page.
+  const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+
 
   return (
     <Link href={href} className={cn(
-      "flex flex-col items-center justify-center gap-1 h-full p-2 transition-colors flex-shrink-0 min-w-[80px] text-center",
+      "flex flex-1 flex-col items-center justify-center gap-1 h-full p-1 transition-colors text-center",
       isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'
     )}>
       {icon}
-      <span className="text-xs font-medium">{label}</span>
+      <span className="text-xs font-medium leading-tight">{label}</span>
     </Link>
   );
 };
@@ -98,7 +103,7 @@ const BottomNavBar = () => {
 
     return (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border z-50 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
-            <div className="flex items-center h-full overflow-x-auto no-scrollbar">
+            <div className="flex items-center h-full">
                 {navItems.map(item => <BottomNavItem key={item.href} {...item} />)}
             </div>
         </div>
