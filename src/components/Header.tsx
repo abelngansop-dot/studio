@@ -59,7 +59,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           <Button variant="ghost" asChild>
             <Link href="/#services">{t('header.services')}</Link>
           </Button>
@@ -77,6 +77,7 @@ export function Header() {
             {isUserLoading ? (
               <div className="flex items-center gap-2 h-10">
                 <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-10 w-24 rounded-md" />
               </div>
             ) : user ? (
               <UserNav user={user} />
@@ -97,7 +98,7 @@ export function Header() {
           <LanguageSwitcher />
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             {hasMounted ? (
               <Sheet>
                 <SheetTrigger asChild>
