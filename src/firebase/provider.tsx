@@ -2,10 +2,103 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, DependencyList } from 'react';
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFirestore, type Firestore, doc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
 
 import { firebaseConfig } from '@/firebase/config';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { Home, LayoutGrid, User as UserIcon, PanelLeft, ShoppingCart, Package, ImageIcon, Settings, Heart, Phone, LogIn } from 'lucide-react';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { cn } from '@/lib/utils';
+
+
+// --- START BOTTOM NAV BAR ---
+type UserProfile = {
+  role: 'client' | 'shop_admin' | 'admin' | 'superadmin';
+  shopId?: string;
+};
+
+
+type BottomNavItemProps = {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+};
+
+const BottomNavItem = ({ href, icon, label }: BottomNavItemProps) => {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link href={href} className={cn(
+      "flex flex-col items-center justify-center gap-1 w-full h-full p-2 transition-colors",
+      isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+    )}>
+      {icon}
+      <span className="text-xs font-medium">{label}</span>
+    </Link>
+  );
+};
+
+const BottomNavBar = () => {
+    const { user, firestore } = useContext(FirebaseContext)!;
+    const pathname = usePathname();
+    const [isVisible, setIsVisible] = useState(true);
+
+    const userDocRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+
+    const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+    useEffect(() => {
+        // Hide nav bar on admin login page or legal page on mobile
+        if (pathname === '/admin' || pathname === '/legal' || pathname === '/login') {
+            setIsVisible(false);
+        } else {
+            setIsVisible(true);
+        }
+    }, [pathname]);
+
+    if (!isVisible) return null;
+    
+    let navItems: BottomNavItemProps[] = [];
+
+    if (userProfile?.role === 'shop_admin') {
+        navItems = [
+            { href: '/dashboard', icon: <Home size={22}/>, label: 'Dashboard' },
+            { href: '/dashboard/bookings', icon: <ShoppingCart size={22}/>, label: 'Réservations' },
+            { href: '/dashboard/services', icon: <Package size={22}/>, label: 'Services' },
+            { href: '/dashboard/gallery', icon: <ImageIcon size={22}/>, label: 'Galerie' },
+            { href: '/dashboard/settings', icon: <Settings size={22}/>, label: 'Paramètres' },
+        ];
+    } else if (user) { // Regular authenticated user
+        navItems = [
+            { href: '/', icon: <Home size={22}/>, label: 'Accueil' },
+            { href: '/mes-reservations', icon: <LayoutGrid size={22}/>, label: 'Réservations' },
+            { href: '/profil', icon: <UserIcon size={22}/>, label: 'Profil' },
+        ];
+    } else { // Unauthenticated user
+        navItems = [
+            { href: '/', icon: <Home size={22}/>, label: 'Accueil' },
+            { href: '/#reviews', icon: <Heart size={22}/>, label: 'Avis' },
+            { href: '/#contact', icon: <Phone size={22}/>, label: 'Contact' },
+            { href: '/login', icon: <LogIn size={22}/>, label: 'Connexion' },
+        ];
+    }
+
+    return (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-background border-t border-border z-50">
+            <div className="flex items-center justify-around h-full">
+                {navItems.map(item => <BottomNavItem key={item.href} {...item} />)}
+            </div>
+        </div>
+    );
+};
+// --- END BOTTOM NAV BAR ---
+
 
 interface UserAuthState {
   user: User | null;
@@ -82,6 +175,7 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   return (
     <FirebaseContext.Provider value={contextValue}>
       {children}
+      <BottomNavBar />
     </FirebaseContext.Provider>
   );
 };
