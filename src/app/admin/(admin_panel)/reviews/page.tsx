@@ -2,28 +2,16 @@
 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collectionGroup, query, orderBy, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, useUser } from '@/firebase/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
+import { useFirestore, useMemoFirebase, useUserProfile } from '@/firebase/provider';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Review } from '@/types/review';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type UserProfile = {
-  role: 'client' | 'admin' | 'superadmin';
-};
-
 export default function ReviewsPage() {
   const firestore = useFirestore();
-  const { user, isUserLoading: isAuthLoading } = useUser();
-  
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+  const { userProfile, isProfileLoading } = useUserProfile();
   
   const isAuthorizedAdmin = !isProfileLoading && userProfile && ['admin', 'superadmin'].includes(userProfile.role);
 
@@ -34,7 +22,7 @@ export default function ReviewsPage() {
 
   const { data: reviews, isLoading: isReviewsLoading } = useCollection<Review>(reviewsQuery);
 
-  const isLoading = isAuthLoading || isProfileLoading || (isAuthorizedAdmin && isReviewsLoading);
+  const isLoading = isProfileLoading || (isAuthorizedAdmin && isReviewsLoading);
   
   if (isLoading && !reviews) {
       return (

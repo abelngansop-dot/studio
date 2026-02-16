@@ -1,10 +1,7 @@
 'use client';
 
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
+import { useUser, useUserProfile } from '@/firebase/provider';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, createContext } from 'react';
-import { doc } from 'firebase/firestore';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from '@/components/ui/button';
@@ -21,36 +18,11 @@ export default function ShopAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
+  const { userProfile, isProfileLoading } = useUserProfile();
   const router = useRouter();
-  const firestore = useFirestore();
-  const [authStatus, setAuthStatus] = useState<'loading' | 'unauthorized' | 'authorized'>('loading');
 
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
-
-  useEffect(() => {
-    if (isUserLoading || isProfileLoading) {
-      return; 
-    }
-
-    if (!user) {
-        router.replace('/login');
-        return;
-    }
-
-    if (userProfile?.role === 'shop_admin' && userProfile.shopId) {
-        setAuthStatus('authorized');
-    } else {
-        setAuthStatus('unauthorized');
-    }
-  }, [user, isUserLoading, userProfile, isProfileLoading, router]);
-
-  if (authStatus === 'loading') {
+  if (isProfileLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -59,7 +31,7 @@ export default function ShopAdminLayout({
     );
   }
   
-  if (authStatus === 'unauthorized') {
+  if (!user || userProfile?.role !== 'shop_admin' || !userProfile.shopId) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background p-4">
            <Alert variant="destructive" className="max-w-md">

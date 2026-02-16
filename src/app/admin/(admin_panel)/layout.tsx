@@ -1,10 +1,7 @@
 'use client';
 
-import { useUser, useMemoFirebase, useFirestore, useAuth } from '@/firebase/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
+import { useUser, useUserProfile, useAuth } from '@/firebase/provider';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { doc } from 'firebase/firestore';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
 import { Home, Package, ShoppingCart, Users, LineChart, Loader2, ShieldAlert, MessageSquare, Image as ImageIcon, Store } from 'lucide-react';
 import Link from 'next/link';
@@ -13,64 +10,27 @@ import { signOut } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
-type UserProfile = {
-  role: 'client' | 'admin' | 'superadmin';
-};
-
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
+  const { userProfile, isProfileLoading } = useUserProfile();
   const router = useRouter();
   const auth = useAuth();
-  const firestore = useFirestore();
   const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
-
-  useEffect(() => {
-    if (isUserLoading || isProfileLoading) {
-      return; // Wait for all data to load
-    }
-
-    if (!user) {
-        router.replace('/admin'); // Not logged in, go to login page
-        return;
-    }
-
-    if (user && userProfile) {
-        const allowedRoles = ['admin', 'superadmin'];
-        if (allowedRoles.includes(userProfile.role)) {
-            setIsAuthorized(true);
-        } else {
-            setIsAuthorized(false);
-        }
-    } else if (user && !userProfile) {
-        // User exists but has no profile document, definitely not an admin.
-        setIsAuthorized(false);
-    }
-  }, [user, isUserLoading, userProfile, isProfileLoading, router]);
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
     }
-    // After logout, always redirect to the admin login page.
     router.push('/admin');
   };
 
   const isActive = (path: string) => pathname.startsWith(path);
 
-  // Show a full-screen loader while checking auth state or profile.
-  if (isUserLoading || isProfileLoading || isAuthorized === null) {
+  if (isProfileLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -79,7 +39,9 @@ export default function AdminLayout({
     );
   }
   
-  if (isAuthorized === false) {
+  const isAuthorized = user && userProfile && ['admin', 'superadmin'].includes(userProfile.role);
+
+  if (!isAuthorized) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background p-4">
            <Alert variant="destructive" className="max-w-md">

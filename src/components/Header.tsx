@@ -5,9 +5,8 @@ import { Button } from './ui/button';
 import { BookingTrigger } from './booking/BookingTrigger';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTranslation } from '@/hooks/use-translation';
-import { useUser, useFirestore, useMemoFirebase, useAuth } from '@/firebase/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { doc, signOut } from 'firebase/firestore';
+import { useUser, useUserProfile, useAuth } from '@/firebase/provider';
+import { signOut } from 'firebase/firestore';
 import { UserNav } from './UserNav';
 import {
   Sheet,
@@ -25,31 +24,16 @@ import { Skeleton } from './ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Store } from 'lucide-react';
 
-type UserProfile = {
-  role: 'client' | 'shop_admin' | 'admin' | 'superadmin';
-  shopId?: string;
-};
-
 export function Header() {
   const { t } = useTranslation();
-  const { user, isUserLoading: isAuthLoading } = useUser();
-  const firestore = useFirestore();
+  const { user } = useUser();
+  const { userProfile, isProfileLoading } = useUserProfile();
   const auth = useAuth();
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile, isLoading: isProfileLoading } =
-    useDoc<UserProfile>(userDocRef);
-
-  const isUserLoading = isAuthLoading || isProfileLoading;
   
   const handleLogout = async () => {
     if (auth) {
@@ -86,7 +70,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {/* Auth/Booking Buttons for larger screens */}
           <div className="hidden sm:flex items-center gap-2">
-            {isUserLoading ? (
+            {isProfileLoading ? (
               <div className="flex items-center gap-2 h-10">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <Skeleton className="h-10 w-24 rounded-md" />
@@ -131,7 +115,7 @@ export function Header() {
                   </SheetHeader>
 
                   <div className="flex-1 overflow-y-auto">
-                    {isUserLoading ? (
+                    {isProfileLoading ? (
                         <div className="p-4 space-y-4">
                             <div className="flex items-center gap-3">
                                 <Skeleton className="h-12 w-12 rounded-full" />
@@ -212,7 +196,7 @@ export function Header() {
                   </div>
                   
                   <SheetFooter className="p-4 border-t mt-auto">
-                    {isUserLoading ? (
+                    {isProfileLoading ? (
                         <Skeleton className="h-10 w-full" />
                     ) : user ? (
                         <SheetClose asChild>

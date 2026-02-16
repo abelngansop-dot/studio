@@ -2,8 +2,7 @@
 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { useFirestore, useMemoFirebase, useUser } from '@/firebase/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
+import { useFirestore, useMemoFirebase, useUserProfile } from '@/firebase/provider';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
@@ -23,22 +22,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-type UserProfile = {
-  role: 'client' | 'admin' | 'superadmin';
-};
-
 export default function UsersPage() {
   const firestore = useFirestore();
-  const { user: authUser, isUserLoading: isAuthLoading } = useUser();
+  const { userProfile, isProfileLoading } = useUserProfile();
   const { toast } = useToast();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !authUser) return null;
-    return doc(firestore, 'users', authUser.uid);
-  }, [firestore, authUser]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
   
   const isAuthorizedAdmin = !isProfileLoading && userProfile && ['admin', 'superadmin'].includes(userProfile.role);
 
@@ -61,7 +49,7 @@ export default function UsersPage() {
     setUserToDelete(null);
   }
 
-  const isLoading = isAuthLoading || isProfileLoading || (isAuthorizedAdmin && isUsersLoading);
+  const isLoading = isProfileLoading || (isAuthorizedAdmin && isUsersLoading);
   
   if (isLoading && !users) {
       return (

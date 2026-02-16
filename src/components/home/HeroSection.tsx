@@ -6,9 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { doc } from 'firebase/firestore';
+import { useUser, useUserProfile } from '@/firebase/provider';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Store } from 'lucide-react';
@@ -24,19 +22,9 @@ type HeroSectionProps = {
 
 export function HeroSection({ heroImage }: HeroSectionProps) {
     const { t } = useTranslation();
-    const { user, isUserLoading: isAuthLoading } = useUser();
-    const firestore = useFirestore();
+    const { user } = useUser();
+    const { userProfile, isProfileLoading } = useUserProfile();
     const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
-
-    const userDocRef = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
-        return doc(firestore, 'users', user.uid);
-    }, [firestore, user]);
-
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
-
-    const isUserLoading = isAuthLoading || isProfileLoading;
-
 
     const CtaButton = () => {
         return (
@@ -52,7 +40,7 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
     }
     
     const VendorCta = () => {
-        if (isUserLoading) return <Skeleton className="h-11 w-48 rounded-full" />;
+        if (isProfileLoading) return <Skeleton className="h-11 w-48 rounded-full" />;
 
         if (user && userProfile?.role === 'client') {
             return (
