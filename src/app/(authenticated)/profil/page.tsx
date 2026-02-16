@@ -161,8 +161,8 @@ export default function ProfilPage() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-3xl font-bold font-headline">Mon Profil</CardTitle>
-              <CardDescription>Gérez vos informations personnelles et vos préférences.</CardDescription>
+              <CardTitle className="text-3xl font-bold font-headline">Paramètres</CardTitle>
+              <CardDescription>Gérez les informations de votre compte, vos préférences et la sécurité.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center gap-6">

@@ -28,12 +28,7 @@ type BottomNavItemProps = {
 
 const BottomNavItem = ({ href, icon, label }: BottomNavItemProps) => {
   const pathname = usePathname();
-  // A more robust active check:
-  // 1. Exact match for the href.
-  // 2. Or, if not the home page, check if the current path starts with the href. This handles nested routes like /dashboard/bookings.
-  // This prevents the "Home" icon from being active on every page.
-  const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-
+  const isActive = pathname === href || (href !== '/' && href !== '/#contact' && href !== '/#services' && href !== '/#reviews' && pathname.startsWith(href));
 
   return (
     <Link href={href} className={cn(
@@ -59,7 +54,6 @@ const BottomNavBar = () => {
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
     useEffect(() => {
-        // Hide nav bar on admin login page, general login, or legal page
         const hiddenPaths = ['/admin', '/login', '/legal'];
         if (hiddenPaths.includes(pathname) || pathname.startsWith('/admin/')) {
             setIsVisible(false);
@@ -68,7 +62,7 @@ const BottomNavBar = () => {
         }
     }, [pathname]);
 
-    if (!isVisible) return null;
+    if (!isVisible || !userProfile && user) return null;
     
     let navItems: BottomNavItemProps[] = [];
 
@@ -87,7 +81,7 @@ const BottomNavBar = () => {
             { href: '/', icon: <Home size={24}/>, label: 'Accueil' },
             { href: '/#services', icon: <Package size={24}/>, label: 'Services' },
             { href: '/mes-reservations', icon: <LayoutGrid size={24}/>, label: 'Réservations' },
-            { href: '/profil', icon: <UserIcon size={24}/>, label: 'Profil' },
+            { href: '/profil', icon: <Settings size={24}/>, label: 'Paramètres' },
             { href: '/#reviews', icon: <Heart size={24}/>, label: 'Avis' },
             { href: '/#contact', icon: <Phone size={24}/>, label: 'Contact' },
         ];
