@@ -52,7 +52,7 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
     }
     
     const VendorCta = () => {
-        if (isUserLoading) return <Skeleton className="h-[52px] w-52 rounded-full" />;
+        if (isUserLoading) return <Skeleton className="h-11 w-48 rounded-full" />;
 
         if (user && userProfile?.role === 'client') {
             return (

@@ -137,9 +137,9 @@ export function Header() {
             {isUserLoading ? (
               // Placeholder to avoid layout shift and hydration errors
               <div className="flex items-center gap-2 h-10">
-                <Skeleton className="h-10 w-28 rounded-md" />
-                <Skeleton className="h-10 w-36 rounded-full" />
                 <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-10 w-40 rounded-md" />
+                <Skeleton className="h-10 w-44 rounded-full" />
               </div>
             ) : user ? (
               <>
