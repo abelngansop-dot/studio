@@ -35,6 +35,7 @@ type UserProfileData = {
   displayName: string;
   email: string;
   phone?: string | null;
+  photoURL?: string | null;
 };
 
 const profileSchema = z.object({
@@ -166,7 +167,7 @@ export default function ProfilPage() {
             <CardContent className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <Avatar className="h-24 w-24 text-3xl">
-                  <AvatarImage src={undefined} alt={userProfile.displayName || ''} />
+                  <AvatarImage src={userProfile.photoURL || undefined} alt={userProfile.displayName || ''} />
                   <AvatarFallback>{userInitial.toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="w-full space-y-4">

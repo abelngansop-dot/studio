@@ -53,7 +53,7 @@ const UserCell = ({ row }: { row: any }) => {
     return (
         <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-                <AvatarImage src={user.photoURL || ''} alt={name} />
+                <AvatarImage src={user.photoURL || undefined} alt={name || ''} />
                 <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">

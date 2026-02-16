@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { FirebaseError } from 'firebase/app';
@@ -31,7 +31,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function LoginPage() {
-  const [isSubmitting, setIsSubmitting] = useState(true); // Start as true to handle redirect
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const router = useRouter();
   const { toast } = useToast();
@@ -46,77 +46,57 @@ export default function LoginPage() {
   };
 
   const handleAuthError = (error: any) => {
-    let description = 'Une erreur est survenue.';
+    let description = 'Une erreur inconnue est survenue.';
     if (error instanceof FirebaseError) {
       switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          description = 'Identifiants invalides.';
-          break;
-        case 'auth/email-already-in-use':
-            description = 'Cette adresse e-mail est déjà utilisée.';
-            break;
-        case 'auth/weak-password':
-            description = 'Le mot de passe doit contenir au moins 6 caractères.';
-            break;
         case 'auth/account-exists-with-different-credential':
           description = 'Un compte avec cet e-mail existe déjà, mais avec une autre méthode de connexion.';
           break;
+        case 'auth/popup-closed-by-user':
+        case 'auth/cancelled-popup-request':
+          description = 'La fenêtre de connexion a été fermée avant la fin.';
+          break;
+        case 'auth/auth-domain-config-required':
+        case 'auth/operation-not-allowed':
+          description = 'La connexion par Google n\'est pas activée. Veuillez contacter le support.';
+          break;
         default:
-          description = "Une erreur inconnue est survenue.";
+           description = "Une erreur technique est survenue. Veuillez réessayer.";
       }
     }
-    toast({ variant: 'destructive', title: 'Échec', description });
+    toast({ variant: 'destructive', title: 'Échec de la connexion', description });
   }
-
-  useEffect(() => {
-    if (!auth || !firestore) return;
-
-    const processRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          // User has successfully signed in via redirect.
-          const user = result.user;
-          const userDocRef = doc(firestore, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (!userDoc.exists()) {
-            const newUserProfile = {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              role: 'client',
-              createdAt: serverTimestamp()
-            };
-            await setDoc(userDocRef, newUserProfile, { merge: false });
-            toast({ title: 'Bienvenue ! Votre compte a été créé.' });
-          } else {
-            toast({ title: 'Connexion réussie !' });
-          }
-          
-          handleSuccess();
-        } else {
-            // No redirect result, so the user is just visiting the page.
-            setIsSubmitting(false);
-        }
-      } catch (error) {
-        handleAuthError(error);
-        setIsSubmitting(false);
-      }
-    };
-    
-    processRedirectResult();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, firestore]);
-
+  
   const handleGoogleSignIn = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsSubmitting(true);
     const provider = new GoogleAuthProvider();
-    // This will navigate away from the page, no need to handle the promise here.
-    signInWithRedirect(auth, provider);
+    
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                role: 'client',
+                createdAt: serverTimestamp()
+            });
+            toast({ title: 'Bienvenue !', description: 'Votre compte a été créé avec succès.' });
+        } else {
+             toast({ title: 'Connexion réussie !' });
+        }
+        handleSuccess();
+    } catch (error) {
+        handleAuthError(error);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
 
@@ -136,9 +116,11 @@ export default function LoginPage() {
                     {isSubmitting ? (
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     ) : (
-                        <GoogleIcon className="mr-3 h-5 w-5" />
+                        <>
+                            <GoogleIcon className="mr-3 h-5 w-5" />
+                            Continuer avec Google
+                        </>
                     )}
-                    Continuer avec Google
                 </Button>
 
                 <div className="relative">

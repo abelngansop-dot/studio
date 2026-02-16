@@ -62,6 +62,7 @@
         "uid": { "type": "string", "description": "Unique identifier from Firebase Auth." },
         "email": { "type": "string", "description": "The email address of the user.", "format": "email" },
         "displayName": { "type": "string", "description": "The display name of the user." },
+        "photoURL": { "type": "string", "description": "URL of the user's profile picture.", "format": "uri" },
         "phone": { "type": "string", "description": "The user's phone number." },
         "gender": { "type": "string", "description": "The gender of the user.", "enum": ["homme", "femme"] },
         "role": { "type": "string", "description": "The role of the user.", "enum": ["client", "shop_admin", "admin", "superadmin"] },
