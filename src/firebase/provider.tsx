@@ -32,7 +32,7 @@ const BottomNavItem = ({ href, icon, label }: BottomNavItemProps) => {
 
   return (
     <Link href={href} className={cn(
-      "flex flex-col items-center justify-center gap-1 w-full h-full p-2 transition-colors",
+      "flex flex-col items-center justify-center gap-1 h-full p-2 transition-colors flex-shrink-0 min-w-[80px] text-center",
       isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'
     )}>
       {icon}
@@ -54,8 +54,9 @@ const BottomNavBar = () => {
     const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
     useEffect(() => {
-        // Hide nav bar on admin login page or legal page on mobile
-        if (pathname === '/admin' || pathname === '/legal' || pathname === '/login') {
+        // Hide nav bar on admin login page, general login, or legal page
+        const hiddenPaths = ['/admin', '/login', '/legal'];
+        if (hiddenPaths.includes(pathname) || pathname.startsWith('/admin/')) {
             setIsVisible(false);
         } else {
             setIsVisible(true);
@@ -66,7 +67,9 @@ const BottomNavBar = () => {
     
     let navItems: BottomNavItemProps[] = [];
 
-    if (userProfile?.role === 'shop_admin') {
+    const isDashboard = pathname.startsWith('/dashboard');
+
+    if (userProfile?.role === 'shop_admin' && isDashboard) {
         navItems = [
             { href: '/dashboard', icon: <Home size={24}/>, label: 'Dashboard' },
             { href: '/dashboard/bookings', icon: <ShoppingCart size={24}/>, label: 'Réservations' },
@@ -74,11 +77,14 @@ const BottomNavBar = () => {
             { href: '/dashboard/gallery', icon: <ImageIcon size={24}/>, label: 'Galerie' },
             { href: '/dashboard/settings', icon: <Settings size={24}/>, label: 'Paramètres' },
         ];
-    } else if (user) { // Regular authenticated user
+    } else if (user) { // Regular authenticated user (or shop_admin outside dashboard)
         navItems = [
             { href: '/', icon: <Home size={24}/>, label: 'Accueil' },
+            { href: '/#services', icon: <Package size={24}/>, label: 'Services' },
             { href: '/mes-reservations', icon: <LayoutGrid size={24}/>, label: 'Réservations' },
             { href: '/profil', icon: <UserIcon size={24}/>, label: 'Profil' },
+            { href: '/#reviews', icon: <Heart size={24}/>, label: 'Avis' },
+            { href: '/#contact', icon: <Phone size={24}/>, label: 'Contact' },
         ];
     } else { // Unauthenticated user
         navItems = [
@@ -86,12 +92,13 @@ const BottomNavBar = () => {
             { href: '/#services', icon: <Package size={24}/>, label: 'Services' },
             { href: '/#reviews', icon: <Heart size={24}/>, label: 'Avis' },
             { href: '/#contact', icon: <Phone size={24}/>, label: 'Contact' },
+            { href: '/login', icon: <LogIn size={24}/>, label: 'Connexion' },
         ];
     }
 
     return (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border z-50 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
-            <div className="flex items-center justify-around h-full">
+            <div className="flex items-center h-full overflow-x-auto no-scrollbar">
                 {navItems.map(item => <BottomNavItem key={item.href} {...item} />)}
             </div>
         </div>
