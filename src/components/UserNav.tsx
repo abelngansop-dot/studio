@@ -45,20 +45,20 @@ export function UserNav({ user }: { user: User }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem asChild className="cursor-pointer">
+        <DropdownMenuItem asChild className="cursor-pointer hidden md:flex">
           <Link href="/profil">
             <UserIcon className="mr-2 h-4 w-4" />
             <span>Mon Profil</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
+        <DropdownMenuItem asChild className="cursor-pointer hidden md:flex">
           <Link href="/mes-reservations">
             <LayoutGrid className="mr-2 h-4 w-4" />
             <span>Mes réservations</span>
           </Link>
         </DropdownMenuItem>
         
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="hidden md:block" />
 
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link href="/legal">

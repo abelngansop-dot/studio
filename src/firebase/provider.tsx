@@ -83,9 +83,9 @@ const BottomNavBar = () => {
     } else { // Unauthenticated user
         navItems = [
             { href: '/', icon: <Home size={24}/>, label: 'Accueil' },
+            { href: '/#services', icon: <Package size={24}/>, label: 'Services' },
             { href: '/#reviews', icon: <Heart size={24}/>, label: 'Avis' },
             { href: '/#contact', icon: <Phone size={24}/>, label: 'Contact' },
-            { href: '/login', icon: <LogIn size={24}/>, label: 'Connexion' },
         ];
     }
 

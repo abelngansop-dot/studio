@@ -17,7 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Menu, X, Home, BookUser, FileText, Phone } from 'lucide-react';
+import { Menu, X, Home, FileText } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
@@ -124,17 +124,9 @@ export function Header() {
                   <nav className="flex flex-col gap-1 p-4">
                     <SheetClose asChild>
                       <Button variant="ghost" asChild className="justify-start text-base">
-                        <Link href="/#reviews">
-                          <BookUser className="mr-2" />
-                          {t('header.reviews')}
-                        </Link>
-                      </Button>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Button variant="ghost" asChild className="justify-start text-base">
-                        <Link href="/#contact">
-                          <Phone className="mr-2" />
-                          {t('header.contact')}
+                        <Link href="/">
+                          <Home className="mr-2" />
+                          Accueil
                         </Link>
                       </Button>
                     </SheetClose>
