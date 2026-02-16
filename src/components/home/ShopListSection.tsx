@@ -90,7 +90,7 @@ export function ShopListSection() {
     const { data: shops, isLoading } = useCollection<Shop>(shopsQuery);
 
     return (
-        <section id="shops" className="py-16 md:py-24">
+        <section id="services" className="py-16 md:py-24">
             <div className="container px-4 md:px-6">
                 <div className="flex flex-col items-center text-center mb-12">
                     <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-4xl">Découvrez nos Boutiques Partenaires</h2>
