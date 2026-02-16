@@ -8,7 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { FirebaseError } from 'firebase/app';
@@ -16,8 +22,6 @@ import { Loader2 } from 'lucide-react';
 import { useNavigationHistory } from '@/hooks/use-navigation-history';
 import { Header } from '@/components/Header';
 import { ContactFooter } from '@/components/ContactFooter';
-import { allCountries } from '@/lib/locations';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 48 48" {...props}>
@@ -31,21 +35,25 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [isLoginView, setIsLoginView] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
   const { popLastRoute } = useNavigationHistory();
-  const [countryCode, setCountryCode] = useState('+237');
 
   const handleSuccess = () => {
     const lastRoute = popLastRoute();
     router.push(lastRoute || '/mes-reservations');
   };
 
-  const handleAuthError = (error: any) => {
+  const handleAuthError = (error: any, context: 'google' | 'email') => {
     let description = 'Une erreur inconnue est survenue.';
     if (error instanceof FirebaseError) {
       switch (error.code) {
@@ -56,20 +64,30 @@ export default function LoginPage() {
         case 'auth/cancelled-popup-request':
           description = 'La fenêtre de connexion a été fermée avant la fin.';
           break;
-        case 'auth/auth-domain-config-required':
-        case 'auth/operation-not-allowed':
-          description = 'La connexion par Google n\'est pas activée. Veuillez contacter le support.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          description = 'Email ou mot de passe incorrect.';
+          break;
+        case 'auth/email-already-in-use':
+          description = 'Cette adresse e-mail est déjà utilisée par un autre compte.';
+          break;
+        case 'auth/weak-password':
+          description = 'Le mot de passe doit contenir au moins 6 caractères.';
+          break;
+        case 'auth/invalid-email':
+          description = "L'adresse e-mail n'est pas valide.";
           break;
         default:
-           description = "Une erreur technique est survenue. Veuillez réessayer.";
+          description = "Une erreur technique est survenue. Veuillez réessayer.";
       }
     }
-    toast({ variant: 'destructive', title: 'Échec de la connexion', description });
-  }
+    toast({ variant: 'destructive', title: `Échec de ${context === 'google' ? 'la connexion Google' : isLoginView ? 'la connexion' : "l'inscription"}`, description });
+  };
   
   const handleGoogleSignIn = async () => {
     if (!auth || !firestore) return;
-    setIsSubmitting(true);
+    setIsGoogleSubmitting(true);
     const provider = new GoogleAuthProvider();
     
     try {
@@ -93,9 +111,55 @@ export default function LoginPage() {
         }
         handleSuccess();
     } catch (error) {
-        handleAuthError(error);
+        handleAuthError(error, 'google');
     } finally {
+        setIsGoogleSubmitting(false);
+    }
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth || !firestore) return;
+    setIsSubmitting(true);
+
+    if (isLoginView) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        toast({ title: 'Connexion réussie !' });
+        handleSuccess();
+      } catch (error) {
+        handleAuthError(error, 'email');
+      } finally {
         setIsSubmitting(false);
+      }
+    } else {
+      try {
+        if (!displayName.trim()) {
+          toast({ variant: 'destructive', title: 'Champ manquant', description: "Le nom d'affichage est requis." });
+          setIsSubmitting(false);
+          return;
+        }
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        await updateProfile(user, { displayName });
+
+        await setDoc(doc(firestore, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: displayName,
+          photoURL: null,
+          role: 'client',
+          createdAt: serverTimestamp()
+        });
+
+        toast({ title: 'Compte créé avec succès !', description: 'Bienvenue sur Inoublevents.' });
+        handleSuccess();
+      } catch (error) {
+        handleAuthError(error, 'email');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -106,14 +170,14 @@ export default function LoginPage() {
       <main className="flex-grow flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Accédez à votre espace</CardTitle>
+                <CardTitle className="text-2xl">{isLoginView ? 'Accédez à votre espace' : 'Créez votre compte'}</CardTitle>
                 <CardDescription>
-                Connectez-vous ou créez un compte pour gérer vos réservations.
+                  {isLoginView ? 'Connectez-vous pour gérer vos réservations.' : 'Rejoignez-nous pour commencer à planifier.'}
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
-                <Button variant="outline" className="h-12 text-base" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-                    {isSubmitting ? (
+                <Button variant="outline" className="h-12 text-base" onClick={handleGoogleSignIn} disabled={isGoogleSubmitting || isSubmitting}>
+                    {isGoogleSubmitting ? (
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     ) : (
                         <>
@@ -134,30 +198,57 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <div className="grid gap-4 text-center">
-                    <div className="grid gap-2 text-left">
-                        <Label>Se connecter par téléphone (bientôt disponible)</Label>
-                        <div className="flex gap-2">
-                            <Select defaultValue={countryCode} onValueChange={setCountryCode}>
-                                <SelectTrigger className="w-[140px]">
-                                    <SelectValue placeholder="Code pays" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {allCountries.map((c) => <SelectItem key={c.code} value={c.phoneCode}>{c.name} ({c.phoneCode})</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                            <Input type="tel" placeholder="Numéro de téléphone" disabled/>
-                        </div>
+                <form onSubmit={handleEmailSubmit} className="grid gap-4">
+                  {!isLoginView && (
+                    <div className="grid gap-2">
+                      <Label htmlFor="displayName">Nom d'affichage</Label>
+                      <Input
+                        id="displayName"
+                        type="text"
+                        placeholder="Jean Dupont"
+                        required
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        disabled={isSubmitting}
+                      />
                     </div>
-                    <Button 
-                        type="button" 
-                        className="w-full"
-                        onClick={() => toast({ title: 'Bientôt disponible', description: "La connexion par téléphone arrive prochainement !"})}
-                        disabled
-                    >
-                      Recevoir un code
-                    </Button>
+                  )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="vous@exemple.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Mot de passe</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full h-11" disabled={isSubmitting || isGoogleSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoginView ? 'Se connecter' : "Créer mon compte"}
+                  </Button>
+                </form>
+
+                 <div className="text-center text-sm">
+                  {isLoginView ? "Pas encore de compte ?" : "Vous avez déjà un compte ?"}{' '}
+                  <Button variant="link" className="p-0 h-auto" onClick={() => setIsLoginView(!isLoginView)}>
+                    {isLoginView ? "S'inscrire" : "Se connecter"}
+                  </Button>
                 </div>
+
                  <div className="mt-4 text-center text-sm">
                   <Button variant="link" asChild className="text-muted-foreground">
                       <Link href="/">Retour à l'accueil</Link>
