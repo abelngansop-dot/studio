@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { FirebaseError } from 'firebase/app';
-import { Loader2, Phone as PhoneIcon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useNavigationHistory } from '@/hooks/use-navigation-history';
 import { Header } from '@/components/Header';
 import { ContactFooter } from '@/components/ContactFooter';
@@ -31,7 +31,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function LoginPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(true); // Start as true to handle redirect
   
   const router = useRouter();
   const { toast } = useToast();
@@ -60,9 +60,9 @@ export default function LoginPage() {
         case 'auth/weak-password':
             description = 'Le mot de passe doit contenir au moins 6 caractères.';
             break;
-        case 'auth/popup-closed-by-user':
-            description = 'La fenêtre de connexion a été fermée.';
-            return; // Don't show a toast for this
+        case 'auth/account-exists-with-different-credential':
+          description = 'Un compte avec cet e-mail existe déjà, mais avec une autre méthode de connexion.';
+          break;
         default:
           description = "Une erreur inconnue est survenue.";
       }
@@ -70,42 +70,53 @@ export default function LoginPage() {
     toast({ variant: 'destructive', title: 'Échec', description });
   }
 
-  const handleGoogleSignIn = async () => {
-    if (!auth || !firestore) {
-        toast({ variant: 'destructive', title: 'Erreur', description: "Les services Firebase ne sont pas disponibles." });
-        return;
-    }
-    setIsSubmitting(true);
-    const provider = new GoogleAuthProvider();
+  useEffect(() => {
+    if (!auth || !firestore) return;
 
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
+    const processRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // User has successfully signed in via redirect.
+          const user = result.user;
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
 
-        const userDocRef = doc(firestore, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
+          if (!userDoc.exists()) {
             const newUserProfile = {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                role: 'client',
-                createdAt: serverTimestamp()
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              role: 'client',
+              createdAt: serverTimestamp()
             };
             await setDoc(userDocRef, newUserProfile, { merge: false });
             toast({ title: 'Bienvenue ! Votre compte a été créé.' });
-        } else {
+          } else {
             toast({ title: 'Connexion réussie !' });
+          }
+          
+          handleSuccess();
+        } else {
+            // No redirect result, so the user is just visiting the page.
+            setIsSubmitting(false);
         }
-        
-        handleSuccess();
-
-    } catch (error) {
+      } catch (error) {
         handleAuthError(error);
-    } finally {
         setIsSubmitting(false);
-    }
+      }
+    };
+    
+    processRedirectResult();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, firestore]);
+
+  const handleGoogleSignIn = async () => {
+    if (!auth) return;
+    setIsSubmitting(true);
+    const provider = new GoogleAuthProvider();
+    // This will navigate away from the page, no need to handle the promise here.
+    signInWithRedirect(auth, provider);
   };
 
 
