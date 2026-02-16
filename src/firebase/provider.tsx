@@ -68,29 +68,29 @@ const BottomNavBar = () => {
 
     if (userProfile?.role === 'shop_admin') {
         navItems = [
-            { href: '/dashboard', icon: <Home size={22}/>, label: 'Dashboard' },
-            { href: '/dashboard/bookings', icon: <ShoppingCart size={22}/>, label: 'Réservations' },
-            { href: '/dashboard/services', icon: <Package size={22}/>, label: 'Services' },
-            { href: '/dashboard/gallery', icon: <ImageIcon size={22}/>, label: 'Galerie' },
-            { href: '/dashboard/settings', icon: <Settings size={22}/>, label: 'Paramètres' },
+            { href: '/dashboard', icon: <Home size={24}/>, label: 'Dashboard' },
+            { href: '/dashboard/bookings', icon: <ShoppingCart size={24}/>, label: 'Réservations' },
+            { href: '/dashboard/services', icon: <Package size={24}/>, label: 'Services' },
+            { href: '/dashboard/gallery', icon: <ImageIcon size={24}/>, label: 'Galerie' },
+            { href: '/dashboard/settings', icon: <Settings size={24}/>, label: 'Paramètres' },
         ];
     } else if (user) { // Regular authenticated user
         navItems = [
-            { href: '/', icon: <Home size={22}/>, label: 'Accueil' },
-            { href: '/mes-reservations', icon: <LayoutGrid size={22}/>, label: 'Réservations' },
-            { href: '/profil', icon: <UserIcon size={22}/>, label: 'Profil' },
+            { href: '/', icon: <Home size={24}/>, label: 'Accueil' },
+            { href: '/mes-reservations', icon: <LayoutGrid size={24}/>, label: 'Réservations' },
+            { href: '/profil', icon: <UserIcon size={24}/>, label: 'Profil' },
         ];
     } else { // Unauthenticated user
         navItems = [
-            { href: '/', icon: <Home size={22}/>, label: 'Accueil' },
-            { href: '/#reviews', icon: <Heart size={22}/>, label: 'Avis' },
-            { href: '/#contact', icon: <Phone size={22}/>, label: 'Contact' },
-            { href: '/login', icon: <LogIn size={22}/>, label: 'Connexion' },
+            { href: '/', icon: <Home size={24}/>, label: 'Accueil' },
+            { href: '/#reviews', icon: <Heart size={24}/>, label: 'Avis' },
+            { href: '/#contact', icon: <Phone size={24}/>, label: 'Contact' },
+            { href: '/login', icon: <LogIn size={24}/>, label: 'Connexion' },
         ];
     }
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-background border-t border-border z-50">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border z-50 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
             <div className="flex items-center justify-around h-full">
                 {navItems.map(item => <BottomNavItem key={item.href} {...item} />)}
             </div>
