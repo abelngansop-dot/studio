@@ -8,6 +8,8 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -72,6 +74,14 @@ export function useDoc<T = any>(
       },
       (err: FirestoreError) => {
         isUnsubscribed = true; // Set flag: listener is torn down by SDK
+
+        // Use the global error emitter for permission errors
+        const permissionError = new FirestorePermissionError({
+          path: memoizedDocRef.path,
+          operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
         setError(err);
         setData(null);
         setIsLoading(false);

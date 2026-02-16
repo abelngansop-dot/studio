@@ -9,6 +9,8 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -73,6 +75,14 @@ export function useCollection<T = any>(
       },
       (err: FirestoreError) => {
         isUnsubscribed = true; // Set flag: listener is torn down by SDK
+        
+        // Use the global error emitter for permission errors
+        const permissionError = new FirestorePermissionError({
+          path: (memoizedTargetRefOrQuery as any).path || '[Collection Group Query]',
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        
         setError(err);
         setData(null);
         setIsLoading(false);
