@@ -19,12 +19,15 @@ import { doc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Service } from './columns';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Loader2, Upload, ImageIcon } from 'lucide-react';
+import { Loader2, Upload, ImageIcon, Video } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon';
 import { useShop } from '@/hooks/use-shop-admin';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
 
 type ServiceDialogProps = {
   isOpen: boolean;
@@ -45,6 +48,13 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Video state
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const [videoDurationError, setVideoDurationError] = useState<string | null>(null);
+
+
   const { firestore, firebaseApp } = useFirebase();
   const { shop } = useShop();
   const { toast } = useToast();
@@ -57,6 +67,9 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
             setIcon(service.icon);
             setPreviewUrl(service.imageUrl || null);
             setSelectedFile(null);
+            setVideoPreviewUrl(service.videoUrl || null);
+            setSelectedVideoFile(null);
+            setVideoDurationError(null);
         } else {
             // Reset form for new service
             setName('');
@@ -64,6 +77,9 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
             setIcon('Package');
             setPreviewUrl(null);
             setSelectedFile(null);
+            setVideoPreviewUrl(null);
+            setSelectedVideoFile(null);
+            setVideoDurationError(null);
         }
     }
   }, [service, isOpen]);
@@ -76,16 +92,51 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
     }
   };
 
+  const handleVideoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        setVideoDurationError(null);
+        
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        
+        video.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(video.src);
+            if (video.duration > 5.5) { // Add a small buffer for safety
+                setVideoDurationError('La vidéo dépasse 5 secondes. Veuillez en choisir une plus courte.');
+            }
+        };
+        video.onerror = () => {
+            setVideoDurationError('Fichier vidéo invalide ou impossible à lire.');
+        };
+
+        video.src = URL.createObjectURL(file);
+        setSelectedVideoFile(file);
+        setVideoPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async () => {
     if (!firestore || !shop || !firebaseApp) return;
     if (!name || !description) {
         toast({ variant: 'destructive', title: 'Champs requis', description: "Le nom et la description sont obligatoires." });
         return;
     }
+    
+    if (videoDurationError) {
+        toast({
+            variant: 'destructive',
+            title: 'Erreur de validation',
+            description: videoDurationError,
+        });
+        return;
+    }
+
     setIsSaving(true);
 
     try {
       let finalImageUrl = service?.imageUrl || '';
+      let finalVideoUrl = service?.videoUrl || '';
 
       if (selectedFile) {
         const storage = getStorage(firebaseApp);
@@ -93,6 +144,14 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
         const imageReference = storageRef(storage, imagePath);
         await uploadBytes(imageReference, selectedFile);
         finalImageUrl = await getDownloadURL(imageReference);
+      }
+      
+      if (selectedVideoFile) {
+        const storage = getStorage(firebaseApp);
+        const videoPath = `shops/${shop.id}/services_video/${Date.now()}_${selectedVideoFile.name}`;
+        const videoReference = storageRef(storage, videoPath);
+        await uploadBytes(videoReference, selectedVideoFile);
+        finalVideoUrl = await getDownloadURL(videoReference);
       }
 
       const serviceData = { 
@@ -102,7 +161,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
           icon, 
           rating: service?.rating || 0,
           imageUrl: finalImageUrl, 
-          videoUrl: '' // Video not supported in this version
+          videoUrl: finalVideoUrl,
       };
 
       if (service) {
@@ -131,7 +190,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{service ? 'Modifier le service' : 'Ajouter un service'}</DialogTitle>
           <DialogDescription>
@@ -170,34 +229,74 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
                 </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Image du service (optionnel)</Label>
-            <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*"
-            />
-             <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
-                {previewUrl ? (
-                    <Image 
-                        src={previewUrl} 
-                        alt="Aperçu" 
-                        fill
-                        className="object-contain rounded"
-                    />
-                ) : (
-                   <div className="text-center text-muted-foreground p-4">
-                        <ImageIcon className="h-8 w-8 mx-auto" />
-                        <p className="text-xs mt-2">Aucune image</p>
-                    </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div className="space-y-2">
+                <Label>Image du service (optionnel)</Label>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*"
+                />
+                 <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                    {previewUrl ? (
+                        <Image 
+                            src={previewUrl} 
+                            alt="Aperçu" 
+                            fill
+                            className="object-contain rounded"
+                        />
+                    ) : (
+                       <div className="text-center text-muted-foreground p-4">
+                            <ImageIcon className="h-8 w-8 mx-auto" />
+                            <p className="text-xs mt-2">Aucune image</p>
+                        </div>
+                    )}
+                </div>
+                 <Button type="button" variant="outline" className="w-full mt-2" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {previewUrl ? 'Changer l\'image' : 'Téléverser une image'}
+                </Button>
+              </div>
+
+               <div className="space-y-2">
+                <Label>Vidéo de 5s (optionnel)</Label>
+                <input
+                    type="file"
+                    ref={videoFileInputRef}
+                    onChange={handleVideoFileChange}
+                    className="hidden"
+                    accept="video/mp4,video/webm"
+                />
+                 <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                    {videoPreviewUrl ? (
+                        <video 
+                            src={videoPreviewUrl}
+                            muted
+                            autoPlay
+                            loop
+                            playsInline
+                            className="object-contain rounded w-full h-full"
+                        />
+                    ) : (
+                       <div className="text-center text-muted-foreground p-4">
+                            <Video className="h-8 w-8 mx-auto" />
+                            <p className="text-xs mt-2">Aucune vidéo</p>
+                        </div>
+                    )}
+                </div>
+                 <Button type="button" variant="outline" className="w-full mt-2" onClick={() => videoFileInputRef.current?.click()} disabled={isSaving}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {videoPreviewUrl ? 'Changer la vidéo' : 'Téléverser une vidéo'}
+                </Button>
+                 {videoDurationError && (
+                    <Alert variant="destructive" className="mt-2">
+                        <AlertDescription>{videoDurationError}</AlertDescription>
+                    </Alert>
                 )}
-            </div>
-             <Button type="button" variant="outline" className="w-full mt-2" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
-                <Upload className="mr-2 h-4 w-4" />
-                {previewUrl ? 'Changer l\'image' : 'Choisir une image'}
-            </Button>
+              </div>
           </div>
         </div>
         <DialogFooter>

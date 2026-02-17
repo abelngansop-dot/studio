@@ -43,16 +43,29 @@ const StarRating = ({ rating, className }: { rating: number, className?: string 
 
 const ServiceCard = ({ service }: { service: Service }) => (
     <Card className="flex flex-col overflow-hidden group transition-all hover:shadow-lg">
-        {service.imageUrl && (
-             <div className="relative h-40 w-full">
+        <div className="relative h-40 w-full bg-muted">
+            {service.videoUrl ? (
+                 <video
+                    src={service.videoUrl}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    className="object-cover w-full h-full"
+                />
+            ) : service.imageUrl ? (
                 <Image
                     src={service.imageUrl}
                     alt={service.name}
                     fill
                     className="object-cover"
                 />
-            </div>
-        )}
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                    <Icon name={service.icon as keyof typeof icons} className="h-16 w-16 text-muted-foreground/30" />
+                </div>
+            )}
+        </div>
         <CardHeader>
             <div className="flex items-center gap-3">
                 <div className="p-3 bg-accent/10 rounded-full">
