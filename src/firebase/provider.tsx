@@ -186,9 +186,11 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     setUserProfileState(prevState => ({ ...prevState, isProfileLoading: true }));
 
     const userDocRef = doc(firebaseServices.firestore, 'users', userAuthState.user.uid);
+    let isUnsubscribed = false;
 
     const unsubscribe = onSnapshot(userDocRef, 
       (docSnap) => {
+        if (isUnsubscribed) return;
         if (docSnap.exists()) {
           setUserProfileState({ userProfile: docSnap.data() as UserProfile, isProfileLoading: false });
         } else {
@@ -196,12 +198,21 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
       }, 
       (error) => {
+        isUnsubscribed = true;
         console.error("FirebaseProvider: Error listening to user profile:", error);
         setUserProfileState({ userProfile: null, isProfileLoading: false });
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+        if (!isUnsubscribed) {
+            try {
+                unsubscribe();
+            } catch (e) {
+                // Ignore the error, as it's likely due to the listener already being torn down.
+            }
+        }
+    };
   }, [userAuthState.user, firebaseServices.firestore]);
 
 
