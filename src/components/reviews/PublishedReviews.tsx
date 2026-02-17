@@ -2,7 +2,7 @@
 
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collectionGroup, query, where } from 'firebase/firestore';
+import { collectionGroup, query } from 'firebase/firestore';
 import {
   Carousel,
   CarouselContent,
@@ -17,6 +17,7 @@ import { AlertCircle, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import type { Review } from '@/types/review';
+import { useMemo } from 'react';
 
 
 const StarRating = ({ rating, className }: { rating: number, className?: string }) => {
@@ -66,15 +67,20 @@ export function PublishedReviews() {
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-      collectionGroup(firestore, 'reviews'),
-      where('status', '==', 'approved')
-    );
+    // The query is now broader to avoid needing a specific Firestore index.
+    // Filtering will happen on the client-side.
+    return query(collectionGroup(firestore, 'reviews'));
   }, [firestore]);
 
-  const { data: reviews, isLoading, error } = useCollection<Review>(reviewsQuery);
+  const { data: allReviews, isLoading, error } = useCollection<Review>(reviewsQuery);
   
-  if (isLoading) {
+  // Memoize the client-side filtering operation.
+  const approvedReviews = useMemo(() => {
+    if (!allReviews) return null;
+    return allReviews.filter(review => review.status === 'approved');
+  }, [allReviews]);
+  
+  if (isLoading && !approvedReviews) {
       return <ReviewSkeleton />;
   }
   
@@ -90,7 +96,7 @@ export function PublishedReviews() {
     )
   }
 
-  if (!reviews || reviews.length === 0) {
+  if (!approvedReviews || approvedReviews.length === 0) {
       return <p className="text-center text-muted-foreground">Aucun avis pour le moment. Soyez le premier !</p>
   }
 
@@ -98,12 +104,12 @@ export function PublishedReviews() {
     <Carousel
       opts={{
         align: 'start',
-        loop: true,
+        loop: approvedReviews.length > 1,
       }}
       className="w-full max-w-sm sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto"
     >
       <CarouselContent>
-        {reviews.map((review) => (
+        {approvedReviews.map((review) => (
           <CarouselItem key={review.id} className="md:basis-1/2 lg:basis-1/3">
             <div className="p-1 h-full">
               <Card className="flex flex-col h-full justify-between shadow-md hover:shadow-primary/10 transition-shadow">
