@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, DependencyList } from 'react';
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, type Firestore, doc, onSnapshot } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -178,30 +178,30 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [firebaseServices.auth]);
 
   useEffect(() => {
-    const fetchProfile = async (user: User) => {
-      // Set loading state for the profile fetch
-      setUserProfileState({ userProfile: null, isProfileLoading: true });
-      try {
-        const userDocRef = doc(firebaseServices.firestore, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
+    if (!userAuthState.user || !firebaseServices.firestore) {
+      setUserProfileState({ userProfile: null, isProfileLoading: false });
+      return;
+    }
+
+    setUserProfileState(prevState => ({ ...prevState, isProfileLoading: true }));
+
+    const userDocRef = doc(firebaseServices.firestore, 'users', userAuthState.user.uid);
+
+    const unsubscribe = onSnapshot(userDocRef, 
+      (docSnap) => {
         if (docSnap.exists()) {
           setUserProfileState({ userProfile: docSnap.data() as UserProfile, isProfileLoading: false });
         } else {
-          // Fallback for a user that exists in Auth but not Firestore
           setUserProfileState({ userProfile: { role: 'client' }, isProfileLoading: false });
         }
-      } catch (error) {
-        console.error("FirebaseProvider: Error fetching user profile:", error);
+      }, 
+      (error) => {
+        console.error("FirebaseProvider: Error listening to user profile:", error);
         setUserProfileState({ userProfile: null, isProfileLoading: false });
       }
-    };
+    );
 
-    if (userAuthState.user) {
-      fetchProfile(userAuthState.user);
-    } else {
-      // No user, so no profile and not loading.
-      setUserProfileState({ userProfile: null, isProfileLoading: false });
-    }
+    return () => unsubscribe();
   }, [userAuthState.user, firebaseServices.firestore]);
 
 
