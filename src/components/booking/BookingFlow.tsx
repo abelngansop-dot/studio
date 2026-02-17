@@ -66,7 +66,7 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
 
   const prevStep = () => {
     if (step > 1) {
-      setStep((s) => s - 1);
+      setStep((s) => s + 1);
     }
   };
 
