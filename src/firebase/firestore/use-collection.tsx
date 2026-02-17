@@ -59,12 +59,10 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
-    let isUnsubscribed = false; // Flag to track if listener is dead
 
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        if (isUnsubscribed) return;
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
           results.push({ ...(doc.data() as T), id: doc.id });
@@ -74,8 +72,6 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        isUnsubscribed = true; // Set flag: listener is torn down by SDK
-        
         // Use the global error emitter for permission errors
         const permissionError = new FirestorePermissionError({
           path: (memoizedTargetRefOrQuery as any).path || '[Collection Group Query]',
@@ -91,15 +87,12 @@ export function useCollection<T = any>(
 
     // Return cleanup function
     return () => {
-      // Only call unsubscribe if the listener has not been torn down by an error.
-      // This try/catch prevents a race condition where the SDK is already tearing down
-      // the listener due to an error, which would cause an internal assertion failure.
-      if (!isUnsubscribed) {
-        try {
-          unsubscribe();
-        } catch (e) {
-          // We can safely ignore this error.
-        }
+      // A simple try/catch is the safest way to prevent the app from crashing
+      // in a race condition scenario where the listener might already be torn down.
+      try {
+        unsubscribe();
+      } catch (e) {
+        // This is likely safe to ignore.
       }
     };
   }, [memoizedTargetRefOrQuery]);

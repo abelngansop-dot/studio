@@ -57,12 +57,10 @@ export function useDoc<T = any>(
 
     setIsLoading(true);
     setError(null);
-    let isUnsubscribed = false; // Flag to track if listener is dead
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (isUnsubscribed) return;
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
@@ -73,8 +71,6 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        isUnsubscribed = true; // Set flag: listener is torn down by SDK
-
         // Use the global error emitter for permission errors
         const permissionError = new FirestorePermissionError({
           path: memoizedDocRef.path,
@@ -90,15 +86,10 @@ export function useDoc<T = any>(
 
     // Return cleanup function
     return () => {
-      // Only call unsubscribe if the listener has not been torn down by an error.
-      // This try/catch prevents a race condition where the SDK is already tearing down
-      // the listener due to an error, which would cause an internal assertion failure.
-      if (!isUnsubscribed) {
-        try {
-            unsubscribe();
-        } catch (e) {
-            // We can safely ignore this error.
-        }
+      try {
+        unsubscribe();
+      } catch (e) {
+        // This is likely safe to ignore.
       }
     };
   }, [memoizedDocRef]);
