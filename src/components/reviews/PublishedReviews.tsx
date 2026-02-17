@@ -62,6 +62,26 @@ const ReviewSkeleton = () => {
     )
 }
 
+/**
+ * Anonymizes a display name for public view.
+ * e.g., "John Doe" becomes "John D."
+ * e.g., "Jean-Claude Van Damme" becomes "Jean-Claude V."
+ * @param name The full display name.
+ * @returns A privacy-enhanced version of the name.
+ */
+const formatDisplayNameForPrivacy = (name: string | null | undefined): string => {
+    if (!name) return 'Anonyme';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length > 1) {
+        // Takes all but the last name part and joins them, then adds the initial of the last part.
+        const firstName = parts.slice(0, -1).join(' ');
+        const lastNameInitial = parts[parts.length - 1].charAt(0);
+        return `${firstName} ${lastNameInitial}.`;
+    }
+    return name; // Return the name as-is if it's a single word.
+};
+
+
 export function PublishedReviews() {
   const firestore = useFirestore();
 
@@ -109,26 +129,29 @@ export function PublishedReviews() {
       className="w-full max-w-sm sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto"
     >
       <CarouselContent>
-        {approvedReviews.map((review) => (
-          <CarouselItem key={review.id} className="md:basis-1/2 lg:basis-1/3">
-            <div className="p-1 h-full">
-              <Card className="flex flex-col h-full justify-between shadow-md hover:shadow-primary/10 transition-shadow">
-                <CardContent className="p-6 flex-grow">
-                  <StarRating rating={review.rating} className="mb-4" />
-                  <p className="text-foreground/80 italic">"{review.comment}"</p>
-                </CardContent>
-                <CardFooter className="bg-secondary/30 p-4 flex items-center gap-4">
-                    <Avatar>
-                      <AvatarFallback>{review.displayName?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                  <div>
-                    <p className="font-semibold">{review.displayName}</p>
-                  </div>
-                </CardFooter>
-              </Card>
-            </div>
-          </CarouselItem>
-        ))}
+        {approvedReviews.map((review) => {
+          const publicName = formatDisplayNameForPrivacy(review.displayName);
+          return (
+            <CarouselItem key={review.id} className="md:basis-1/2 lg:basis-1/3">
+              <div className="p-1 h-full">
+                <Card className="flex flex-col h-full justify-between shadow-md hover:shadow-primary/10 transition-shadow">
+                  <CardContent className="p-6 flex-grow">
+                    <StarRating rating={review.rating} className="mb-4" />
+                    <p className="text-foreground/80 italic">"{review.comment}"</p>
+                  </CardContent>
+                  <CardFooter className="bg-secondary/30 p-4 flex items-center gap-4">
+                      <Avatar>
+                        <AvatarFallback>{publicName?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    <div>
+                      <p className="font-semibold">{publicName}</p>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </div>
+            </CarouselItem>
+          )
+        })}
       </CarouselContent>
       <CarouselPrevious className="hidden sm:flex" />
       <CarouselNext className="hidden sm:flex" />
