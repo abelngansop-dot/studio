@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Store } from 'lucide-react';
+import { ArrowRight, Store, Star } from 'lucide-react';
 import type { Shop } from '@/app/admin/(admin_panel)/shops/columns';
+import { cn } from '@/lib/utils';
 
 function ShopCard({ shop }: { shop: Shop }) {
     const getStatusVariant = (status: Shop['status']): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -25,7 +26,7 @@ function ShopCard({ shop }: { shop: Shop }) {
         <Card className="flex flex-col overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1">
             <div className="relative h-48 w-full">
                 <Image
-                    src={`https://picsum.photos/seed/${shop.id}/600/400`}
+                    src={shop.imageUrl || `https://picsum.photos/seed/${shop.id}/600/400`}
                     alt={shop.name}
                     fill
                     className="object-cover"
@@ -33,7 +34,14 @@ function ShopCard({ shop }: { shop: Shop }) {
                 />
             </div>
             <CardHeader>
-                <CardTitle className="font-headline">{shop.name}</CardTitle>
+                <div className="flex justify-between items-start">
+                    <CardTitle className="font-headline">{shop.name}</CardTitle>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Star className="w-4 h-4 fill-primary text-primary" />
+                        <span className="font-semibold">{(shop.averageRating || 0).toFixed(1)}</span>
+                        <span className="text-xs">({shop.reviewCount || 0})</span>
+                    </div>
+                </div>
                 <div className="flex gap-2 pt-1">
                     <Badge variant={getStatusVariant(shop.status)} className="capitalize">{shop.status.replace('_', ' ')}</Badge>
                     <Badge variant="outline" className="capitalize">{shop.subscriptionPlan}</Badge>
@@ -84,7 +92,12 @@ function ShopListSkeleton() {
 export function ShopListSection() {
     const firestore = useFirestore();
     const shopsQuery = useMemoFirebase(
-        () => firestore ? query(collection(firestore, 'shops'), where('status', '==', 'active'), orderBy('name', 'asc')) : null,
+        () => firestore ? query(
+            collection(firestore, 'shops'), 
+            where('status', '==', 'active'), 
+            orderBy('averageRating', 'desc'), 
+            orderBy('name', 'asc')
+        ) : null,
         [firestore]
     );
     const { data: shops, isLoading } = useCollection<Shop>(shopsQuery);

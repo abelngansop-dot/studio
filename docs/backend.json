@@ -18,6 +18,11 @@
           "type": "string",
           "description": "The UID of the user who owns the shop."
         },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the shop's logo or profile image."
+        },
         "services": {
           "type": "array",
           "description": "The types of services offered by the shop.",
@@ -44,6 +49,14 @@
           "type": "string",
           "description": "The status of the shop.",
           "enum": ["active", "suspended", "pending_setup"]
+        },
+        "averageRating": {
+          "type": "number",
+          "description": "The average rating of the shop based on customer reviews."
+        },
+        "reviewCount": {
+          "type": "number",
+          "description": "The total number of reviews for the shop."
         },
         "createdAt": {
           "type": "string",

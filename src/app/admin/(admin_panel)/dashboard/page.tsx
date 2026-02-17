@@ -119,8 +119,8 @@ export default function Dashboard() {
         
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center">
             <div className="grid gap-2">
               <CardTitle>Réservations Récentes</CardTitle>
@@ -172,7 +172,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-1">
             <CardHeader>
                 <CardTitle>Activité</CardTitle>
                 <CardDescription>Un aperçu rapide de vos données.</CardDescription>

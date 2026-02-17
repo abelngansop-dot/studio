@@ -3,12 +3,13 @@
 import { useShop } from '@/hooks/use-shop-admin';
 import { usePathname } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarSeparator } from '@/components/ui/sidebar';
-import { Home, Package, ShoppingCart, Image as ImageIcon, Settings, LogOut, Loader2, Undo2 } from 'lucide-react';
+import { Home, Package, ShoppingCart, Image as ImageIcon, Settings, LogOut, Loader2, Undo2, Store } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/firebase/provider';
 import { signOut } from 'firebase/auth';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export default function ShopAdminDashboardLayout({
   children,
@@ -44,8 +45,15 @@ export default function ShopAdminDashboardLayout({
           <SidebarContent>
             <SidebarHeader className="flex flex-col items-start p-4">
                 <div className='w-full flex justify-between items-center'>
-                    <Link href="/dashboard" className="text-xl font-bold text-primary font-headline">
-                        {shop.name}
+                    <Link href="/dashboard" className="flex items-center gap-3 text-xl font-bold text-primary font-headline">
+                      {shop.imageUrl ? (
+                          <div className="relative w-8 h-8 rounded-md overflow-hidden shrink-0">
+                              <Image src={shop.imageUrl} alt={shop.name} fill className="object-cover" />
+                          </div>
+                      ) : (
+                          <Store className="h-7 w-7 shrink-0" />
+                      )}
+                      <span className="truncate">{shop.name}</span>
                     </Link>
                     <SidebarTrigger className="md:hidden" />
                 </div>

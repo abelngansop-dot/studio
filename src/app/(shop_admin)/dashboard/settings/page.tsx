@@ -7,30 +7,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useShop } from "@/hooks/use-shop-admin";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Trash2, Image as ImageIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useFirestore } from "@/firebase/provider";
+import { doc } from 'firebase/firestore';
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import Image from "next/image";
 
 export default function ShopSettingsPage() {
     const { shop } = useShop();
     const { toast } = useToast();
+    const firestore = useFirestore();
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // In a real implementation, you would use react-hook-form here
-    // For now, we'll use simple state
     const [shopName, setShopName] = useState(shop?.name || '');
+    const [imageUrl, setImageUrl] = useState(shop?.imageUrl || '');
+
+    useEffect(() => {
+        if(shop) {
+            setShopName(shop.name);
+            setImageUrl(shop.imageUrl || '');
+        }
+    }, [shop])
 
     const handleSaveChanges = () => {
+        if (!firestore || !shop) return;
+
         setIsSubmitting(true);
-        // Here you would call a function to update the shop in Firestore
-        // For example: updateDocumentNonBlocking(shopRef, { name: shopName });
+        const shopRef = doc(firestore, 'shops', shop.id);
+
+        updateDocumentNonBlocking(shopRef, { 
+            name: shopName,
+            imageUrl: imageUrl 
+        });
         
-        setTimeout(() => {
-            toast({
-                title: "Paramètres sauvegardés !",
-                description: "Les informations de votre boutique ont été mises à jour.",
-            });
-            setIsSubmitting(false);
-        }, 1500);
+        // No need for a timeout, the `useShop` hook will provide the updated data
+        toast({
+            title: "Paramètres sauvegardés !",
+            description: "Les informations de votre boutique ont été mises à jour.",
+        });
+        setIsSubmitting(false);
     }
 
     if (!shop) {
@@ -44,12 +61,13 @@ export default function ShopSettingsPage() {
                 <p className="text-muted-foreground">Gérez les informations et les configurations de votre boutique.</p>
             </div>
             <Tabs defaultValue="general">
-                <TabsList>
+                <TabsList className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 w-full sm:w-auto max-w-full">
                     <TabsTrigger value="general">Général</TabsTrigger>
+                    <TabsTrigger value="visuals">Apparence</TabsTrigger>
                     <TabsTrigger value="subscription" disabled>Abonnement</TabsTrigger>
-                    <TabsTrigger value="users" disabled>Utilisateurs</TabsTrigger>
                     <TabsTrigger value="danger_zone">Zone de Danger</TabsTrigger>
                 </TabsList>
+
                 <TabsContent value="general">
                     <Card>
                         <CardHeader>
@@ -63,14 +81,32 @@ export default function ShopSettingsPage() {
                             </div>
                             {/* Add other fields like phone, address etc. here */}
                         </CardContent>
-                        <CardContent>
-                             <Button onClick={handleSaveChanges} disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Enregistrer les modifications
-                            </Button>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="visuals">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Logo / Image de la boutique</CardTitle>
+                            <CardDescription>Cette image sera affichée sur la page de votre boutique et dans l'en-tête de votre tableau de bord.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="shop-image-url">URL de l'image</Label>
+                                <Input id="shop-image-url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/logo.png" />
+                            </div>
+                            <Label>Aperçu</Label>
+                            <div className="w-32 h-32 relative rounded-md overflow-hidden border-2 border-dashed flex items-center justify-center bg-muted">
+                                {imageUrl ? (
+                                    <Image src={imageUrl} alt="Aperçu du logo" fill className="object-cover" />
+                                ) : (
+                                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
+                
                 <TabsContent value="danger_zone">
                      <Card className="border-destructive">
                         <CardHeader>
@@ -94,6 +130,12 @@ export default function ShopSettingsPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+             <div className="mt-6">
+                 <Button onClick={handleSaveChanges} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enregistrer les modifications
+                </Button>
+            </div>
         </div>
     )
 }

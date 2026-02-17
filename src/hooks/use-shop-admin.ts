@@ -18,6 +18,9 @@ type Shop = {
   subscriptionPlan: 'basic' | 'premium' | 'pro' | 'none';
   status: 'active' | 'suspended' | 'pending_setup';
   createdAt: any;
+  imageUrl?: string;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 interface ShopContextType {

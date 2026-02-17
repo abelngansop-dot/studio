@@ -171,12 +171,17 @@ export default function ShopPage() {
                 </section>
                 <div className="container -mt-24 md:-mt-20 z-10 relative pb-16">
                      <Card className="p-6 md:p-8 backdrop-blur-sm bg-background/80 shadow-2xl">
-                        <div className="flex flex-col md:flex-row gap-4 justify-between">
-                            <div>
+                        <div className="flex flex-col md:flex-row gap-6 items-center">
+                            {shop.imageUrl && (
+                                <div className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-lg overflow-hidden border-4 border-background shadow-lg shrink-0">
+                                    <Image src={shop.imageUrl} alt={shop.name} fill className="object-cover" />
+                                </div>
+                            )}
+                            <div className="flex-grow text-center md:text-left">
                                 <h1 className="text-4xl lg:text-5xl font-bold font-headline text-primary">{shop.name}</h1>
                                 <p className="text-muted-foreground mt-2">Votre partenaire pour un événement réussi.</p>
                             </div>
-                            <div className="flex items-start gap-2">
+                            <div className="flex items-start gap-2 self-center md:self-start">
                                 <Badge variant="default" className="capitalize text-base">{shop.status}</Badge>
                                 <Badge variant="secondary" className="capitalize text-base">{shop.subscriptionPlan}</Badge>
                             </div>

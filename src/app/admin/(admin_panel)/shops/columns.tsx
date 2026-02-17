@@ -21,6 +21,9 @@ export type Shop = {
   subscriptionPlan: 'basic' | 'premium' | 'pro' | 'none';
   status: 'active' | 'suspended' | 'pending_setup';
   createdAt: { seconds: number; nanoseconds: number };
+  imageUrl?: string;
+  averageRating?: number;
+  reviewCount?: number;
 };
 
 export const columns = (

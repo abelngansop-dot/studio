@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase/provider';
+import { useUser, useFirestore, useMemoFirebase, useUserProfile } from '@/firebase/provider';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc, collection, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +34,7 @@ type UserProfileData = {
   phone?: string | null;
   country?: string;
   city?: string;
+  role?: string;
 };
 
 type Service = {
@@ -57,16 +58,27 @@ const defaultServices: Service[] = [
 export default function CreateShopPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
+    const { userProfile, isProfileLoading } = useUserProfile();
     const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (!isProfileLoading && userProfile?.role === 'shop_admin') {
+            toast({
+                title: 'Vous avez déjà une boutique',
+                description: 'Redirection vers votre tableau de bord.',
+            });
+            router.replace('/dashboard');
+        }
+    }, [userProfile, isProfileLoading, router, toast]);
 
     const userDocRef = useMemoFirebase(() => {
         if (!firestore || !user) return null;
         return doc(firestore, 'users', user.uid);
     }, [firestore, user]);
 
-    const { data: userProfile } = useDoc<UserProfileData>(userDocRef);
+    const { data: userDocData } = useDoc<UserProfileData>(userDocRef);
 
     const form = useForm<z.infer<typeof shopSchema>>({
         resolver: zodResolver(shopSchema),
@@ -85,10 +97,10 @@ export default function CreateShopPage() {
     const selectedCountry = form.watch('country');
 
     useEffect(() => {
-        if (userProfile) {
-            const initialCountry = userProfile.country || '';
+        if (userDocData) {
+            const initialCountry = userDocData.country || '';
             const countryData = allCountries.find(c => c.name === initialCountry);
-            let initialPhone = userProfile.phone || '';
+            let initialPhone = userDocData.phone || '';
 
             if (countryData && initialPhone.startsWith(countryData.phoneCode)) {
                 initialPhone = initialPhone.substring(countryData.phoneCode.length).trim();
@@ -98,11 +110,11 @@ export default function CreateShopPage() {
                 name: '',
                 services: [],
                 country: initialCountry,
-                city: userProfile.city || '',
+                city: userDocData.city || '',
                 phone: initialPhone,
             });
         }
-    }, [userProfile, form]);
+    }, [userDocData, form]);
 
      useEffect(() => {
         if (selectedCountry) {
@@ -155,7 +167,10 @@ export default function CreateShopPage() {
                 phone: finalPhoneNumber,
                 status: 'pending_setup',
                 subscriptionPlan: 'none',
-                createdAt: serverTimestamp()
+                createdAt: serverTimestamp(),
+                imageUrl: '',
+                averageRating: 0,
+                reviewCount: 0,
             };
             batch.set(newShopRef, newShopData);
 
@@ -184,6 +199,15 @@ export default function CreateShopPage() {
             setIsSubmitting(false);
         }
     };
+    
+    if (isProfileLoading || (!isProfileLoading && userProfile?.role === 'shop_admin')) {
+        return (
+             <div className="flex h-screen w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             </div>
+        )
+    }
+
 
     return (
         <div className="container mx-auto py-12">
