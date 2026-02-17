@@ -7,47 +7,82 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useShop } from "@/hooks/use-shop-admin";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Image as ImageIcon } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useFirestore } from "@/firebase/provider";
+import { Loader2, Trash2, Image as ImageIcon, Upload } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useFirebase } from "@/firebase/provider";
 import { doc } from 'firebase/firestore';
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 
 export default function ShopSettingsPage() {
     const { shop } = useShop();
     const { toast } = useToast();
-    const firestore = useFirestore();
+    const { firestore, firebaseApp } = useFirebase();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const [shopName, setShopName] = useState(shop?.name || '');
-    const [imageUrl, setImageUrl] = useState(shop?.imageUrl || '');
+    
+    // State for image upload
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(shop?.imageUrl || null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if(shop) {
             setShopName(shop.name);
-            setImageUrl(shop.imageUrl || '');
+            setPreviewUrl(shop.imageUrl || null);
+            setSelectedFile(null); // Reset file input on shop change
         }
     }, [shop])
 
-    const handleSaveChanges = () => {
-        if (!firestore || !shop) return;
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSaveChanges = async () => {
+        if (!firestore || !shop || !firebaseApp) return;
 
         setIsSubmitting(true);
-        const shopRef = doc(firestore, 'shops', shop.id);
-
-        updateDocumentNonBlocking(shopRef, { 
-            name: shopName,
-            imageUrl: imageUrl 
-        });
         
-        // No need for a timeout, the `useShop` hook will provide the updated data
-        toast({
-            title: "Paramètres sauvegardés !",
-            description: "Les informations de votre boutique ont été mises à jour.",
-        });
-        setIsSubmitting(false);
+        let finalImageUrl = shop.imageUrl || '';
+
+        try {
+            if (selectedFile) {
+                const storage = getStorage(firebaseApp);
+                const imagePath = `shops/${shop.id}/logo/${Date.now()}_${selectedFile.name}`;
+                const imageReference = storageRef(storage, imagePath);
+                await uploadBytes(imageReference, selectedFile);
+                finalImageUrl = await getDownloadURL(imageReference);
+            }
+
+            const shopRef = doc(firestore, 'shops', shop.id);
+            updateDocumentNonBlocking(shopRef, { 
+                name: shopName,
+                imageUrl: finalImageUrl 
+            });
+            
+            toast({
+                title: "Paramètres sauvegardés !",
+                description: "Les informations de votre boutique ont été mises à jour.",
+            });
+            setSelectedFile(null);
+        } catch (error) {
+            console.error("Error saving settings: ", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur",
+                description: "La sauvegarde a échoué. Veuillez réessayer.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     if (!shop) {
@@ -91,18 +126,27 @@ export default function ShopSettingsPage() {
                             <CardDescription>Cette image sera affichée sur la page de votre boutique et dans l'en-tête de votre tableau de bord.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                             <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/*"
+                            />
                             <div className="space-y-2">
-                                <Label htmlFor="shop-image-url">URL de l'image</Label>
-                                <Input id="shop-image-url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/logo.png" />
+                                <Label>Aperçu</Label>
+                                <div className="w-32 h-32 relative rounded-md overflow-hidden border-2 border-dashed flex items-center justify-center bg-muted">
+                                    {previewUrl ? (
+                                        <Image src={previewUrl} alt="Aperçu du logo" fill className="object-cover" />
+                                    ) : (
+                                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                                    )}
+                                </div>
                             </div>
-                            <Label>Aperçu</Label>
-                            <div className="w-32 h-32 relative rounded-md overflow-hidden border-2 border-dashed flex items-center justify-center bg-muted">
-                                {imageUrl ? (
-                                    <Image src={imageUrl} alt="Aperçu du logo" fill className="object-cover" />
-                                ) : (
-                                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                                )}
-                            </div>
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                {previewUrl ? 'Changer l\'image' : 'Choisir une image'}
+                            </Button>
                         </CardContent>
                     </Card>
                 </TabsContent>

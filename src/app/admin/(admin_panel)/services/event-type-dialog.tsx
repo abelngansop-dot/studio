@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   Dialog,
@@ -13,15 +13,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useFirestore } from '@/firebase/provider';
+import { useFirebase } from '@/firebase/provider';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { EventType } from './event-types-columns';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, ImageIcon } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type EventTypeDialogProps = {
   isOpen: boolean;
@@ -34,48 +35,70 @@ const iconNames = Object.keys(icons) as (keyof typeof icons)[];
 export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialogProps) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState<keyof typeof icons>('Sparkles');
-  const [imageUrl, setImageUrl] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const firestore = useFirestore();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { firestore, firebaseApp } = useFirebase();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (eventType) {
-      setName(eventType.name);
-      setIcon(eventType.icon);
-      setImageUrl(eventType.imageUrl || '');
-      setVideoUrl(eventType.videoUrl || '');
-    } else {
-      // Reset form
-      setName('');
-      setIcon('Sparkles');
-      setImageUrl('');
-      setVideoUrl('');
+     if (isOpen) {
+        if (eventType) {
+          setName(eventType.name);
+          setIcon(eventType.icon);
+          setPreviewUrl(eventType.imageUrl || null);
+          setSelectedFile(null);
+        } else {
+          // Reset form
+          setName('');
+          setIcon('Sparkles');
+          setPreviewUrl(null);
+          setSelectedFile(null);
+        }
     }
   }, [eventType, isOpen]);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!firestore) return;
+    if (!firestore || !firebaseApp) return;
+    if (!eventType) {
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Aucun type d\'événement sélectionné.' });
+        return;
+    }
+    if (!name) {
+        toast({ variant: 'destructive', title: 'Champs requis', description: "Le nom est obligatoire." });
+        return;
+    }
+
     setIsSaving(true);
 
-    const eventTypeData = { name, icon, imageUrl, videoUrl };
-
     try {
-      if (eventType) {
-        // Update existing
-        const eventTypeRef = doc(firestore, 'shops', eventType.shopId, 'eventTypes', eventType.id);
-        setDocumentNonBlocking(eventTypeRef, eventTypeData, { merge: true });
-        toast({ title: 'Type d\'événement mis à jour !' });
-      } else {
-        // This action is disabled for global admins.
-         toast({
-          variant: 'destructive',
-          title: 'Action non supportée',
-          description: "La création de types d'événement n'est possible que depuis le tableau de bord d'une boutique.",
-        });
+      let finalImageUrl = eventType.imageUrl || '';
+      if (selectedFile) {
+        const storage = getStorage(firebaseApp);
+        const imagePath = `shops/${eventType.shopId}/eventTypes/${Date.now()}_${selectedFile.name}`;
+        const imageReference = storageRef(storage, imagePath);
+        await uploadBytes(imageReference, selectedFile);
+        finalImageUrl = await getDownloadURL(imageReference);
       }
+
+      const eventTypeData = { name, icon, imageUrl: finalImageUrl };
+
+      // Update existing
+      const eventTypeRef = doc(firestore, 'shops', eventType.shopId, 'eventTypes', eventType.id);
+      setDocumentNonBlocking(eventTypeRef, eventTypeData, { merge: true });
+      toast({ title: 'Type d\'événement mis à jour !' });
+
       setIsOpen(false);
     } catch (error) {
       toast({
@@ -125,25 +148,34 @@ export function EventTypeDialog({ isOpen, setIsOpen, eventType }: EventTypeDialo
                 </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">URL de l'image</Label>
-            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/image.png" />
-             {imageUrl && (
-                <div className="mt-2 rounded-md border p-2 bg-muted/50">
-                    <div className="relative aspect-video">
-                         <Image 
-                            src={imageUrl} 
-                            alt="Aperçu" 
-                            fill
-                            className="object-contain rounded"
-                        />
+           <div className="space-y-2">
+            <Label>Image (optionnel)</Label>
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+            />
+             <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                {previewUrl ? (
+                    <Image 
+                        src={previewUrl} 
+                        alt="Aperçu" 
+                        fill
+                        className="object-contain rounded"
+                    />
+                ) : (
+                   <div className="text-center text-muted-foreground p-4">
+                        <ImageIcon className="h-8 w-8 mx-auto" />
+                        <p className="text-xs mt-2">Aucune image</p>
                     </div>
-                </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="videoUrl">URL de la vidéo</Label>
-            <Input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://exemple.com/video.mp4" />
+                )}
+            </div>
+             <Button type="button" variant="outline" className="w-full mt-2" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
+                <Upload className="mr-2 h-4 w-4" />
+                {previewUrl ? 'Changer l\'image' : 'Choisir une image'}
+            </Button>
           </div>
         </div>
         <DialogFooter>

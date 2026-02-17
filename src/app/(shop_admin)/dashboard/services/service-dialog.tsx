@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   Dialog,
@@ -14,16 +14,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useFirestore } from '@/firebase/provider';
+import { useFirebase } from '@/firebase/provider';
 import { doc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Service } from './columns';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, ImageIcon } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/Icon';
 import { useShop } from '@/hooks/use-shop-admin';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type ServiceDialogProps = {
   isOpen: boolean;
@@ -37,52 +38,73 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState<keyof typeof icons>('Package');
-  const [imageUrl, setImageUrl] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const firestore = useFirestore();
-  const { shop } = useShop(); // Get the current shop
+  const { firestore, firebaseApp } = useFirebase();
+  const { shop } = useShop();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen) { // Reset/populate form when dialog opens
+    if (isOpen) {
         if (service) {
             setName(service.name);
             setDescription(service.description);
             setIcon(service.icon);
-            setImageUrl(service.imageUrl || '');
-            setVideoUrl(service.videoUrl || '');
+            setPreviewUrl(service.imageUrl || null);
+            setSelectedFile(null);
         } else {
             // Reset form for new service
             setName('');
             setDescription('');
             setIcon('Package');
-            setImageUrl('');
-            setVideoUrl('');
+            setPreviewUrl(null);
+            setSelectedFile(null);
         }
     }
   }, [service, isOpen]);
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async () => {
-    if (!firestore || !shop) return;
+    if (!firestore || !shop || !firebaseApp) return;
     if (!name || !description) {
         toast({ variant: 'destructive', title: 'Champs requis', description: "Le nom et la description sont obligatoires." });
         return;
     }
     setIsSaving(true);
 
-    const serviceData = { 
-        shopId: shop.id, // always associate with current shop
-        name, 
-        description, 
-        icon, 
-        rating: 0, // default rating
-        imageUrl, 
-        videoUrl 
-    };
-
     try {
+      let finalImageUrl = service?.imageUrl || '';
+
+      if (selectedFile) {
+        const storage = getStorage(firebaseApp);
+        const imagePath = `shops/${shop.id}/services/${Date.now()}_${selectedFile.name}`;
+        const imageReference = storageRef(storage, imagePath);
+        await uploadBytes(imageReference, selectedFile);
+        finalImageUrl = await getDownloadURL(imageReference);
+      }
+
+      const serviceData = { 
+          shopId: shop.id,
+          name, 
+          description, 
+          icon, 
+          rating: service?.rating || 0,
+          imageUrl: finalImageUrl, 
+          videoUrl: '' // Video not supported in this version
+      };
+
       if (service) {
         // Update existing service
         const serviceRef = doc(firestore, 'shops', shop.id, 'services', service.id);
@@ -96,6 +118,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
       }
       setIsOpen(false);
     } catch (error) {
+      console.error("Error saving service:", error);
       toast({
         variant: 'destructive',
         title: 'Erreur',
@@ -148,24 +171,33 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">URL de l'image (optionnel)</Label>
-            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/image.png" />
-             {imageUrl && (
-                <div className="mt-2 rounded-md border p-2 bg-muted/50">
-                    <div className="relative aspect-video">
-                         <Image 
-                            src={imageUrl} 
-                            alt="Aperçu" 
-                            fill
-                            className="object-contain rounded"
-                        />
+            <Label>Image du service (optionnel)</Label>
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+            />
+             <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                {previewUrl ? (
+                    <Image 
+                        src={previewUrl} 
+                        alt="Aperçu" 
+                        fill
+                        className="object-contain rounded"
+                    />
+                ) : (
+                   <div className="text-center text-muted-foreground p-4">
+                        <ImageIcon className="h-8 w-8 mx-auto" />
+                        <p className="text-xs mt-2">Aucune image</p>
                     </div>
-                </div>
-            )}
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="videoUrl">URL de la vidéo (optionnel)</Label>
-            <Input id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://exemple.com/video.mp4" />
+                )}
+            </div>
+             <Button type="button" variant="outline" className="w-full mt-2" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
+                <Upload className="mr-2 h-4 w-4" />
+                {previewUrl ? 'Changer l\'image' : 'Choisir une image'}
+            </Button>
           </div>
         </div>
         <DialogFooter>

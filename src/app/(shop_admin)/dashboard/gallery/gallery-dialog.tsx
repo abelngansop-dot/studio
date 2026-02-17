@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   Dialog,
@@ -13,13 +13,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useFirestore } from '@/firebase/provider';
+import { useFirebase } from '@/firebase/provider';
 import { doc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 import { useShop } from '@/hooks/use-shop-admin';
 import type { GalleryImage } from './page';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type GalleryDialogProps = {
   isOpen: boolean;
@@ -28,47 +29,74 @@ type GalleryDialogProps = {
 };
 
 export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) {
-  const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [imageHint, setImageHint] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const firestore = useFirestore();
+  // New state for file upload
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { firestore, firebaseApp } = useFirebase();
   const { shop } = useShop();
   const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
         if (image) {
-            setImageUrl(image.imageUrl);
+            setPreviewUrl(image.imageUrl); // set preview
             setDescription(image.description);
             setImageHint(image.imageHint || '');
         } else {
             // Reset form for new image
-            setImageUrl('');
+            setPreviewUrl(null);
+            setSelectedFile(null);
             setDescription('');
             setImageHint('');
         }
     }
   }, [image, isOpen]);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!firestore || !shop) return;
-    if (!imageUrl || !description) {
+    if (!firestore || !shop || !firebaseApp) return;
+    if (!description || (!previewUrl && !selectedFile)) {
         toast({
             variant: 'destructive',
             title: 'Champs requis',
-            description: "L'URL de l'image et la description sont obligatoires."
+            description: "L'image et la description sont obligatoires."
         });
         return;
     }
     setIsSaving(true);
 
     try {
+      let finalImageUrl = image?.imageUrl || '';
+
+      if (selectedFile) {
+        const storage = getStorage(firebaseApp);
+        const imagePath = `shops/${shop.id}/gallery/${Date.now()}_${selectedFile.name}`;
+        const imageReference = storageRef(storage, imagePath);
+        await uploadBytes(imageReference, selectedFile);
+        finalImageUrl = await getDownloadURL(imageReference);
+      }
+
+      if (!finalImageUrl) {
+          throw new Error("Image URL is missing");
+      }
+
       if (image) {
         // Update existing
         const imageRef = doc(firestore, 'shops', shop.id, 'gallery', image.id);
-        const imageData = { imageUrl, description, imageHint };
+        const imageData = { imageUrl: finalImageUrl, description, imageHint };
         setDocumentNonBlocking(imageRef, imageData, { merge: true });
         toast({ title: 'Image mise à jour !' });
       } else {
@@ -76,7 +104,7 @@ export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) 
         const collectionRef = collection(firestore, 'shops', shop.id, 'gallery');
         const imageData = { 
             shopId: shop.id,
-            imageUrl, 
+            imageUrl: finalImageUrl, 
             description, 
             imageHint, 
             createdAt: serverTimestamp()
@@ -107,20 +135,34 @@ export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) 
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">URL de l'image</Label>
-            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://exemple.com/image.png" />
-            {imageUrl && (
-                <div className="mt-2 rounded-md border p-2 bg-muted/50">
-                    <div className="relative aspect-video">
-                         <Image 
-                            src={imageUrl} 
-                            alt="Aperçu" 
-                            fill
-                            className="object-contain rounded"
-                        />
+            <Label htmlFor="image-upload">Image</Label>
+             <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+            />
+            
+            <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                {previewUrl ? (
+                    <Image 
+                        src={previewUrl} 
+                        alt="Aperçu" 
+                        fill
+                        className="object-contain rounded"
+                    />
+                ) : (
+                   <div className="text-center text-muted-foreground">
+                        <ImageIcon className="h-10 w-10 mx-auto" />
+                        <p className="text-sm mt-2">Aucune image sélectionnée</p>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+             <Button type="button" variant="outline" className="w-full mt-2" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
+                <Upload className="mr-2 h-4 w-4" />
+                {previewUrl ? 'Changer l\'image' : 'Choisir une image'}
+            </Button>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
