@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Store, Info, MapPin, ListChecks, Phone } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -81,16 +81,25 @@ export default function CreateShopPage() {
     
     const [availableCities, setAvailableCities] = useState<string[]>([]);
     const [showCustomCityInput, setShowCustomCityInput] = useState(false);
+    const [phonePrefix, setPhonePrefix] = useState('');
     const selectedCountry = form.watch('country');
 
     useEffect(() => {
         if (userProfile) {
+            const initialCountry = userProfile.country || '';
+            const countryData = allCountries.find(c => c.name === initialCountry);
+            let initialPhone = userProfile.phone || '';
+
+            if (countryData && initialPhone.startsWith(countryData.phoneCode)) {
+                initialPhone = initialPhone.substring(countryData.phoneCode.length).trim();
+            }
+
             form.reset({
                 name: '',
                 services: [],
-                country: userProfile.country || '',
+                country: initialCountry,
                 city: userProfile.city || '',
-                phone: userProfile.phone || '',
+                phone: initialPhone,
             });
         }
     }, [userProfile, form]);
@@ -99,6 +108,8 @@ export default function CreateShopPage() {
         if (selectedCountry) {
             const countryData = allCountries.find(c => c.name === selectedCountry);
             if (countryData) {
+                setPhonePrefix(countryData.phoneCode);
+
                 if (countryData.code === 'CM') {
                     setAvailableCities(cameroonCities.map(c => c.name));
                 } else {
@@ -106,10 +117,14 @@ export default function CreateShopPage() {
                     setAvailableCities(capital ? [capital.name] : []);
                 }
             }
+             // Force user to re-select city when country changes
+             form.setValue('city', '');
              setShowCustomCityInput(false);
         } else {
             setAvailableCities([]);
+            setPhonePrefix('');
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCountry]);
 
     const onSubmit = async (values: z.infer<typeof shopSchema>) => {
@@ -123,6 +138,8 @@ export default function CreateShopPage() {
         }
 
         setIsSubmitting(true);
+        
+        const finalPhoneNumber = phonePrefix && values.phone ? `${phonePrefix}${values.phone.trim()}` : (values.phone || null);
 
         try {
             const batch = writeBatch(firestore);
@@ -135,7 +152,7 @@ export default function CreateShopPage() {
                 services: values.services,
                 country: values.country,
                 city: values.city,
-                phone: values.phone || null,
+                phone: finalPhoneNumber,
                 status: 'pending_setup',
                 subscriptionPlan: 'none',
                 createdAt: serverTimestamp()
@@ -279,9 +296,28 @@ export default function CreateShopPage() {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Ville</FormLabel>
-                                                        <FormControl>
-                                                             <Input placeholder="Ex: Douala" {...field} />
-                                                        </FormControl>
+                                                        {(availableCities.length > 0 && !showCustomCityInput) ? (
+                                                            <Select onValueChange={(value) => {
+                                                                if (value === '__autre__') {
+                                                                    setShowCustomCityInput(true);
+                                                                    field.onChange('');
+                                                                } else {
+                                                                    field.onChange(value);
+                                                                }
+                                                            }} value={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger><SelectValue placeholder="Choisir une ville" /></SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    {availableCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                                                    <SelectItem value="__autre__">Autre (préciser)</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        ) : (
+                                                            <FormControl>
+                                                                 <Input placeholder="Précisez votre ville" {...field} />
+                                                            </FormControl>
+                                                        )}
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -293,9 +329,21 @@ export default function CreateShopPage() {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Numéro de téléphone de la boutique</FormLabel>
-                                                     <FormControl>
-                                                        <Input type="tel" placeholder="+237 6 XX XX XX XX" {...field} />
-                                                    </FormControl>
+                                                    <div className="flex items-center">
+                                                        {phonePrefix && (
+                                                            <span className="inline-flex h-10 items-center rounded-l-md border border-r-0 border-input bg-secondary px-3 text-sm text-muted-foreground">
+                                                                {phonePrefix}
+                                                            </span>
+                                                        )}
+                                                        <FormControl>
+                                                            <Input 
+                                                                type="tel" 
+                                                                placeholder="6 XX XX XX XX" 
+                                                                {...field}
+                                                                className={cn(phonePrefix && "rounded-l-none")}
+                                                            />
+                                                        </FormControl>
+                                                    </div>
                                                     <FormDescription>Ce numéro pourra être affiché sur la page de votre boutique.</FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
