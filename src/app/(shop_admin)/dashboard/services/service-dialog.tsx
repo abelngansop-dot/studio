@@ -172,7 +172,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
       } else {
         // Create new service
         const collectionRef = collection(firestore, 'shops', shop.id, 'services');
-        await addDocumentNonBlocking(collectionRef, serviceData);
+        addDocumentNonBlocking(collectionRef, serviceData);
         toast({ title: 'Service ajouté !', description: `${name} est maintenant disponible dans votre boutique.` });
       }
       setIsOpen(false);

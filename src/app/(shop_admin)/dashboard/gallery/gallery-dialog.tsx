@@ -109,7 +109,7 @@ export function GalleryDialog({ isOpen, setIsOpen, image }: GalleryDialogProps) 
             imageHint, 
             createdAt: serverTimestamp()
         };
-        await addDocumentNonBlocking(collectionRef, imageData);
+        addDocumentNonBlocking(collectionRef, imageData);
         toast({ title: 'Image ajoutée !' });
       }
       setIsOpen(false);
