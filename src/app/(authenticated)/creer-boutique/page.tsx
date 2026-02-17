@@ -180,6 +180,13 @@ export default function CreateShopPage() {
                 shopId: newShopRef.id
             });
 
+            // Add the owner to the shop's admin subcollection so they can pass security rules
+            const adminRef = doc(firestore, 'shops', newShopRef.id, 'admins', user.uid);
+            batch.set(adminRef, {
+                userId: user.uid,
+                addedAt: serverTimestamp()
+            });
+
             await batch.commit();
             
             toast({
