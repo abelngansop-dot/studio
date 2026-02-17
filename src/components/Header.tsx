@@ -6,7 +6,7 @@ import { BookingTrigger } from './booking/BookingTrigger';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTranslation } from '@/hooks/use-translation';
 import { useUser, useUserProfile, useAuth } from '@/firebase/provider';
-import { signOut } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import { UserNav } from './UserNav';
 import {
   Sheet,
@@ -17,12 +17,11 @@ import {
   SheetTitle,
   SheetFooter
 } from '@/components/ui/sheet';
-import { Menu, Home, FileText, LogOut, LayoutGrid, Settings, Shield, User as UserIcon, LogIn } from 'lucide-react';
+import { Menu, Home, FileText, LogOut, LayoutGrid, Settings, Shield, User as UserIcon, LogIn, Store, Package, Heart, Phone } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { useState, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Store } from 'lucide-react';
 
 export function Header() {
   const { t } = useTranslation();
@@ -37,7 +36,7 @@ export function Header() {
   
   const handleLogout = async () => {
     if (auth) {
-      await (signOut as any)(auth);
+      await signOut(auth);
     }
   };
 
@@ -70,11 +69,11 @@ export function Header() {
         <div className="flex items-center gap-2">
           {/* Auth/Booking Buttons for larger screens */}
           <div className="hidden sm:flex items-center gap-2">
-            {isProfileLoading ? (
-              <div className="flex items-center gap-2 h-10">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <Skeleton className="h-10 w-24 rounded-md" />
-              </div>
+            {!hasMounted ? (
+                <div className="flex items-center gap-2 h-10">
+                    <Skeleton className="h-10 w-28 rounded-md" />
+                    <Skeleton className="h-10 w-36 rounded-full" />
+                </div>
             ) : user ? (
               <UserNav user={user} />
             ) : (
@@ -178,8 +177,24 @@ export function Header() {
                             <SheetClose asChild>
                             <Button variant="ghost" asChild className="justify-start text-base">
                                 <Link href="/#services">
-                                <Home className="mr-2" />
+                                <Package className="mr-2 h-5 w-5" />
                                 Services
+                                </Link>
+                            </Button>
+                            </SheetClose>
+                             <SheetClose asChild>
+                            <Button variant="ghost" asChild className="justify-start text-base">
+                                <Link href="/#reviews">
+                                <Heart className="mr-2 h-5 w-5" />
+                                Avis
+                                </Link>
+                            </Button>
+                            </SheetClose>
+                             <SheetClose asChild>
+                            <Button variant="ghost" asChild className="justify-start text-base">
+                                <Link href="/#contact">
+                                <Phone className="mr-2 h-5 w-5" />
+                                Contact
                                 </Link>
                             </Button>
                             </SheetClose>
