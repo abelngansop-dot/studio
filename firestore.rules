@@ -2,6 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --- RULE FOR PUBLIC COLLECTION GROUP QUERIES ---
+    // This rule specifically allows the public 'list' query for the homepage reviews carousel.
+    // The query is performed across all shops' 'reviews' sub-collections.
+    // Security for other operations (get, create, update) is handled by the more specific rules below.
+    match /{path=**}/reviews/{reviewId} {
+      allow list: if true;
+    }
+
     // --- HELPER FUNCTIONS ---
     function isSignedIn() {
       return request.auth != null;
@@ -142,7 +150,10 @@ service cloud.firestore {
         // READ/LIST: Approved reviews are public.
         // Shop admin and platform admin can see all reviews for moderation.
         allow get: if resource.data.status == 'approved' || isShopAdmin(shopId) || isAdmin();
-        allow list: if true; // Public list queries will be filtered by status on the client.
+        
+        // This list rule applies to queries on a single shop's reviews collection.
+        // The collection group query is handled by the global rule at the top of the file.
+        allow list: if true; 
 
         // CREATE: Any signed-in user can submit a 'pending' review.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'pending';
