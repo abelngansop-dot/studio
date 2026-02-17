@@ -92,9 +92,14 @@ export function useCollection<T = any>(
     // Return cleanup function
     return () => {
       // Only call unsubscribe if the listener has not been torn down by an error.
-      // This prevents the race condition that causes the internal assertion failure.
+      // This try/catch prevents a race condition where the SDK is already tearing down
+      // the listener due to an error, which would cause an internal assertion failure.
       if (!isUnsubscribed) {
-        unsubscribe();
+        try {
+          unsubscribe();
+        } catch (e) {
+          // We can safely ignore this error.
+        }
       }
     };
   }, [memoizedTargetRefOrQuery]);
