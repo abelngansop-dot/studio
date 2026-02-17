@@ -12,7 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { ArrowRight, Star, AlertCircle, Store } from 'lucide-react';
+import { ArrowRight, Star, AlertCircle, Store, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Icon from '@/components/Icon';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
@@ -193,6 +193,17 @@ export default function ShopPage() {
                             <div className="flex-grow text-center md:text-left">
                                 <h1 className="text-4xl lg:text-5xl font-bold font-headline text-primary">{shop.name}</h1>
                                 <p className="text-muted-foreground mt-2">Votre partenaire pour un événement réussi.</p>
+                                {shop.phone && (
+                                    <div className="mt-4 flex items-center justify-center md:justify-start gap-4">
+                                        <Button asChild>
+                                            <a href={`tel:${shop.phone.replace(/\s/g, '')}`}>
+                                                <Phone className="mr-2 h-4 w-4" />
+                                                Appeler
+                                            </a>
+                                        </Button>
+                                        <span className="text-muted-foreground font-semibold">{shop.phone}</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex items-start gap-2 self-center md:self-start">
                                 <Badge variant="default" className="capitalize text-base">{shop.status}</Badge>

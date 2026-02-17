@@ -22,6 +22,7 @@ export type Shop = {
   status: 'active' | 'suspended' | 'pending_setup';
   createdAt: { seconds: number; nanoseconds: number };
   imageUrl?: string;
+  phone?: string;
   averageRating?: number;
   reviewCount?: number;
 };

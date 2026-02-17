@@ -190,14 +190,14 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>{service ? 'Modifier le service' : 'Ajouter un service'}</DialogTitle>
           <DialogDescription>
             Remplissez les détails du service ci-dessous.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nom</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -299,7 +299,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
               </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="p-6 pt-4 border-t">
           <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSaving}>Annuler</Button>
           <Button onClick={handleSubmit} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

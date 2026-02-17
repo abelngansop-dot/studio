@@ -19,6 +19,7 @@ type Shop = {
   status: 'active' | 'suspended' | 'pending_setup';
   createdAt: any;
   imageUrl?: string;
+  phone?: string;
   averageRating?: number;
   reviewCount?: number;
 }
