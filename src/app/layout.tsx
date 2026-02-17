@@ -1,11 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { ToastStateProvider, Toaster } from '@/components/ui/toaster';
-import { FirebaseProvider } from '@/firebase/provider';
-import { LanguageProvider } from '@/context/language-context';
-import { HtmlLangUpdater } from '@/components/HtmlLangUpdater';
-import { SwipeNavigationHandler } from '@/components/SwipeNavigationHandler';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'Inoublevents',
@@ -28,17 +23,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased pb-16 lg:pb-0">
-        <FirebaseProvider>
-          <ToastStateProvider>
-            <FirebaseErrorListener />
-            <LanguageProvider>
-              <HtmlLangUpdater />
-              <SwipeNavigationHandler />
-              {children}
-              <Toaster />
-            </LanguageProvider>
-          </ToastStateProvider>
-        </FirebaseProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
