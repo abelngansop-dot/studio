@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BookingTrigger } from '@/components/booking/BookingTrigger';
 import { useTranslation } from '@/hooks/use-translation';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { useUser, useUserProfile } from '@/firebase/provider';
+import { useUserProfile } from '@/firebase/provider';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Store } from 'lucide-react';
@@ -22,7 +22,6 @@ type HeroSectionProps = {
 
 export function HeroSection({ heroImage }: HeroSectionProps) {
     const { t } = useTranslation();
-    const { user } = useUser();
     const { userProfile, isProfileLoading } = useUserProfile();
     const ctaButtonClass = "bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 py-6 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105";
 
@@ -40,31 +39,32 @@ export function HeroSection({ heroImage }: HeroSectionProps) {
     }
     
     const VendorCta = () => {
-        if (isProfileLoading) return <Skeleton className="h-11 w-48 rounded-full" />;
-
-        if (user && userProfile?.role === 'client') {
-            return (
-                 <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base">
-                    <Link href="/creer-boutique">
-                        <Store className="mr-2 h-5 w-5" />
-                        Proposer un service
-                    </Link>
-                </Button>
-            )
+        if (isProfileLoading) {
+            return <Skeleton className="h-12 w-48 rounded-full" />;
         }
 
-        if (user && userProfile?.role === 'shop_admin') {
+        if (userProfile?.role === 'shop_admin') {
             return (
-                 <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base">
+                 <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base py-6">
                     <Link href="/dashboard">
                         <Store className="mr-2 h-5 w-5" />
-                        Accéder à mon tableau de bord
+                        Accéder à ma boutique
                     </Link>
                 </Button>
             )
         }
         
-        return null;
+        // This button is for clients who want to become partners, and for visitors.
+        // The /creer-boutique route is protected by an authenticated layout, which will
+        // automatically redirect to /login for visitors.
+        return (
+             <Button asChild variant="outline" size="lg" className="rounded-full shadow-lg border-2 bg-background/50 hover:bg-background/80 text-base py-6">
+                <Link href="/creer-boutique">
+                    <Store className="mr-2 h-5 w-5" />
+                    Devenir Partenaire
+                </Link>
+            </Button>
+        );
     }
 
 
