@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import type { Date } from 'date-fns';
 
 import { ProgressBar } from '@/components/booking/ProgressBar';
 import { EventTypeStep } from '@/components/booking/EventTypeStep';
