@@ -101,7 +101,7 @@ service cloud.firestore {
       // SHOP ADMINS subcollection
       match /admins/{userId} {
         // Only the shop owner (via client code) or a platform admin can add/remove other admins.
-        allow read, create, delete: if isShopAdmin(shopId) || isAdmin();
+        allow read, write: if isShopAdmin(shopId) || isAdmin();
       }
       
       // SERVICES for a shop
