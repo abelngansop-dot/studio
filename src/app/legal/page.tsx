@@ -19,15 +19,15 @@ export default function LegalPage() {
                         </CardHeader>
                         <CardContent className="space-y-4 prose max-w-none">
                             <h2>1. Introduction</h2>
-                            <p>Bienvenue sur Inoublevents. En accédant ou en utilisant notre plateforme, vous acceptez de vous conformer aux présentes Conditions Générales d’Utilisation (CGU). Si vous n’acceptez pas ces conditions, veuillez ne pas utiliser l’application.</p>
+                            <p>Bienvenue sur Kabapo. En accédant ou en utilisant notre plateforme, vous acceptez de vous conformer aux présentes Conditions Générales d’Utilisation (CGU). Si vous n’acceptez pas ces conditions, veuillez ne pas utiliser l’application.</p>
 
                             <h2>2. Description du Service</h2>
-                            <p>Inoublevents est une plateforme de mise en relation (marketplace) qui permet à des utilisateurs (ci-après "Clients") de consulter et réserver des services événementiels proposés par des prestataires indépendants (ci-après "Prestataires" ou "Boutiques"). Inoublevents agit en tant qu'intermédiaire et ne fait pas partie du contrat de service entre le Client et le Prestataire.</p>
+                            <p>Kabapo est une plateforme de mise en relation (marketplace) qui permet à des utilisateurs (ci-après "Clients") de consulter et réserver des services événementiels proposés par des prestataires indépendants (ci-après "Prestataires" ou "Boutiques"). Kabapo agit en tant qu'intermédiaire et ne fait pas partie du contrat de service entre le Client et le Prestataire.</p>
 
                             <h2>3. Accès et Compte Utilisateur</h2>
                             <p>L'inscription est requise pour accéder à certaines fonctionnalités. Chaque utilisateur est responsable de la confidentialité de ses identifiants.</p>
                             <p>En créant une boutique, un utilisateur accepte de changer son rôle de "Client" à "Shop Admin" (Administrateur de Boutique) et se voit confier la gestion de sa boutique sur la plateforme.</p>
-                            <p>Les comptes administrateurs de la plateforme (`admin`, `superadmin`) sont strictement réservés aux utilisateurs autorisés par Inoublevents.</p>
+                            <p>Les comptes administrateurs de la plateforme (`admin`, `superadmin`) sont strictement réservés aux utilisateurs autorisés par Kabapo.</p>
 
                             <h2>4. Obligations des Utilisateurs (Clients)</h2>
                             <p>Le Client s'engage à fournir des informations exactes lors de la réservation et à respecter les conditions établies par le Prestataire. Toute annulation ou modification doit suivre les procédures indiquées.</p>
@@ -42,10 +42,10 @@ export default function LegalPage() {
                             </ul>
 
                             <h2>6. Propriété Intellectuelle</h2>
-                            <p>Tout le contenu de la plateforme Inoublevents (logo, design, textes) est notre propriété exclusive. Le contenu fourni par les Prestataires (photos de services, descriptions) reste leur propriété, mais ils nous accordent une licence d'utilisation non-exclusive pour l'afficher sur la plateforme.</p>
+                            <p>Tout le contenu de la plateforme Kabapo (logo, design, textes) est notre propriété exclusive. Le contenu fourni par les Prestataires (photos de services, descriptions) reste leur propriété, mais ils nous accordent une licence d'utilisation non-exclusive pour l'afficher sur la plateforme.</p>
 
                             <h2>7. Limitation de Responsabilité</h2>
-                            <p>Inoublevents, en tant qu'intermédiaire, ne pourra être tenue responsable des litiges entre un Client et un Prestataire, de la qualité des services fournis, ou de tout dommage résultant de la prestation. Notre responsabilité se limite à la fourniture et à la maintenance de la plateforme.</p>
+                            <p>Kabapo, en tant qu'intermédiaire, ne pourra être tenue responsable des litiges entre un Client et un Prestataire, de la qualité des services fournis, ou de tout dommage résultant de la prestation. Notre responsabilité se limite à la fourniture et à la maintenance de la plateforme.</p>
 
                             <h2>8. Modifications des Conditions</h2>
                             <p>Nous nous réservons le droit de modifier ces CGU à tout moment. Les utilisateurs seront informés des changements et l’utilisation continue de l’application constitue l’acceptation des nouvelles conditions.</p>
@@ -100,7 +100,7 @@ export default function LegalPage() {
 
                              <h2>7. Contact</h2>
                             <p>Pour toute question concernant la confidentialité ou les CGU :</p>
-                            <p>Email : inoublevents@gmail.com</p>
+                            <p>Email : contact@kabapo.com</p>
                             <p>Téléphone/WhatsApp : +237699264201</p>
                         </CardContent>
                     </Card>

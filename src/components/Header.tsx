@@ -50,7 +50,7 @@ export function Header() {
           className="flex items-center gap-2 text-primary transition-transform transform hover:scale-105"
         >
           <Home className="h-7 w-7" />
-          <span className="text-xl sm:text-2xl font-bold font-headline">Inoublevents</span>
+          <span className="text-xl sm:text-2xl font-bold font-headline">Kabapo</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -108,7 +108,7 @@ export function Header() {
                      <SheetClose asChild>
                         <Link href="/" className="flex items-center gap-2 text-primary">
                             <Home className="h-6 w-6" />
-                            <span className="font-bold font-headline text-lg">Inoublevents</span>
+                            <span className="font-bold font-headline text-lg">Kabapo</span>
                         </Link>
                      </SheetClose>
                   </SheetHeader>

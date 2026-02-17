@@ -153,7 +153,7 @@ export default function LoginPage() {
           createdAt: serverTimestamp()
         });
 
-        toast({ title: 'Compte créé avec succès !', description: 'Bienvenue sur Inoublevents.' });
+        toast({ title: 'Compte créé avec succès !', description: 'Bienvenue sur Kabapo.' });
         handleSuccess();
       } catch (error) {
         handleAuthError(error, 'email');
@@ -243,7 +243,7 @@ export default function LoginPage() {
                 </form>
 
                  <div className="text-center text-sm">
-                  {isLoginView ? "Pas encore de compte ?" : "Vous avez déjà un compte ?"}{' '}
+                  {isLoginView ? "Pas encore de compte ?" : "Vous avez déjà un compte ?"} {' '}
                   <Button variant="link" className="p-0 h-auto" onClick={() => setIsLoginView(!isLoginView)}>
                     {isLoginView ? "S'inscrire" : "Se connecter"}
                   </Button>

@@ -70,7 +70,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the Inoublevents application.",
+      "description": "Represents a user of the Kabapo application.",
       "properties": {
         "uid": { "type": "string", "description": "Unique identifier from Firebase Auth." },
         "email": { "type": "string", "description": "The email address of the user.", "format": "email" },

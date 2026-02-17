@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Inoublevents',
+  title: 'Kabapo',
   description: 'Organisez votre événement en toute tranquillité, choisissez, on vous rappelle.',
 };
 

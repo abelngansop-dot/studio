@@ -39,7 +39,7 @@ const SummaryItem = ({ icon, label, value }: { icon: React.ReactNode, label: str
 const generateBookingSummaryText = (bookingData: BookingData): string => {
   const summaryLines = [
     `Bonjour,`,
-    `Je souhaite confirmer ma demande de réservation pour un événement Inoublevents.`,
+    `Je souhaite confirmer ma demande de réservation pour un événement Kabapo.`,
     `Voici le proforma de ma demande :`,
     ``,
     `--- DÉTAILS DE L'ÉVÉNEMENT ---`,
@@ -125,13 +125,13 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
 
       const summaryText = generateBookingSummaryText(bookingPayload);
       const businessWhatsapp = "237699264201";
-      const businessEmail = "inoublevents@gmail.com";
+      const businessEmail = "contact@kabapo.com";
 
       if (method === 'whatsapp') {
         const whatsappUrl = `https://wa.me/${businessWhatsapp}?text=${encodeURIComponent(summaryText)}`;
         window.open(whatsappUrl, '_blank');
       } else { // method === 'email'
-        const subject = `Demande de réservation Inoublevents : ${bookingData.eventType}`;
+        const subject = `Demande de réservation Kabapo : ${bookingData.eventType}`;
         const mailtoUrl = `mailto:${businessEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summaryText)}`;
         window.location.href = mailtoUrl;
       }
@@ -238,7 +238,7 @@ export function ConfirmationStep({ bookingData, updateBookingData, onBack, onBoo
                             Je confirme mes informations
                             </label>
                             <p className="text-sm text-muted-foreground">
-                            J’accepte que mon numéro et mon e-mail soient utilisés pour être contacté par l’équipe Inoublevents.
+                            J’accepte que mon numéro et mon e-mail soient utilisés pour être contacté par l’équipe Kabapo.
                             </p>
                             {consentError && <p className="text-sm text-destructive flex items-center gap-1 pt-1"><AlertCircle className="h-4 w-4" />{consentError}</p>}
                         </div>

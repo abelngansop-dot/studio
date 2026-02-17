@@ -28,7 +28,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'service-photo',
         name: 'Service Photographie',
         role: 'Responsable',
-        email: 'photo@inoubleven.com',
+        email: 'photo@kabapo.com',
         avatarId: 'avatar-1',
         type: 'service',
         icon: 'Camera'
@@ -37,7 +37,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'service-video',
         name: 'Service Vidéo & Drone',
         role: 'Responsable',
-        email: 'video@inoubleven.com',
+        email: 'video@kabapo.com',
         avatarId: 'avatar-2',
         type: 'service',
         icon: 'Video'
@@ -46,7 +46,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'service-event',
         name: 'Service Événementiel',
         role: 'Responsable',
-        email: 'event@inoubleven.com',
+        email: 'event@kabapo.com',
         avatarId: 'avatar-3',
         type: 'service',
         icon: 'PartyPopper'
@@ -55,7 +55,7 @@ export const companyContacts: CompanyContact[] = [
         id: 'emergency',
         name: 'Contact d\'urgence & Légal',
         role: 'Support',
-        email: 'inoublevents@gmail.com',
+        email: 'contact@kabapo.com',
         avatarId: 'none',
         type: 'support'
     },
