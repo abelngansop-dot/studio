@@ -43,12 +43,10 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
   const [icon, setIcon] = useState<keyof typeof icons>('Package');
   const [isSaving, setIsSaving] = useState(false);
   
-  // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Video state
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +69,6 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
             setSelectedVideoFile(null);
             setVideoDurationError(null);
         } else {
-            // Reset form for new service
             setName('');
             setDescription('');
             setIcon('Package');
@@ -96,20 +93,14 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
     const file = event.target.files?.[0];
     if (file) {
         setVideoDurationError(null);
-        
         const video = document.createElement('video');
         video.preload = 'metadata';
-        
         video.onloadedmetadata = () => {
             window.URL.revokeObjectURL(video.src);
-            if (video.duration > 5.5) { // Add a small buffer for safety
+            if (video.duration > 5.5) {
                 setVideoDurationError('La vidéo dépasse 5 secondes. Veuillez en choisir une plus courte.');
             }
         };
-        video.onerror = () => {
-            setVideoDurationError('Fichier vidéo invalide ou impossible à lire.');
-        };
-
         video.src = URL.createObjectURL(file);
         setSelectedVideoFile(file);
         setVideoPreviewUrl(URL.createObjectURL(file));
@@ -123,14 +114,7 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
         return;
     }
     
-    if (videoDurationError) {
-        toast({
-            variant: 'destructive',
-            title: 'Erreur de validation',
-            description: videoDurationError,
-        });
-        return;
-    }
+    if (videoDurationError) return;
 
     setIsSaving(true);
 
@@ -165,24 +149,17 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
       };
 
       if (service) {
-        // Update existing service
         const serviceRef = doc(firestore, 'shops', shop.id, 'services', service.id);
         setDocumentNonBlocking(serviceRef, serviceData, { merge: true });
         toast({ title: 'Service mis à jour !' });
       } else {
-        // Create new service
         const collectionRef = collection(firestore, 'shops', shop.id, 'services');
         addDocumentNonBlocking(collectionRef, serviceData);
-        toast({ title: 'Service ajouté !', description: `${name} est maintenant disponible dans votre boutique.` });
+        toast({ title: 'Service ajouté !', description: `${name} est maintenant disponible.` });
       }
       setIsOpen(false);
     } catch (error) {
-      console.error("Error saving service:", error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder le service.',
-      });
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de sauvegarder le service.' });
     } finally {
       setIsSaving(false);
     }
@@ -190,11 +167,11 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b shrink-0">
           <DialogTitle>{service ? 'Modifier le service' : 'Ajouter un service'}</DialogTitle>
           <DialogDescription>
-            Remplissez les détails du service ci-dessous.
+            Remplissez les détails du service ci-dessous. Les modifications sont immédiates.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -204,24 +181,24 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[100px]" />
           </div>
            <div className="space-y-2">
             <Label htmlFor="icon">Icône</Label>
             <Select onValueChange={(value) => setIcon(value as keyof typeof icons)} value={icon}>
                 <SelectTrigger id="icon">
-                    <SelectValue placeholder="Choisir une icône">
+                    <SelectValue>
                         <div className="flex items-center gap-2">
-                           <Icon name={icon} /> 
+                           <Icon name={icon} className="h-4 w-4" /> 
                            <span>{icon}</span>
                         </div>
                     </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                    {iconNames.map(iconName => (
+                    {iconNames.slice(0, 50).map(iconName => (
                         <SelectItem key={iconName} value={iconName}>
                             <div className="flex items-center gap-2">
-                                <Icon name={iconName} />
+                                <Icon name={iconName} className="h-4 w-4" />
                                 <span>{iconName}</span>
                             </div>
                         </SelectItem>
@@ -232,22 +209,11 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-2">
-                <Label>Image du service (optionnel)</Label>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*"
-                />
-                 <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                <Label>Image (optionnel)</Label>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                 <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden">
                     {previewUrl ? (
-                        <Image 
-                            src={previewUrl} 
-                            alt="Aperçu" 
-                            fill
-                            className="object-contain rounded"
-                        />
+                        <Image src={previewUrl} alt="Aperçu" fill className="object-cover" />
                     ) : (
                        <div className="text-center text-muted-foreground p-4">
                             <ImageIcon className="h-8 w-8 mx-auto" />
@@ -257,29 +223,16 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
                 </div>
                  <Button type="button" variant="outline" className="w-full mt-2" onClick={() => fileInputRef.current?.click()} disabled={isSaving}>
                     <Upload className="mr-2 h-4 w-4" />
-                    {previewUrl ? 'Changer l\'image' : 'Téléverser une image'}
+                    {previewUrl ? 'Changer' : 'Téléverser'}
                 </Button>
               </div>
 
                <div className="space-y-2">
-                <Label>Vidéo de 5s (optionnel)</Label>
-                <input
-                    type="file"
-                    ref={videoFileInputRef}
-                    onChange={handleVideoFileChange}
-                    className="hidden"
-                    accept="video/mp4,video/webm"
-                />
-                 <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted">
+                <Label>Vidéo 5s (optionnel)</Label>
+                <input type="file" ref={videoFileInputRef} onChange={handleVideoFileChange} className="hidden" accept="video/mp4,video/webm" />
+                 <div className="relative aspect-video w-full rounded-md border-2 border-dashed flex items-center justify-center bg-muted overflow-hidden">
                     {videoPreviewUrl ? (
-                        <video 
-                            src={videoPreviewUrl}
-                            muted
-                            autoPlay
-                            loop
-                            playsInline
-                            className="object-contain rounded w-full h-full"
-                        />
+                        <video src={videoPreviewUrl} muted autoPlay loop playsInline className="object-cover w-full h-full" />
                     ) : (
                        <div className="text-center text-muted-foreground p-4">
                             <Video className="h-8 w-8 mx-auto" />
@@ -289,17 +242,17 @@ export function ServiceDialog({ isOpen, setIsOpen, service }: ServiceDialogProps
                 </div>
                  <Button type="button" variant="outline" className="w-full mt-2" onClick={() => videoFileInputRef.current?.click()} disabled={isSaving}>
                     <Upload className="mr-2 h-4 w-4" />
-                    {videoPreviewUrl ? 'Changer la vidéo' : 'Téléverser une vidéo'}
+                    {videoPreviewUrl ? 'Changer' : 'Téléverser'}
                 </Button>
                  {videoDurationError && (
-                    <Alert variant="destructive" className="mt-2">
-                        <AlertDescription>{videoDurationError}</AlertDescription>
+                    <Alert variant="destructive" className="mt-2 py-2">
+                        <AlertDescription className="text-xs">{videoDurationError}</AlertDescription>
                     </Alert>
                 )}
               </div>
           </div>
         </div>
-        <DialogFooter className="p-6 pt-4 border-t">
+        <DialogFooter className="p-6 pt-4 border-t shrink-0">
           <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSaving}>Annuler</Button>
           <Button onClick={handleSubmit} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

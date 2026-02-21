@@ -16,10 +16,8 @@ export function BookingTrigger({ initialServiceId, children, asChild = true }: B
             <DialogTrigger asChild={asChild}>
                 {children}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl h-auto max-h-[95vh] flex flex-col p-0">
-                <div className="overflow-y-auto">
-                    <BookingFlow initialServiceId={initialServiceId} closeModal={() => setOpen(false)} />
-                </div>
+            <DialogContent className="max-w-4xl h-auto max-h-[95vh] flex flex-col p-0 overflow-hidden">
+                <BookingFlow initialServiceId={initialServiceId} closeModal={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
     );

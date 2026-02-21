@@ -54,20 +54,20 @@ export function Header() {
           <span className="text-xl sm:text-2xl font-bold font-headline">Kabapo</span>
         </Link>
 
-        <div className="flex items-center gap-4 lg:gap-8">
-          <nav className="hidden lg:flex items-center gap-1">
-            <Button variant="ghost" asChild>
-              <Link href="/#services">{t('header.services')}</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/#reviews">{t('header.reviews')}</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/#contact">{t('header.contact')}</Link>
-            </Button>
-          </nav>
-
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
+            <nav className="hidden lg:flex items-center gap-1 mr-4">
+                <Button variant="ghost" asChild>
+                <Link href="/#services">{t('header.services')}</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                <Link href="/#reviews">{t('header.reviews')}</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                <Link href="/#contact">{t('header.contact')}</Link>
+                </Button>
+            </nav>
+
             <div className="hidden sm:flex items-center gap-2">
               {!hasMounted ? (
                   <div className="flex items-center gap-2 h-10">

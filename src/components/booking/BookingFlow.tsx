@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-
 import { ProgressBar } from '@/components/booking/ProgressBar';
 import { EventTypeStep } from '@/components/booking/EventTypeStep';
 import { ServiceStep } from '@/components/booking/ServiceStep';
@@ -10,7 +9,6 @@ import { ConfirmationStep } from '@/components/booking/ConfirmationStep';
 import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useBookingProgress } from '@/hooks/use-booking-progress';
-
 
 export type BookingData = {
   eventType: string;
@@ -105,36 +103,38 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
 
   return (
     <>
-      <DialogHeader className="p-6 pb-0">
+      <DialogHeader className="p-6 pb-4 border-b">
         <DialogTitle className="text-center text-3xl font-bold font-headline tracking-tight">Votre réservation</DialogTitle>
         <DialogDescription className="text-center">
             Suivez les étapes pour compléter votre demande.
         </DialogDescription>
       </DialogHeader>
-      <div className="container mx-auto max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
-        <ProgressBar currentStep={step} totalSteps={TOTAL_STEPS} />
-        <div className="mt-8">
-          {step === 1 && (
-            <EventTypeStep
-              onSelect={handleEventTypeSelect}
-            />
-          )}
-          {step === 2 && (
-            <ServiceStep
-              bookingData={bookingData}
-              updateBookingData={updateBookingData}
-              onNext={nextStep}
-              onBack={prevStep}
-            />
-          )}
-          {step === 3 && (
-            <DetailsStep
-              bookingData={bookingData}
-              updateBookingData={updateBookingData}
-              onConfirm={nextStep}
-              onBack={prevStep}
-            />
-          )}
+      <div className="flex-1 overflow-y-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+            <ProgressBar currentStep={step} totalSteps={TOTAL_STEPS} />
+            <div className="mt-8">
+            {step === 1 && (
+                <EventTypeStep
+                onSelect={handleEventTypeSelect}
+                />
+            )}
+            {step === 2 && (
+                <ServiceStep
+                bookingData={bookingData}
+                updateBookingData={updateBookingData}
+                onNext={nextStep}
+                onBack={prevStep}
+                />
+            )}
+            {step === 3 && (
+                <DetailsStep
+                bookingData={bookingData}
+                updateBookingData={updateBookingData}
+                onConfirm={nextStep}
+                onBack={prevStep}
+                />
+            )}
+            </div>
         </div>
       </div>
     </>
