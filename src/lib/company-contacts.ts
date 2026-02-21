@@ -12,15 +12,15 @@ export type CompanyContact = {
 export const companyContacts: CompanyContact[] = [
     {
         id: 'ceo',
-        name: 'Jean-Pierre Dupont',
+        name: 'Abel Ngansop',
         role: 'CEO',
         avatarId: 'contact-ceo',
         type: 'management'
     },
     {
         id: 'hr',
-        name: 'Amina Ndiaye',
-        role: 'Directeur des Ressources Humaines',
+        name: 'Ivan nono',
+        role: 'Directeur',
         avatarId: 'contact-hr',
         type: 'management'
     },
