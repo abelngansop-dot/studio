@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Logo } from '@/components/Logo';
 
 
 export default function AdminLayout({
@@ -65,9 +66,10 @@ export default function AdminLayout({
       <div className="flex min-h-screen">
         <Sidebar>
           <SidebarContent>
-            <SidebarHeader className="flex items-center justify-between">
-              <Link href="/admin/dashboard" className="text-xl font-bold text-primary font-headline">
-                Super Admin
+            <SidebarHeader className="flex items-center justify-between p-4">
+              <Link href="/admin/dashboard" className="flex items-center gap-3 text-xl font-bold text-primary font-headline">
+                <Logo className="h-8 w-8" />
+                <span>Super Admin</span>
               </Link>
               <SidebarTrigger className="md:hidden" />
             </SidebarHeader>
@@ -140,6 +142,7 @@ export default function AdminLayout({
           </SidebarContent>
           <SidebarFooter>
             <Button variant="ghost" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </Button>
           </SidebarFooter>

@@ -10,6 +10,7 @@ import { useAuth } from '@/firebase/provider';
 import { signOut } from 'firebase/auth';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { Logo } from '@/components/Logo';
 
 export default function ShopAdminDashboardLayout({
   children,
@@ -23,7 +24,6 @@ export default function ShopAdminDashboardLayout({
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
-        // Redirect is handled by the root shop layout
     }
   };
 
@@ -51,7 +51,7 @@ export default function ShopAdminDashboardLayout({
                               <Image src={shop.imageUrl} alt={shop.name} fill className="object-cover" />
                           </div>
                       ) : (
-                          <Store className="h-7 w-7 shrink-0" />
+                          <Logo className="h-8 w-8 shrink-0" />
                       )}
                       <span className="truncate">{shop.name}</span>
                     </Link>

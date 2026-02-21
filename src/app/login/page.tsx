@@ -22,6 +22,7 @@ import { Loader2 } from 'lucide-react';
 import { useNavigationHistory } from '@/hooks/use-navigation-history';
 import { Header } from '@/components/Header';
 import { ContactFooter } from '@/components/ContactFooter';
+import { Logo } from '@/components/Logo';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 48 48" {...props}>
@@ -170,6 +171,7 @@ export default function LoginPage() {
       <main className="flex-grow flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
             <CardHeader className="text-center">
+                <Logo className="mx-auto h-12 w-12 mb-4" />
                 <CardTitle className="text-2xl">{isLoginView ? 'Accédez à votre espace' : 'Créez votre compte'}</CardTitle>
                 <CardDescription>
                   {isLoginView ? 'Connectez-vous pour gérer vos réservations.' : 'Rejoignez-nous pour commencer à planifier.'}

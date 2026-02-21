@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useUser, useUserProfile, useAuth } from '@/firebase/provider';
 import { signOut } from 'firebase/auth';
 import { UserNav } from './UserNav';
+import { Logo } from './Logo';
 import {
   Sheet,
   SheetContent,
@@ -47,14 +48,13 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-primary transition-transform transform hover:scale-105"
+          className="flex items-center gap-3 text-primary transition-transform transform hover:scale-105"
         >
-          <Home className="h-7 w-7" />
+          <Logo className="h-9 w-9" />
           <span className="text-xl sm:text-2xl font-bold font-headline">Kabapo</span>
         </Link>
 
         <div className="flex items-center gap-4 lg:gap-8">
-          {/* Desktop Nav - Now moved to the right next to actions */}
           <nav className="hidden lg:flex items-center gap-1">
             <Button variant="ghost" asChild>
               <Link href="/#services">{t('header.services')}</Link>
@@ -68,7 +68,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Auth/Booking Buttons for larger screens */}
             <div className="hidden sm:flex items-center gap-2">
               {!hasMounted ? (
                   <div className="flex items-center gap-2 h-10">
@@ -93,7 +92,6 @@ export function Header() {
 
             <LanguageSwitcher />
 
-            {/* Mobile Menu */}
             <div className="lg:hidden">
               {hasMounted ? (
                 <Sheet>
@@ -107,8 +105,8 @@ export function Header() {
                      <SheetHeader className="p-4 border-b">
                        <SheetTitle className="sr-only">Menu principal</SheetTitle>
                        <SheetClose asChild>
-                          <Link href="/" className="flex items-center gap-2 text-primary">
-                              <Home className="h-6 w-6" />
+                          <Link href="/" className="flex items-center gap-3 text-primary">
+                              <Logo className="h-7 w-7" />
                               <span className="font-bold font-headline text-lg">Kabapo</span>
                           </Link>
                        </SheetClose>

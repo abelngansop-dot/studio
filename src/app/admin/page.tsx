@@ -14,6 +14,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Logo } from '@/components/Logo';
 
 // The designated email for the superadmin to bootstrap the application.
 const SUPERADMIN_EMAIL = 'abelnono1994@gmail.com';
@@ -126,6 +127,7 @@ export default function AdminLoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-secondary/20">
       <Card className="mx-auto max-w-sm w-full shadow-xl">
         <CardHeader className="text-center">
+          <Logo className="mx-auto h-12 w-12 mb-4" />
           <CardTitle className="text-3xl font-bold font-headline text-primary">Kabapo Admin</CardTitle>
           <CardDescription>
             Authentification requise pour accéder au cockpit.
