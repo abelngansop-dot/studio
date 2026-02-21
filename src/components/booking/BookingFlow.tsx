@@ -66,13 +66,11 @@ export function BookingFlow({ initialServiceId, closeModal }: BookingFlowProps) 
 
   const prevStep = () => {
     if (step > 1) {
-      setStep((s) => s + 1);
+      setStep((s) => s - 1);
     }
   };
 
   const handleEventTypeSelect = (newEventType: string) => {
-    // If the event type is being changed (and it's not the initial selection),
-    // reset the services to provide a clean slate for the new event context.
     if (bookingData.eventType && bookingData.eventType !== newEventType) {
         updateBookingData({ eventType: newEventType, services: [], shopId: null });
     } else {

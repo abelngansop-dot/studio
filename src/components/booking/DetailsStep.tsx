@@ -253,17 +253,6 @@ export function DetailsStep({
         </p>
       </div>
 
-      {shouldShowOtherDetails && (
-        <Alert className="mb-8 border-accent text-accent-foreground bg-accent/5 animate-in fade-in duration-300">
-          <MessageSquare className="h-4 w-4" />
-          <AlertTitle className="font-bold">Demande spécifique</AlertTitle>
-          <AlertDescription>
-            Vous avez sélectionné "Autre". Veuillez décrire votre besoin dans la
-            section dédiée plus bas.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <div className="max-w-4xl mx-auto space-y-8">
           <Card className="overflow-hidden shadow-lg border-primary/20">
             <CardHeader className="flex-row items-center gap-4 space-y-0 bg-primary/5">
@@ -326,18 +315,7 @@ export function DetailsStep({
                   </p>
                 )}
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      ou
-                    </span>
-                  </div>
-                </div>
-
-                <ScrollArea className="h-48 border rounded-md">
+                <ScrollArea className="h-48 border rounded-md mt-4">
                   <div className="grid grid-cols-3 gap-2 p-2">
                     {timeSlots.map(time => (
                       <Button
@@ -379,7 +357,7 @@ export function DetailsStep({
                 </Label>
                 <Textarea
                   id="request-details"
-                  placeholder="Décrivez votre besoin spécifique (événement, service, etc.)..."
+                  placeholder="Décrivez votre besoin spécifique..."
                   value={bookingData.requestDetails || ''}
                   onChange={e =>
                     updateBookingData({ requestDetails: e.target.value })
@@ -475,7 +453,7 @@ export function DetailsStep({
                         onChange={e =>
                           updateBookingData({ city: e.target.value })
                         }
-                        className="mt-2 animate-in fade-in duration-300"
+                        className="mt-2"
                       />
                     )}
                     {errors.city && (
@@ -515,9 +493,6 @@ export function DetailsStep({
               <CardTitle className="font-headline text-xl">
                 Vos Coordonnées
               </CardTitle>
-              <p className="text-sm text-muted-foreground pt-1">
-                Le numéro de téléphone est obligatoire pour continuer.
-              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -599,10 +574,6 @@ export function DetailsStep({
                 </span>
               </div>
               <div className="flex justify-between items-start">
-                <span className="text-muted-foreground">Heure de début</span>
-                <span className="font-medium">{bookingData.time || '...'}</span>
-              </div>
-              <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">Lieu</span>
                 <span className="font-medium capitalize text-right">
                   {bookingData.city ? `${bookingData.city}, ` : ''}
@@ -612,19 +583,12 @@ export function DetailsStep({
             </CardContent>
           </Card>
 
-          {(errors.date ||
-            errors.time ||
-            errors.country ||
-            errors.city ||
-            errors.phone ||
-            errors.email ||
-            errors.requestDetails) && (
+          {(Object.keys(errors).length > 0) && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Champs manquants ou invalides</AlertTitle>
+              <AlertTitle>Champs requis</AlertTitle>
               <AlertDescription>
-                Veuillez vérifier que tous les champs obligatoires sont bien
-                renseignés.
+                Veuillez compléter tous les champs obligatoires avant de confirmer.
               </AlertDescription>
             </Alert>
           )}

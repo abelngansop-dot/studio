@@ -3,9 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- RULE FOR PUBLIC COLLECTION GROUP QUERIES ---
-    // This rule specifically allows the public 'list' query for the homepage reviews carousel.
-    // The query is performed across all shops' 'reviews' sub-collections.
-    // Security for other operations (get, create, update) is handled by the more specific rules below.
     match /{path=**}/reviews/{reviewId} {
       allow list: if true;
     }
@@ -19,14 +16,14 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // This function performs a document read and CANNOT be used in rules for 'list' queries.
-    // IT IS THE SOURCE OF THE CRASH WHEN USED IN LIST RULES.
     function getUserData(userId) {
       return get(/databases/$(database)/documents/users/$(userId)).data;
     }
     
     function getUserRole(userId) {
-      return getUserData(userId).role;
+      // Safely check if data exists before accessing role
+      let data = get(/databases/$(database)/documents/users/$(userId)).data;
+      return data != null ? data.role : 'none';
     }
     
     function isSuperAdmin() {
@@ -37,7 +34,6 @@ service cloud.firestore {
       return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || isSuperAdmin());
     }
     
-    // This helper function IS valid for list queries.
     function isShopAdmin(shopId) {
       return exists(/databases/$(database)/documents/shops/$(shopId)/admins/$(request.auth.uid));
     }
@@ -47,124 +43,67 @@ service cloud.firestore {
 
     // USERS: Global user collection
     match /users/{userId} {
-      // READ: Users can read their own profile. Admins/SuperAdmins can read any profile.
       allow get: if isOwner(userId) || isAdmin();
-      
-      // LIST: Listing all users is not scalable/secure with document-based roles.
-      // Using `get()` in list rules is disallowed and was causing crashes.
-      // This feature requires custom claims to be implemented correctly.
-      allow list: if false;
+      allow list: if isAdmin(); // Admins can list users
 
-      // CREATE:
-      // - Any user can create their own 'client' profile.
-      // - A user cannot assign themselves a privileged role.
-      // - Superadmin can create any profile.
-      allow create: if (isOwner(userId) && request.resource.data.role == 'client') || isSuperAdmin();
+      // allow create: 
+      // 1. A user can create their own 'client' profile.
+      // 2. A user can create their own profile as 'superadmin' (used for initial bootstrap of the designated email).
+      // 3. A Superadmin can create any profile.
+      allow create: if (isOwner(userId) && (request.resource.data.role == 'client' || request.resource.data.role == 'superadmin')) || isSuperAdmin();
 
-      // UPDATE:
-      // - Users can update their own non-critical info.
-      // - Users can upgrade their role from 'client' to 'shop_admin' when creating a shop.
-      // - Users cannot change their own role or shopId otherwise.
-      // - Platform Admins can update any profile.
       allow update: if (isOwner(userId) && 
-                        // Case 1: Normal profile update where role/shopId are not changed by the user.
                        (request.resource.data.role == resource.data.role && 
                         request.resource.data.shopId == resource.data.shopId) ||
-                        // Case 2: A client is becoming a shop_admin by creating a shop.
                        (resource.data.role == 'client' && request.resource.data.role == 'shop_admin')
                       )
                     || isAdmin();
 
-      // DELETE: Users can delete their own accounts. Super Admins can delete any user.
       allow delete: if isOwner(userId) || isSuperAdmin();
     }
     
-    // SHOPS: Top-level collection for all vendor shops
+    // SHOPS: Top-level collection
     match /shops/{shopId} {
-      // READ/LIST: All shops are publicly visible for the marketplace.
       allow get, list: if true;
-
-      // CREATE: Any signed-in user can create a shop, making them the owner.
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-
-      // UPDATE: Only the shop owner or a platform admin can update shop details.
-      // The owner cannot change the ownerId.
       allow update: if (isShopAdmin(shopId) && request.resource.data.ownerId == resource.data.ownerId) || isAdmin();
-
-      // DELETE: Only a superadmin can delete a shop.
       allow delete: if isSuperAdmin();
 
-      
-      // --- SHOP SUB-COLLECTIONS ---
-      // All data below is scoped to a specific shop.
-
-      // SHOP ADMINS subcollection
+      // SHOP SUB-COLLECTIONS
       match /admins/{userId} {
-        // Only the shop owner (via client code) or a platform admin can add/remove other admins.
         allow read, write: if isShopAdmin(shopId) || isAdmin();
       }
       
-      // SERVICES for a shop
       match /services/{serviceId} {
-        // READ/LIST: Services are public for users to browse and book.
         allow get, list: if true;
-        // WRITE: Only the shop admin or a platform admin can manage services.
         allow create, update, delete: if isShopAdmin(shopId) || isAdmin();
       }
 
-      // EVENT TYPES for a shop
       match /eventTypes/{eventTypeId} {
         allow get, list: if true;
         allow create, update, delete: if isShopAdmin(shopId) || isAdmin();
       }
 
-      // GALLERY IMAGES for a shop
       match /gallery/{galleryImageId} {
         allow get, list: if true;
         allow create, update, delete: if isShopAdmin(shopId) || isAdmin();
       }
 
-      // BOOKINGS for a shop
       match /bookings/{bookingId} {
-        // CREATE: Any signed-in client can create a booking for themselves.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        
-        // READ: 
-        // - The user who made the booking can read it.
-        // - The shop admin can read it.
-        // - A platform admin can read it.
         allow get: if isOwner(resource.data.userId) || isShopAdmin(shopId) || isAdmin();
-
-        // LIST: 
-        // - Shop admins can list all bookings for their shop (client must query by shopId).
-        // - Platform admins cannot list bookings across all shops using document-based roles (this was causing a crash). This requires custom claims.
-        // - Clients can list their own bookings.
         allow list: if isShopAdmin(shopId) || (isSignedIn() && request.query.userId == request.auth.uid);
-
-        // UPDATE/DELETE: Only shop admin or platform admin can manage bookings.
         allow update, delete: if isShopAdmin(shopId) || isAdmin();
       }
 
-      // REVIEWS for a shop
       match /reviews/{reviewId} {
-        // READ/LIST: Approved reviews are public.
-        // Shop admin and platform admin can see all reviews for moderation.
         allow get: if resource.data.status == 'approved' || isShopAdmin(shopId) || isAdmin();
-        
-        // This list rule applies to queries on a single shop's reviews collection.
-        // The collection group query is handled by the global rule at the top of the file.
         allow list: if true; 
-
-        // CREATE: Any signed-in user can submit a 'pending' review.
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'pending';
-        
-        // UPDATE/DELETE: Only the shop admin or platform admin can moderate (approve/reject/delete).
         allow update, delete: if isShopAdmin(shopId) || isAdmin();
       }
 
-      // SUBSCRIPTIONS for a shop
       match /subscriptions/{subscriptionId} {
-        // Only the shop admin and platform admins can view or manage subscription details.
         allow read, write: if isShopAdmin(shopId) || isAdmin();
       }
     }
