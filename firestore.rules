@@ -2,9 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- RULE FOR PUBLIC COLLECTION GROUP QUERIES ---
+    // --- RULES FOR PUBLIC COLLECTION GROUP QUERIES ---
+    // These allow the app to fetch all reviews, services, and event types 
+    // across all shops for the homepage and discovery features.
+    
     match /{path=**}/reviews/{reviewId} {
       allow list: if true;
+    }
+    
+    match /{path=**}/services/{serviceId} {
+      allow list: if true;
+    }
+    
+    match /{path=**}/eventTypes/{eventTypeId} {
+      allow list: if true;
+    }
+    
+    match /{path=**}/bookings/{bookingId} {
+      // Users can list their own bookings via collection group queries
+      allow list: if isSignedIn() && (request.query.userId == request.auth.uid || isAdmin());
     }
 
     // --- HELPER FUNCTIONS ---
@@ -17,7 +33,7 @@ service cloud.firestore {
     }
 
     function isDesignatedSuperAdmin() {
-      // Reconnaissance explicite de l'email administrateur pour le bootstrap
+      // Explicit recognition of the admin email for bootstrapping and security
       return isSignedIn() && request.auth.token.email == 'abelnono1994@gmail.com';
     }
 
@@ -26,7 +42,6 @@ service cloud.firestore {
     }
     
     function getUserRole(userId) {
-      // Safely check if data exists before accessing role
       let data = get(/databases/$(database)/documents/users/$(userId)).data;
       return data != null ? data.role : 'none';
     }
@@ -49,7 +64,7 @@ service cloud.firestore {
     // USERS: Global user collection
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin(); // Admins can list users
+      allow list: if isAdmin();
 
       // allow create: 
       // 1. A user can create their own 'client' profile.
