@@ -21,7 +21,6 @@ type EventTypeStepProps = {
 };
 
 // Default data to ensure the booking flow is always usable.
-// Admin can override or add to this by adding event types in the admin panel.
 const defaultEventTypes: EventType[] = [
     { id: 'mariage', name: 'Mariage', icon: 'Heart' },
     { id: 'anniversaire', name: 'Anniversaire', icon: 'Cake' },
@@ -82,7 +81,7 @@ export function EventTypeStep({ onSelect }: EventTypeStepProps) {
             {displayTypes?.map((type) => (
               <SelectableCard
                 key={type.id}
-                isSelected={false} // This component navigates on select, so it's never "selected" in this view
+                isSelected={false}
                 onSelect={() => onSelect(type.name.toLowerCase())}
               >
                 <Card className="h-full group-hover:-translate-y-1 transition-transform duration-300">

@@ -56,19 +56,19 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <nav className="hidden lg:flex items-center gap-1 mr-4">
-                <Button variant="ghost" asChild>
-                <Link href="/#services">{t('header.services')}</Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                <Link href="/#reviews">{t('header.reviews')}</Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                <Link href="/#contact">{t('header.contact')}</Link>
-                </Button>
-            </nav>
-
             <div className="hidden sm:flex items-center gap-2">
+              <nav className="hidden lg:flex items-center gap-1 mr-2">
+                  <Button variant="ghost" asChild>
+                  <Link href="/#services">{t('header.services')}</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                  <Link href="/#reviews">{t('header.reviews')}</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                  <Link href="/#contact">{t('header.contact')}</Link>
+                  </Button>
+              </nav>
+
               {!hasMounted ? (
                   <div className="flex items-center gap-2 h-10">
                       <Skeleton className="h-10 w-28 rounded-md" />
