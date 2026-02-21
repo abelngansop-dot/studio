@@ -11,7 +11,7 @@ import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } f
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { FirebaseError } from 'firebase/app';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -33,13 +33,22 @@ export default function AdminLoginPage() {
     if (!firestore) return false;
     try {
         const userDocRef = doc(firestore, "users", uid);
-        await setDoc(userDocRef, {
-            uid: uid,
-            email: userEmail,
-            displayName: 'Super Admin',
-            role: 'superadmin',
-            createdAt: serverTimestamp()
-        });
+        const userDoc = await getDoc(userDocRef);
+        
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                uid: uid,
+                email: userEmail,
+                displayName: 'Super Admin',
+                role: 'superadmin',
+                createdAt: serverTimestamp()
+            });
+        } else {
+            // Document already exists, ensure it has the superadmin role
+            await updateDoc(userDocRef, {
+                role: 'superadmin'
+            });
+        }
         return true;
     } catch (e) {
         console.error("Bootstrap error:", e);
@@ -64,7 +73,7 @@ export default function AdminLoginPage() {
             user = userCredential.user;
         } catch (signInError: any) {
             // Si l'utilisateur n'existe pas et que c'est l'email superadmin, on tente de le créer
-            if ((signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') && email === SUPERADMIN_EMAIL) {
+            if ((signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/invalid-login-credentials') && email === SUPERADMIN_EMAIL) {
                 const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
                 user = newUserCredential.user;
             } else {
@@ -74,16 +83,16 @@ export default function AdminLoginPage() {
 
         // --- ÉTAPE 2: Vérifier/Créer le document Firestore ---
         const userDocRef = doc(firestore, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
+        let userDoc = await getDoc(userDocRef);
 
         let userRole = userDoc.exists() ? userDoc.data()?.role : null;
         
-        if (!userDoc.exists() && user.email === SUPERADMIN_EMAIL) {
+        if (user.email === SUPERADMIN_EMAIL && userRole !== 'superadmin') {
             const success = await handleBootstrapSuperAdmin(user.uid, user.email!);
             if (success) {
                 userRole = 'superadmin';
             } else {
-                throw new Error("Impossible de créer le profil superadmin dans Firestore. Vérifiez les règles de sécurité.");
+                throw new Error("Impossible de configurer le profil superadmin dans Firestore. Vérifiez les règles de sécurité.");
             }
         }
 
@@ -99,7 +108,7 @@ export default function AdminLoginPage() {
         console.error("Admin login error:", error);
         let message = "Une erreur est survenue lors de la connexion.";
         
-        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-login-credentials') {
             message = "Email ou mot de passe incorrect.";
         } else if (error.code === 'auth/weak-password') {
             message = "Le mot de passe doit contenir au moins 6 caractères.";

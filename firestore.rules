@@ -16,6 +16,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isDesignatedSuperAdmin() {
+      // Reconnaissance explicite de l'email administrateur pour le bootstrap
+      return isSignedIn() && request.auth.token.email == 'abelnono1994@gmail.com';
+    }
+
     function getUserData(userId) {
       return get(/databases/$(database)/documents/users/$(userId)).data;
     }
@@ -27,7 +32,7 @@ service cloud.firestore {
     }
     
     function isSuperAdmin() {
-      return isSignedIn() && getUserRole(request.auth.uid) == 'superadmin';
+      return isSignedIn() && (getUserRole(request.auth.uid) == 'superadmin' || isDesignatedSuperAdmin());
     }
 
     function isAdmin() {
@@ -48,14 +53,12 @@ service cloud.firestore {
 
       // allow create: 
       // 1. A user can create their own 'client' profile.
-      // 2. A user can create their own profile as 'superadmin' (used for initial bootstrap of the designated email).
-      // 3. A Superadmin can create any profile.
-      allow create: if (isOwner(userId) && (request.resource.data.role == 'client' || request.resource.data.role == 'superadmin')) || isSuperAdmin();
+      // 2. A designated user can create their own 'superadmin' profile.
+      allow create: if (isOwner(userId) && (request.resource.data.role == 'client' || (request.resource.data.role == 'superadmin' && isDesignatedSuperAdmin()))) || isSuperAdmin();
 
       allow update: if (isOwner(userId) && 
-                       (request.resource.data.role == resource.data.role && 
-                        request.resource.data.shopId == resource.data.shopId) ||
-                       (resource.data.role == 'client' && request.resource.data.role == 'shop_admin')
+                       (request.resource.data.role == resource.data.role || (request.resource.data.role == 'superadmin' && isDesignatedSuperAdmin())) && 
+                        (request.resource.data.shopId == resource.data.shopId || (resource.data.role == 'client' && request.resource.data.role == 'shop_admin'))
                       )
                     || isAdmin();
 
