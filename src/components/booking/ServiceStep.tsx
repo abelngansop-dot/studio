@@ -36,7 +36,7 @@ const defaultServices: Service[] = [
     { id: 'gâteau', shopId: 'default', name: 'Gâteau', icon: 'Cake' },
     { id: 'sonorisation', shopId: 'default', name: 'Sonorisation', icon: 'Music' },
     { id: 'décoration', shopId: 'default', name: 'Décoration', icon: 'PartyPopper' },
-    { id: 'autre', shopId: 'default', name: 'Autre', icon: 'PlusCircle' },
+    { id: 'autre', shopId: 'default', name: 'Autre', icon: 'Plus' },
 ];
 
 const ServiceSkeleton = () => (

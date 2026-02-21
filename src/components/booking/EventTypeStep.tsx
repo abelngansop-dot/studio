@@ -28,7 +28,7 @@ const defaultEventTypes: EventType[] = [
     { id: 'bapteme', name: 'Baptême', icon: 'Sparkles' },
     { id: 'entreprise', name: 'Entreprise', icon: 'Briefcase' },
     { id: 'deuil', name: 'Deuil', icon: 'Flower2' },
-    { id: 'autre', name: 'Autre', icon: 'PlusCircle' },
+    { id: 'autre', name: 'Autre', icon: 'Plus' },
 ];
 
 

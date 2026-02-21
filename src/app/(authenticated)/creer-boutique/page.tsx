@@ -52,7 +52,7 @@ const defaultServices: Service[] = [
     { id: 'gâteau', name: 'Gâteau', icon: 'Cake' },
     { id: 'sonorisation', name: 'Sonorisation', icon: 'Music' },
     { id: 'décoration', name: 'Décoration', icon: 'PartyPopper' },
-    { id: 'autre', name: 'Autre', icon: 'PlusCircle' },
+    { id: 'autre', name: 'Autre', icon: 'Plus' },
 ];
 
 export default function CreateShopPage() {
@@ -224,7 +224,7 @@ export default function CreateShopPage() {
                         <Store className="mx-auto h-12 w-12 text-primary mb-4" />
                         <CardTitle className="text-3xl font-bold font-headline">Proposez vos services</CardTitle>
                         <CardDescription className="text-lg text-muted-foreground pt-2">
-                            Créez votre boutique sur Inoublevents et commencez à recevoir des demandes de clients.
+                            Créez votre boutique sur Kabapo et commencez à recevoir des demandes de clients.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
