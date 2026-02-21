@@ -53,188 +53,190 @@ export function Header() {
           <span className="text-xl sm:text-2xl font-bold font-headline">Kabapo</span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
-          <Button variant="ghost" asChild>
-            <Link href="/#services">{t('header.services')}</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/#reviews">{t('header.reviews')}</Link>
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/#contact">{t('header.contact')}</Link>
-          </Button>
-        </nav>
+        <div className="flex items-center gap-4 lg:gap-8">
+          {/* Desktop Nav - Now moved to the right next to actions */}
+          <nav className="hidden lg:flex items-center gap-1">
+            <Button variant="ghost" asChild>
+              <Link href="/#services">{t('header.services')}</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/#reviews">{t('header.reviews')}</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/#contact">{t('header.contact')}</Link>
+            </Button>
+          </nav>
 
-        <div className="flex items-center gap-2">
-          {/* Auth/Booking Buttons for larger screens */}
-          <div className="hidden sm:flex items-center gap-2">
-            {!hasMounted ? (
-                <div className="flex items-center gap-2 h-10">
-                    <Skeleton className="h-10 w-28 rounded-md" />
-                    <Skeleton className="h-10 w-36 rounded-full" />
-                </div>
-            ) : user ? (
-              <UserNav user={user} />
-            ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Se connecter</Link>
-                </Button>
-                <BookingTrigger>
-                  <Button className="rounded-full shadow-lg">
-                    {t('header.book')}
-                  </Button>
-                </BookingTrigger>
-              </>
-            )}
-          </div>
-
-          <LanguageSwitcher />
-
-          {/* Mobile Menu */}
-          <div className="lg:hidden">
-            {hasMounted ? (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
-                    <span className="sr-only">Ouvrir le menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="flex w-full max-w-sm flex-col p-0">
-                   <SheetHeader className="p-4 border-b">
-                     <SheetTitle className="sr-only">Menu principal</SheetTitle>
-                     <SheetClose asChild>
-                        <Link href="/" className="flex items-center gap-2 text-primary">
-                            <Home className="h-6 w-6" />
-                            <span className="font-bold font-headline text-lg">Kabapo</span>
-                        </Link>
-                     </SheetClose>
-                  </SheetHeader>
-
-                  <div className="flex-1 overflow-y-auto">
-                    {isProfileLoading ? (
-                        <div className="p-4 space-y-4">
-                            <div className="flex items-center gap-3">
-                                <Skeleton className="h-12 w-12 rounded-full" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-24" />
-                                    <Skeleton className="h-3 w-32" />
-                                </div>
-                            </div>
-                            <Separator/>
-                            <Skeleton className="h-8 w-full"/>
-                            <Skeleton className="h-8 w-full"/>
-                        </div>
-                    ) : user && userProfile ? (
-                        <div className="p-4">
-                            <div className="flex items-center gap-3 mb-4">
-                                <Avatar className="h-12 w-12">
-                                    <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? ''} />
-                                    <AvatarFallback>{userInitial}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-semibold">{user.displayName}</p>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                                </div>
-                            </div>
-                            <Separator />
-                            <nav className="mt-4 flex flex-col gap-1">
-                               {userProfile.role === 'shop_admin' && (
-                                <SheetClose asChild>
-                                    <Button variant="ghost" asChild className="justify-start text-base">
-                                        <Link href="/dashboard"><Store className="mr-2 h-5 w-5"/>Tableau de bord</Link>
-                                    </Button>
-                                </SheetClose>
-                               )}
-                                {(userProfile.role === 'admin' || userProfile.role === 'superadmin') && (
-                                    <SheetClose asChild>
-                                        <Button variant="ghost" asChild className="justify-start text-base">
-                                            <Link href="/admin/dashboard"><Shield className="mr-2 h-5 w-5"/>Super Admin</Link>
-                                        </Button>
-                                    </SheetClose>
-                                )}
-                                 <SheetClose asChild>
-                                    <Button variant="ghost" asChild className="justify-start text-base">
-                                        <Link href="/mes-reservations"><LayoutGrid className="mr-2 h-5 w-5"/>Mes réservations</Link>
-                                    </Button>
-                                </SheetClose>
-                                <SheetClose asChild>
-                                    <Button variant="ghost" asChild className="justify-start text-base">
-                                        <Link href="/profil"><Settings className="mr-2 h-5 w-5"/>Paramètres</Link>
-                                    </Button>
-                                </SheetClose>
-                                <SheetClose asChild>
-                                    <Button variant="ghost" asChild className="justify-start text-base">
-                                        <Link href="/legal"><FileText className="mr-2 h-5 w-5"/>Légal</Link>
-                                    </Button>
-                                </SheetClose>
-                            </nav>
-                        </div>
-                    ) : (
-                         <nav className="flex flex-col gap-1 p-4">
-                            <SheetClose asChild>
-                            <Button variant="ghost" asChild className="justify-start text-base">
-                                <Link href="/#services">
-                                <Package className="mr-2 h-5 w-5" />
-                                Services
-                                </Link>
-                            </Button>
-                            </SheetClose>
-                             <SheetClose asChild>
-                            <Button variant="ghost" asChild className="justify-start text-base">
-                                <Link href="/#reviews">
-                                <Heart className="mr-2 h-5 w-5" />
-                                Avis
-                                </Link>
-                            </Button>
-                            </SheetClose>
-                             <SheetClose asChild>
-                            <Button variant="ghost" asChild className="justify-start text-base">
-                                <Link href="/#contact">
-                                <Phone className="mr-2 h-5 w-5" />
-                                Contact
-                                </Link>
-                            </Button>
-                            </SheetClose>
-                            <SheetClose asChild>
-                            <Button variant="ghost" asChild className="justify-start text-base">
-                                <Link href="/legal">
-                                <FileText className="mr-2" />
-                                Légal
-                                </Link>
-                            </Button>
-                            </SheetClose>
-                        </nav>
-                    )}
+          <div className="flex items-center gap-2">
+            {/* Auth/Booking Buttons for larger screens */}
+            <div className="hidden sm:flex items-center gap-2">
+              {!hasMounted ? (
+                  <div className="flex items-center gap-2 h-10">
+                      <Skeleton className="h-10 w-28 rounded-md" />
+                      <Skeleton className="h-10 w-36 rounded-full" />
                   </div>
-                  
-                  <SheetFooter className="p-4 border-t mt-auto">
-                    {isProfileLoading ? (
-                        <Skeleton className="h-10 w-full" />
-                    ) : user ? (
-                        <SheetClose asChild>
-                             <Button variant="outline" onClick={handleLogout} className="w-full">
-                                <LogOut className="mr-2 h-5 w-5" />
-                                Déconnexion
-                            </Button>
-                        </SheetClose>
-                    ) : (
-                        <SheetClose asChild>
-                            <Button asChild className="w-full">
-                                <Link href="/login"><LogIn className="mr-2 h-5 w-5"/>Se connecter / S'inscrire</Link>
-                            </Button>
-                        </SheetClose>
-                    )}
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
-            ) : (
-              <Button variant="ghost" size="icon" disabled>
-                <Menu className="h-6 w-6" />
-              </Button>
-            )}
+              ) : user ? (
+                <UserNav user={user} />
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Se connecter</Link>
+                  </Button>
+                  <BookingTrigger>
+                    <Button className="rounded-full shadow-lg">
+                      {t('header.book')}
+                    </Button>
+                  </BookingTrigger>
+                </>
+              )}
+            </div>
+
+            <LanguageSwitcher />
+
+            {/* Mobile Menu */}
+            <div className="lg:hidden">
+              {hasMounted ? (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-6 w-6" />
+                      <span className="sr-only">Ouvrir le menu</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="flex w-full max-w-sm flex-col p-0">
+                     <SheetHeader className="p-4 border-b">
+                       <SheetTitle className="sr-only">Menu principal</SheetTitle>
+                       <SheetClose asChild>
+                          <Link href="/" className="flex items-center gap-2 text-primary">
+                              <Home className="h-6 w-6" />
+                              <span className="font-bold font-headline text-lg">Kabapo</span>
+                          </Link>
+                       </SheetClose>
+                    </SheetHeader>
+
+                    <div className="flex-1 overflow-y-auto">
+                      {isProfileLoading ? (
+                          <div className="p-4 space-y-4">
+                              <div className="flex items-center gap-3">
+                                  <Skeleton className="h-12 w-12 rounded-full" />
+                                  <div className="space-y-2">
+                                      <Skeleton className="h-4 w-24" />
+                                      <Skeleton className="h-3 w-32" />
+                                  </div>
+                              </div>
+                              <Separator/>
+                              <Skeleton className="h-8 w-full"/>
+                              <Skeleton className="h-8 w-full"/>
+                          </div>
+                      ) : user && userProfile ? (
+                          <div className="p-4">
+                              <div className="flex items-center gap-3 mb-4">
+                                  <Avatar className="h-12 w-12">
+                                      <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? ''} />
+                                      <AvatarFallback>{userInitial}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                      <p className="font-semibold">{user.displayName}</p>
+                                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                                  </div>
+                              </div>
+                              <Separator />
+                              <nav className="mt-4 flex flex-col gap-1">
+                                 {userProfile.role === 'shop_admin' && (
+                                  <SheetClose asChild>
+                                      <Button variant="ghost" asChild className="justify-start text-base">
+                                          <Link href="/dashboard"><Store className="mr-2 h-5 w-5"/>Tableau de bord</Link>
+                                      </Button>
+                                  </SheetClose>
+                                 )}
+                                  {(userProfile.role === 'admin' || userProfile.role === 'superadmin') && (
+                                      <SheetClose asChild>
+                                          <Button variant="ghost" asChild className="justify-start text-base">
+                                              <Link href="/admin/dashboard"><Shield className="mr-2 h-5 w-5"/>Super Admin</Link>
+                                          </Button>
+                                      </SheetClose>
+                                  )}
+                                   <SheetClose asChild>
+                                      <Button variant="ghost" asChild className="justify-start text-base">
+                                          <Link href="/mes-reservations"><LayoutGrid className="mr-2 h-5 w-5"/>Mes réservations</Link>
+                                      </Button>
+                                  </SheetClose>
+                                  <SheetClose asChild>
+                                      <Button variant="ghost" asChild className="justify-start text-base">
+                                          <Link href="/profil"><Settings className="mr-2 h-5 w-5"/>Paramètres</Link>
+                                      </Button>
+                                  </SheetClose>
+                                  <SheetClose asChild>
+                                      <Button variant="ghost" asChild className="justify-start text-base">
+                                          <Link href="/legal"><FileText className="mr-2 h-5 w-5"/>Légal</Link>
+                                      </Button>
+                                  </SheetClose>
+                              </nav>
+                          </div>
+                      ) : (
+                           <nav className="flex flex-col gap-1 p-4">
+                              <SheetClose asChild>
+                              <Button variant="ghost" asChild className="justify-start text-base">
+                                  <Link href="/#services">
+                                  <Package className="mr-2 h-5 w-5" />
+                                  Services
+                                  </Link>
+                              </Button>
+                              </SheetClose>
+                               <SheetClose asChild>
+                              <Button variant="ghost" asChild className="justify-start text-base">
+                                  <Link href="/#reviews">
+                                  <Heart className="mr-2 h-5 w-5" />
+                                  Avis
+                                  </Link>
+                              </Button>
+                              </SheetClose>
+                               <SheetClose asChild>
+                              <Button variant="ghost" asChild className="justify-start text-base">
+                                  <Link href="/#contact">
+                                  <Phone className="mr-2 h-5 w-5" />
+                                  Contact
+                                  </Link>
+                              </Button>
+                              </SheetClose>
+                              <SheetClose asChild>
+                              <Button variant="ghost" asChild className="justify-start text-base">
+                                  <Link href="/legal">
+                                  <FileText className="mr-2" />
+                                  Légal
+                                  </Link>
+                              </Button>
+                              </SheetClose>
+                          </nav>
+                      )}
+                    </div>
+                    
+                    <SheetFooter className="p-4 border-t mt-auto">
+                      {isProfileLoading ? (
+                          <Skeleton className="h-10 w-full" />
+                      ) : user ? (
+                          <SheetClose asChild>
+                               <Button variant="outline" onClick={handleLogout} className="w-full">
+                                  <LogOut className="mr-2 h-5 w-5" />
+                                  Déconnexion
+                               </Button>
+                          </SheetClose>
+                      ) : (
+                          <SheetClose asChild>
+                              <Button asChild className="w-full">
+                                  <Link href="/login"><LogIn className="mr-2 h-5 w-5"/>Se connecter / S'inscrire</Link>
+                              </Button>
+                          </SheetClose>
+                      )}
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <Button variant="ghost" size="icon" disabled>
+                  <Menu className="h-6 w-6" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
